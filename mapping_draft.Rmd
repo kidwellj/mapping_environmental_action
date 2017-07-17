@@ -29,17 +29,15 @@ require(scales)
 
 # Introduction[^15541312]
 
-Until recently, environmentalism has been treated by governments and environmental charities as a largely secular concern. In spite of the well-developed tradition of "eco-theology" in a variety of religious traditions which began in earnest in the mid-twentieth century, third-sector groups and governments, particularly in Britain and Europe, have largely ignored religious groups as they have gone about their business crafting agendas for behaviour change, developing funding programmes, and developing platforms to mitigate ecological harm, motivate consumers and create regulation regimes. That this has changed is evidenced by the fact that several prominent non-religious environmental groups have commissioned studies and crafted outreach programmes to persons with a particular faith tradition or to "spiritual communities" including RSPB (2013) and the Sierra Club USA (2008).[^158261118] Further, since 2008, the Scottish Government has provided a significant portion of funding for the ecumenical charity, Eco-Congregation Scotland, which works to promote literacy on environmental issues in religious communities in Scotland and helps to certify congregations under their award programme. What is not well known, however, even by these religious environmental groups themselves, is whether or how their membership might be different from other environmental groups. This study represents an attempt to illuminate this new interest with some more concrete data about religious groups in Scotland and how they may differ from non-religious counterparts.
+Until recently, environmentalism has been treated by governments and environmental charities as a largely secular concern. In spite of the well-developed tradition of "eco-theology" which began in earnest in the UK in the mid-twentieth century (and which has many precursors in previous centuries), third-sector groups and governments, particularly in Britain and Europe, have largely ignored religious groups as they have gone about their business crafting agendas for behaviour change, developing funding programmes, and developing platforms to mitigate ecological harm, motivate consumers and create regulation regimes. That this has changed is evidenced by the fact that several prominent non-religious environmental groups have commissioned studies and crafted outreach programmes to persons with a particular faith tradition or to "spiritual communities" including RSPB (2013) and the Sierra Club USA (2008).[^158261118] Further, since 2008, the Scottish Government has provided a significant portion of funding for the ecumenical charity, Eco-Congregation Scotland, which works to promote literacy on environmental issues in religious communities in Scotland and helps to certify congregations under their award programme. What is not well known, however, even by these religious environmental groups themselves, is whether or how their membership might be different from other environmental groups. This study represents an attempt to illuminate this new interest with some more concrete data about religious groups in Scotland and how they may differ from non-religious counterparts.
 
 # 2. Eco-Congregation Scotland: The Basics
 
 ```
 {r load_ecs_data}
-
 # read in Eco-Congregation Scotland data and-------------------
 # ...turn it into a SpatialPointsDataFrame---------------------
 # placeholder for ECS data locally when internet isn't present:
-setwd("~/Dropbox/Writing/Articles and Chapters/mapping_environmental_action")
 if (dir.exists("data") == FALSE) {
   dir.create("data")
 }
@@ -53,6 +51,9 @@ bng = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000
 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy
 +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
 # set CRS to be British National Grid (27000) ---------------------------
+# note: I've used BNG in this paper, but have found that it is falling out
+# of use in many cases, so will be defaulting to WGS84 in future data-sets
+# and papers--------------------------------
 proj4string(ecs) = CRS(bng)
 ```
 
@@ -648,7 +649,7 @@ pander(urbanrural.shortened)
 
 
 # Citations #
-[^15541312]:This research was jointly funded by the AHRC/ESRC under project # AH/K005456/1.
+[^15541312]:This research was jointly funded by the AHRC/ESRC under project numnbers AH/K005456/1 and AH/P005063/1.
 [^158261118]: This is not to say that there have been no collaborations before 2000, noteworthy in this respect is the WWF who helped to found the Alliance of Religion and Conservation (ARC) in 1985.
 [^159141043]: This suggestion should be qualified - RSPB would greatly exceed ECS both in terms of the number of individual subscribers and budget. The RSPB trustee's report for 2013-2014 suggests that their member base was 1,114,938 people across Britain with a net income of £127m - the latter of which exceeds the Church of Scotland. If we adjust this based on the Scottish share of the population of the United Kingdom as of the 2011 census (8.3%) this leaves us with an income of £9.93m. The British charity commission requires charities to self-report the number of volunteers and staff, and from their most recent statistics we learn that RSPB engaged with 17,600 volunteers and employed 2,110 members of staff. Again, adjusted for population, this leaves 1,460 volunteers in Scotland and 176 staff. However, if we measure environmental groups based on the number of sites they maintain, RSPB has only 40 reserves with varying levels of local community engagement. For comparison, as of Sep 14 2015, Friends of the Earth Scotland had only 10 local groups (concentrated mostly in large urban areas). Depending on how one measures "volunteerism," it may be possible that ECS has more engaged volunteers in Scotland as well - if each ECS group had only 4 "volunteers" then this would exceed RSPB.
 [^15541313]: Kidwell, Jeremy. (2016). Eco-Congregation Scotland, 2014-2016 [dataset]. University of Edinburgh. http://dx.doi.org/10.7488/ds/1357.
