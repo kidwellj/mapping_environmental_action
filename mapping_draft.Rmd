@@ -1,0 +1,664 @@
+---
+title:  "Mapping Environmental Action in Scotland"
+abstract:    
+style:  jeremy1
+author: “[Jeremy H. Kidwell](http://jeremykidwell.info)”
+affiliation: University of Birmingham
+e-mail: “[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)”
+date: “`r Sys.Date()`”
+bibliography: everything.bib
+linkcolor: black
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE)
+{r load_packages, include=FALSE}
+require(sp)
+require(rgdal)
+require(GISTools)
+require(ggplot2)
+library(rgeos)
+require(ggmap)
+require(maptools)
+require(RCurl)
+require(dplyr)
+require(pander)
+require(scales)
+```
+
+# Introduction[^15541312]
+
+Until recently, environmentalism has been treated by governments and environmental charities as a largely secular concern. In spite of the well-developed tradition of "eco-theology" in a variety of religious traditions which began in earnest in the mid-twentieth century, third-sector groups and governments, particularly in Britain and Europe, have largely ignored religious groups as they have gone about their business crafting agendas for behaviour change, developing funding programmes, and developing platforms to mitigate ecological harm, motivate consumers and create regulation regimes. That this has changed is evidenced by the fact that several prominent non-religious environmental groups have commissioned studies and crafted outreach programmes to persons with a particular faith tradition or to "spiritual communities" including RSPB (2013) and the Sierra Club USA (2008).[^158261118] Further, since 2008, the Scottish Government has provided a significant portion of funding for the ecumenical charity, Eco-Congregation Scotland, which works to promote literacy on environmental issues in religious communities in Scotland and helps to certify congregations under their award programme. What is not well known, however, even by these religious environmental groups themselves, is whether or how their membership might be different from other environmental groups. This study represents an attempt to illuminate this new interest with some more concrete data about religious groups in Scotland and how they may differ from non-religious counterparts.
+
+# 2. Eco-Congregation Scotland: The Basics
+
+```
+{r load_ecs_data}
+
+# read in Eco-Congregation Scotland data and-------------------
+# ...turn it into a SpatialPointsDataFrame---------------------
+# placeholder for ECS data locally when internet isn't present:
+setwd("~/Dropbox/Writing/Articles and Chapters/mapping_environmental_action")
+if (dir.exists("data") == FALSE) {
+  dir.create("data")
+}
+# ecs <- read.csv("data/ECS-GIS-Locations_3.0.csv", comment.char="#")
+# actual command is the following------------------------------
+ecs <- read.csv(text=getURL("https://zenodo.org/record/159155/files/ECS-GIS-Locations_2.9_simplified.csv"))
+coordinates(ecs) <- c("X", "Y")
+# Define CRS for here and later--------------------------------
+wgs84 = '+proj=longlat +datum=WGS84'
+bng = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000
++y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy
++towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
+# set CRS to be British National Grid (27000) ---------------------------
+proj4string(ecs) = CRS(bng)
+```
+
+There are `length(ecs)` eco-congregations in Scotland. By some measurements, particularly in terms of individual sites and possibly also with regards to volunteers, this makes Eco-Congregation Scotland one of the largest environmental third-sector groups in Scotland.[^159141043] 
+
+In seeking to conduct GIS and statistical analysis of ECS, it is important to note that there some ways in which these sites are statistically opaque. Our research conducted through interviews at a sampling of sites and analysis of a variety of documents suggests that there is a high level of diversity both in terms of the number of those participating in environmental action and the types of action underway at specific sites. Work at a particular site can also ebb and flow over the course of time. Of course, as research into other forms of activism and secular environmental NGOs has shown, this is no different from any other third sector volunteer group. Variability is a regular feature of groups involved in activism and/or environmental concern. 
+
+For the sake of this analysis, we took each Eco-Congregation Scotland sites to represent a point of analysis as if each site represented a community group which had "opted-in" on environmental concern. On this basis, in this section, in the tradition of human geography, we "map" environmental action in among religious communities in Scotland a variety of ways. This is the first major geographical analysis of this kind conducted to date in Europe. We measure the frequency and location of ECS sites against a variety of standard geo-referenced statistical data sets, seeking to provide a statistical and geographically based assessment of the participation of religious groups in relation to the following:
+
+- Location within Scotland
+- Religious affiliation
+- Relation to the Scottish Index of Multiple Deprivation (SIMD)
+- Relation to the 8-Fold Scottish Government Urban-Rural Scale 
+- Proximity to "wilderness" (based on several different designations)
+
+For the sake of comparison, we also measured the geographical footprint of two other forms of community group in Scotland, (1) Transition Towns (taking into account their recent merge with Scotland Communities Climate Action Network) and (2) Scottish Community Development Trusts (SCDT). These two groups provide a helpful basis for comparison as they are not centralised and thus have a significant geographical dispersion across Scotland. They also provide a useful comparison as transition is a non-religious environmental movement, and community development trusts are not explicitly linked to environmental conservation (though this is often part of their remit), so we have a non-religious point of comparison in Transition and a non-environmental point of comparison with SCDT.
+
+# Technical Background #
+
+Analysis was conducted using QGIS 2.8.4 and R Studio 0.99.893, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics May 2014 postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis. These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
+
+# Background and History of Eco-Congregation Scotland
+
+Eco-Congregation Scotland began a year before the official launch of Eco-Congregation England and Wales, in 1999, as part of an effort by Kippen Environment Centre (later renamed to Forth Environment Link, or "FEL") a charity devoted to environmental education in central Scotland[^158261210] to broaden the scope of its environmental outreach to churches in central Scotland.[^15826124] Initial funding was provided, through Kippen Environment Centre by way of a "sustainable action grant" (with funds drawn from a government landfill tax) through a government programme called Keep Scotland Beautiful (the Scottish cousin of Keep Britain Tidy). After this initial pilot project concluded, the Church of Scotland provided additional funding for the project in the form of staff time and office space. Additional funding a few years later from the Scottish Government helped subsidise the position of a business manager, and in 2011 the United Reformed Church contributed additional funding which subsidised the position of a full-time environmental chaplain for a 5-year term, bringing the total staff to five.
+
+```
+{r calculate_ecs_by_year}
+ecs_complete_cases <- ecs[complete.cases(ecs$year_begun),]
+# Read in longer csv with award dates
+ecs_full <- read.csv("data/ECS-GIS-Locations_2.9_tidy.csv")
+# Better way of doing this - first convert to date
+ecs_full$award1 <- strptime(as.character(ecs_full$award1), "%d/%m/%Y")
+ecs_full$award2 <- strptime(as.character(ecs_full$award2), "%d/%m/%Y")
+ecs_full$award3 <- strptime(as.character(ecs_full$award3), "%d/%m/%Y")
+ecs_full$award4 <- strptime(as.character(ecs_full$award4), "%d/%m/%Y")
+```
+
+The programme launched officially in 2001 at Dunblane Cathedral in Stirling and by 2005 the project had `length(ecs_complete_cases[ecs_complete_cases$year_begun < 2006, ])` congregations registered to be a part of the programme and 25 which had completed the curriculum successfully and received an Eco-Congregation award. By 2011, the number of registrations had tripled to `length(ecs_complete_cases[ecs_complete_cases$year_begun < 2012, ])` and the number of awarded congregations had quadrupled to `sum(ecs_full$award1 < "2012-01-01", na.rm=TRUE)`. This process of taking registrations and using a tiered award or recognition scheme is common to many voluntary organisations. The ECS curriculum was developed in part by consulting the Eco-Congregation England and Wales materials which had been released just a year earlier in 1999, though it has been subsequently revised, particularly with a major redesign in 2010. In the USA, a number of similar groups take a similar approach including Earth Ministry (earthministry.org) and Green Faith (greenfaith.org). 
+
+In the case of Eco-Congregation Scotland, congregations are invited to begin by "registering" their interest in the programme by completing a basic one-sided form. The next step requires the completion of an award application, which includes a facilitated curriculum called a "church check-up" and after an application is submitted, the site is visited and assessed by third-party volunteer assessors. Sites are invited to complete additional applications for further awards which are incremental (as is the application process). Transition communities, at least in the period reflected on their map, go through a similar process (though this does not involve the use of a supplied curriculum) by which they are marked first as "interested," become "active" and then gain "official" status.[^1554162]
+
+# Representation by Regional Authorities (Council Areas)
+```
+{r import_admin_data}
+# read in polygon for Scottish admin boundaries
+setwd("~/Dropbox/Writing/Articles and Chapters/Mapping Environmental Action")
+### Need to change to Scottish data----
+download.file("https://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_laulevel1_2011.zip", destfile = "data/Scotland_laulevel1_2011.zip")
+unzip("data/Scotland_laulevel1_2011.zip", exdir = "data")
+admin <- readOGR("./data", "scotland_laulevel1_2011")
+
+# read in polygon for intermediate admin boundary layers
+download.file("https://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_parlcon_2011.zip", destfile = "data/Scotland_parlcon_2011.zip")
+unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
+admin_lev2 <- readOGR("./data", "scotland_parlcon_2011")
+
+download.file("https://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/infuse_ward_lyr_2011.zip", destfile = "data/infuse_ward_lyr_2011.zip")
+unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
+admin_lev3 <- readOGR("./data", "infuse_ward_lyr_2011")
+# note - need to add code here to filter on geo_code or "label" begins with "S"
+
+# read in Transition Towns data and turn it into a SpatialPointsDataFrame
+transition <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
+coordinates(transition) <- c("X", "Y")
+proj4string(transition) <- proj4string(wgs84)
+
+# possibly need to change spec above for wgs84, note single vs double quotes
+# or change above to omit proj4string before wgs84
+
+# read in all_churches data and turn it into a SpatialPointsDataFrame
+# note to self - need to remove all data points which are outside BNG area to resolve error
+# also need to make symmetrical with ECS denominations, add Methodist churches, remove nazarene and salvation army
+# churches_all <- read.csv("data/all_churches_0.9.csv")
+# churches_all_clean<-churches_all[complete.cases(churches_all),]
+# churches_all_null<-churches_all[!complete.cases(churches_all),]
+# coordinates(churches_all) <- c("X", "Y")
+# proj4string(churches_all) <- proj4string(admin)
+
+# read in pointX data and turn it into a SpatialPointsDataFrame
+pow_pointX <- read.csv("./data/poi_2015_12_scot06340459.csv", sep="|")
+coordinates(pow_pointX) <- c("feature_easting", "feature_northing")
+proj4string(pow_pointX) <- proj4string(admin)
+# note, consider drawing this from open data now...
+
+# read in Scottish Community Dev. trust data and turn it into a SpatialPointsDataFrame
+scdt <- read.csv("data/community-dev-trusts-2.6.csv")
+coordinates(scdt) <- c("X", "Y")
+proj4string(scdt) <- proj4string(admin)
+
+# read in permaculture data and turn it into a SpatialPointsDataFrame
+permaculture <- read.csv("data/permaculture_scot-0.8.csv")
+coordinates(permaculture) <- c("X", "Y")
+proj4string(permaculture) <- proj4string(admin)
+
+# This code will generate a table of frequencies for each spatialpointsdataframe in admin
+# calculate count of ECS for fields in admin and provide percentages
+admin$ecs_count <- poly.counts(ecs,admin)
+admin$ecs_percent<- prop.table(admin$ecs_count)
+# calculate count of places of worship in PointX db for fields in admin and provide percentages
+admin$pow_count <- poly.counts(pow_pointX,admin)
+admin$pow_percent<- prop.table(admin$pow_count)
+# calculate count of Transition for fields in admin and provide percentages
+admin$transition_count <- poly.counts(transition,admin)
+admin$transition_percent<- prop.table(admin$transition_count)
+# calculate count of SCDT for fields in admin and provide percentages
+admin$scdt_count <- poly.counts(scdt,admin)
+admin$scdt_percent<- prop.table(admin$scdt_count)
+# calculate count of permaculture for fields in admin and provide percentages
+admin$permaculture_count <- poly.counts(permaculture,admin)
+admin$permaculture_percent<- prop.table(admin$permaculture_count)
+
+# run totals for intermediate boundaries level 2
+# This code will generate a table of frequencies for each spatialpointsdataframe in admin_lev2
+# calculate count of ECS for fields in admin_lev2 and provide percentages
+admin_lev2$ecs_count <- poly.counts(ecs,admin_lev2)
+admin_lev2$ecs_percent<- prop.table(admin_lev2$ecs_count)
+# calculate count of places of worship in PointX db for fields in admin_lev2 and provide percentages
+admin_lev2$pow_count <- poly.counts(pow_pointX,admin_lev2)
+admin_lev2$pow_percent<- prop.table(admin_lev2$pow_count)
+# calculate count of Transition for fields in admin_lev2 and provide percentages
+admin_lev2$transition_count <- poly.counts(transition,admin_lev2)
+admin_lev2$transition_percent<- prop.table(admin_lev2$transition_count)
+# calculate count of SCDT for fields in admin_lev2 and provide percentages
+admin_lev2$scdt_count <- poly.counts(scdt,admin_lev2)
+admin_lev2$scdt_percent<- prop.table(admin_lev2$scdt_count)
+# calculate count of permaculture for fields in admin_lev2 and provide percentages
+admin_lev2$permaculture_count <- poly.counts(permaculture,admin_lev2)
+admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
+
+# run totals for intermediate boundaries level 3
+# This code will generate a table of frequencies for each spatialpointsdataframe in admin_lev3
+# calculate count of ECS for fields in admin_lev3 and provide percentages
+admin_lev3$ecs_count <- poly.counts(ecs,admin_lev3)
+admin_lev3$ecs_percent<- prop.table(admin_lev3$ecs_count)
+# calculate count of places of worship in PointX db for fields in admin_lev3 and provide percentages
+admin_lev3$pow_count <- poly.counts(pow_pointX,admin_lev3)
+admin_lev3$pow_percent<- prop.table(admin_lev3$pow_count)
+# calculate count of Transition for fields in admin_lev3 and provide percentages
+admin_lev3$transition_count <- poly.counts(transition,admin_lev3)
+admin_lev3$transition_percent<- prop.table(admin_lev3$transition_count)
+# calculate count of SCDT for fields in admin_lev3 and provide percentages
+admin_lev3$scdt_count <- poly.counts(scdt,admin_lev3)
+admin_lev3$scdt_percent<- prop.table(admin_lev3$scdt_count)
+# calculate count of permaculture for fields in admin_lev3 and provide percentages
+admin_lev3$permaculture_count <- poly.counts(permaculture,admin_lev3)
+admin_lev3$permaculture_percent<- prop.table(admin_lev3$permaculture_count)
+```
+
+Perhaps the first important question to ask of these groups is, where are they? I calculated the spread of eco-congregations and transition groups across each of the 32 council areas in Scotland. Every council area in Scotland has at least one eco-congregation or transition group). The most are located in `as.character(admin$NAME_2[which.max(admin$ecs_count)])`, with `max(admin$ecs_count)`, whereas the mean among all the 32 council areas is `mean(admin$ecs_count)`, with a median of `median(admin$ecs_count)`, standard deviation of `sd(admin$ecs_count)`, and interquartile range of `IQR(admin$ecs_count)`. The following choropleth maps show the relative concentration of eco-congregations (indicated by yellow to red). 
+
+(*JK note: need to implement*) Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake. Note, for the sake of a more accurate visual communication, we have also marked out areas of Scotland that are uninhabited with hash marks on the map of agricultural parishes. (*JK note: this will be done in the final draft, once I get my image masking fixed!*).[^15571030]
+
+```
+{r create_admin_ecs_choropleth}
+pdf(file="figures/admin_choropleth_ecs.pdf", width=4, height=4)
+var01 <- admin$ecs_count
+bins <- unique(quantile(var01, seq(0,1,length.out=30)))
+admin$binId01 <- findInterval(var01, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin, col=colSet01[admin$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+# use the following to add points to the map (with transparency)
+# points(ecs, pch='.', col=rgb(0,0,0,alpha=0.15))
+# use the following to add region names to the map
+# regionnames <- admin$NAME_2
+# title(main="Figure 1", sub="Eco-Congregation Scotland\nconcentrations by administrative region", cex.main=0.75, cex.sub=0.5)
+# save to file
+# dev.copy(png,'figures/admin_choropleth_1.png')
+dev.off()
+
+# run choropleth for lev2
+pdf(file="figures/admin_lev2_choropleth_ecs.pdf", width=4, height=4)
+var01 <- admin_lev2$ecs_count
+bins <- unique(quantile(var01, seq(0,1,length.out=30)))
+admin_lev2$binId01 <- findInterval(var01, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin_lev2, col=colSet01[admin_lev2$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+dev.off()
+
+# run choropleth1 for lev3
+
+pdf(file="figures/admin_lev3_choropleth_ecs.pdf", width=4, height=4)
+var01 <- admin_lev3$ecs_count
+bins <- unique(quantile(var01, seq(0,1,length.out=30)))
+admin_lev3$binId01 <- findInterval(var01, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin_lev3, col=colSet01[admin_lev3$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+dev.off()
+
+# New section for population normalised choropleth maps ------------------
+# Import csv with population data for each level of administrative subdivision and join to spatialdataframe
+
+# Running this command as reproducible uses the following:
+if (dir.exists("parishes") == FALSE) {
+  dir.create("parishes")
+}
+download.file("https://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/England_cp_1991.zip", destfile = "parishes/parishes-1991.zip")
+unzip("parishes/parishes-1991.zip", exdir = "parishes")
+parishes <- rgdal::readOGR(dsn = "parishes", "england_cp_1991")
+
+admin_pop <- read.csv("./data/scotland_admin_2011pop.csv", stringsAsFactors=FALSE)
+# commenting out original
+# admin_joined <- merge(x=admin, y=admin_pop, by="CODE")
+admin <- merge(x=admin, y=admin_pop, by="CODE")
+# convert numbers to proper characters and ditch commas
+admin$X2011_pop <- as.numeric(gsub("[,-]","",admin$X2011_pop))
+# admin_joined$X2011_pop <- as.numeric(gsub("[,-]","",admin_joined$X2011_pop))
+admin$pop_percent<- prop.table(admin$X2011_pop)
+
+admin_lev2_pop <- read.csv("./data/scotland_and_wales_const_scotland_2011pop.csv",  stringsAsFactors=FALSE)
+admin_joined_lev2 <- merge(x=admin_lev2, y=admin_lev2_pop, by="CODE")
+# convert numbers to proper characters and ditch commas
+admin_joined_lev2$Postcode.Population <- as.numeric(gsub("[,-]","",admin_joined_lev2$Postcode.Population))
+
+admin_lev3_pop <- read.csv("./data/district_borough_unitary_ward_scotland_2011pop.csv",  stringsAsFactors=FALSE)
+admin_joined_lev3 <- merge(x=admin_lev3, y=admin_lev3_pop, by="CODE")
+admin_joined_lev3$Postcode.Population <- as.numeric(gsub("[,-]","",admin_joined_lev3$Postcode.Population))
+
+# Run plot for level 1
+pdf(file="figures/admin_choropleth_ecs_popnorm.pdf", width=4, height=4)
+var02 <- admin_joined$ecs_count / admin_joined$X2011_pop
+bins <- unique(quantile(var02, seq(0,1,length.out=30)))
+admin_joined$binId01 <- findInterval(var02, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin_joined, col=colSet01[admin_joined$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+dev.off()
+
+# Run plot for level 2
+pdf(file="figures/admin_lev2_choropleth_ecs_popnorm.pdf", width=4, height=4)
+var02 <- admin_joined_lev2$ecs_count / admin_joined_lev2$Postcode.Population
+bins <- unique(quantile(var02, seq(0,1,length.out=30)))
+admin_joined_lev2$binId01 <- findInterval(var02, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin_joined_lev2, col=colSet01[admin_joined_lev2$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+dev.off()
+
+# Run plot for level 3
+pdf(file="figures/admin_lev3_choropleth_ecs_popnorm.pdf", width=4, height=4)
+var02 <- admin_joined_lev3$ecs_count / admin_joined_lev3$Postcode.Population
+bins <- unique(quantile(var02, seq(0,1,length.out=30)))
+admin_joined_lev3$binId01 <- findInterval(var02, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin_joined_lev3, col=colSet01[admin_joined_lev3$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+dev.off()
+
+# New section for overall places of worship count normalised choropleth maps
+
+pdf(file="figures/admin_choropleth_ecs_pownorm.pdf", width=4, height=4)
+var03 <- admin$ecs_count / admin$pow_count
+bins <- unique(quantile(var03, seq(0,1,length.out=30)))
+admin$binId01 <- findInterval(var03, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin, col=colSet01[admin$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+dev.off()
+
+pdf(file="figures/admin_lev2_choropleth_ecs_pownorm.pdf", width=4, height=4)
+var03 <- admin_lev2$ecs_count / admin_lev2$pow_count
+bins <- unique(quantile(var03, seq(0,1,length.out=30)))
+admin_lev2$binId01 <- findInterval(var03, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin_lev2, col=colSet01[admin_lev2$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+dev.off()
+
+pdf(file="figures/admin_lev3_choropleth_ecs_pownorm.pdf", width=4, height=4)
+var03 <- admin_lev3$ecs_count / admin_lev3$pow_count
+bins <- unique(quantile(var03, seq(0,1,length.out=30), 'na.rm'=TRUE))
+admin_lev3$binId01 <- findInterval(var03, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin_lev3, col=colSet01[admin_lev3$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+dev.off()
+```
+
+Given the way population and places of worship are unevenly distributed across Scotland it is important to represent data in terms of relative distribution. For this study, we attempted to "normalise" our data in two different ways, (1) as shown by Figure 2 above, by taking population figures from the 2011 census (see data sheet in Appendix A) and (2) by adjusting relative to the number of places of worship in each council region.[^15914204] The latter of these two can yield particularly unexpected results. Thus, of the `length(pow_pointX)` "places of worship" in Scotland, the highest concentration is actually the `as.character(admin$NAME_2[which.max(admin$pow_count)])` region, with `max(admin$pow_count)`, second is `max( admin$pow_count[admin$pow_count!=max(admin$pow_count)] )` (`as.character(admin$NAME_2[which.max( admin$pow_count[admin$pow_count!=max(admin$pow_count)])] )`). Rank of Council Areas by population and number of places of worship is also included in Appendix A.
+
+```
+{r create_admin_proportions}
+# Calculate factors by which ECS representation exceeds rep by population and total pow counts
+admin$ecs_pop_factor <- ((admin$ecs_percent - admin$pop_percent) / admin$pop_percent)*2
+admin$ecs_pow_factor <- ((admin$ecs_percent - admin$pow_percent) / admin$pow_percent)*2
+admin$ecs_transition_factor <- ((admin$ecs_percent - admin$transition_percent) / admin$transition_percent)*2
+admin$ecs_scdt_factor <- ((admin$ecs_percent - admin$scdt_percent) / admin$scdt_percent)*2
+
+```
+
+We can use this data to normalise our figures regarding Eco-Congregation Scotland communities and this draws the presence in Edinburgh of ECS communities into even sharper relief, as Edinburgh, though ranked second in terms of population and fifth in terms of places of worship, ranks first for the presence of all ECS congregations and awarded ECS congregations. However, taking population as the basis for normalisation first, we find that Edinburgh is far from the most prominent outlier. In trying to communicate this difference for a lay-audience, we have chosen to list this difference as a multiplier (i.e. there are 2.x times as many congregations as their share of population and an average figure of congregations might allow for) as this conveys the difference in a straight-forward way. Outliers where the disparity between their relative share of the total ECS footprint and their relative share of population is different by a positive ratio of more than double include the Orkney Islands (3.7 times more eco-congregations than their expected average share based on population), Argyll and Bute (`admin[CODE=S12000023]$ecs_pop_factor)4.2x), Stirling (2.76x), and Perthshire and Kinross (2.18x). Interestingly, there are no outliers whose relative share of the total footprint of ECS is double or more in the negative direction (see Appendix A chart for full numbers). 
+
+Turning to the total of `length(pow_pointX)` "places of worship" in Scotland, we find a slightly different picture of the relative concentration of Eco-Congregations in Scotland. In this case, the outliers are 
+
+Whereas our initial measurements indicated a prominent lead for Edinburgh, by normalising our data in this way we can highlight the stronger-than-expected presence of several others that might otherwise escape notice because they lie in a region with significantly lower population or numerically less places of worship. Taking the PointX data on "places of worship" in Scotland, we find a less dramatic picture, but also a slightly different one. The positive outliers include East Renfrewshire (3.4x) Edinburgh (2.9x), Stirling (2.2), West Lothian (1.9x) and Aberdeen (1.5x). Again, negative outliers are far less dramatic, with only Midlothian possessing a ratio of more than 100% negative difference from the number of "places of worship" at 1.5x *fewer*.
+
+```
+{r create_admin_barplot}
+# comvert admin back to dataframe for analysis
+admin.df<-data.frame(admin)
+# Note to self: still doesn't work! Need to fix this bar plot
+qplot(admin$ecs_count, admin$transition_count data=admin, geom = "bar")
+```
+
+We can compare the representation in these various regions against our comparison groups to see how other community-based organisations cluster in Scottish administrative districts. Here there are some significant contrasts. Scottish Community Development trusts are most intensely concentrated in the Highlands and Argyll & Bute. But, this is consistent with all the other categories, Eco-Congregations, Places of Worship, and SCDTs are all over-represented in this area, varying only by the degree. Edinburgh is different, here we find that Eco-Congregations and Transition projects are over-represented, while SCDTs are under-represented. Finally, the highlands are another strong contrast, here we find a very strong over-representation by transition towns and SCDTs while the representation of Eco-Congregations is relatively close to the population share for that area. The two areas of greatest contrast for Eco-Congregations from the other groups are unsurprising, Edinburgh is the location of the ECS offices, while Stirling is the area in which ECS first began (see Appendix B for full data). 
+
+![][Figure3b]
+
+[Figure 3c, map normalised by population; choropeth map with 6 gradients. with white represented by =/- 0.5; side-by-side with agricultural parishes map; uninhabited areas greyed out]
+
+[Figure 4, normalised by PointX data; also including agricultural parishes etc. as above]
+
+# Christian Denominations #
+
+Eco-Congregation Scotland describes itself as an "ecumenical movement helping local groups of Christians link environmental issues to their faith, reduce their environmental impact and engage with their local community." There are several ties to the Church of Scotland, as the denomination provides office space to Eco-Congregation Scotland in the Church of Scotland complex at 121 George Street in Edinburgh and provides funding for one full-time member of staff. In spite of this, ECS has, from the start, attempted to emphasise its ecumenical aspirations and this is reflected in a wide variety of ways. The name "eco-congregation" is meant to be tradition neutral (in interviews, staff noted how they have sought to avoid names such as "eco-kirk" which would be the more obvious Presbyterian title, or "eco-community" or "eco-church" which might indicate allegiance towards another). Further, the group has a environmental chaplain on their staff whose position is funded by the United Reformed Church, and other members of staff are funded by the Scottish government, and as such, carry no formal affiliation with a religious institution. This diversity and ecumenicism is reflected in a membership which is, though dominated by the Church of Scotland, nevertheless, made up of a range of Christian traditions. 
+
+Though these are not numerically significant, it is important to note that some member congregations describe themselves as ecumenical communities, and others are hybrids reflecting the merging of two traditions. As this ecumenical/hybrid designation involves a small number of the overall total, for the sake of this research, these have been combined into a category called "ecumenical." Further, as research conducted by Church of Scotland statistician Fiona Tweedie has shown, in many Scottish communities with only one church, members of this church will specify their denominational affiliation in a variety of ways (Roman Catholic, Quaker, Methodist, etc.) even though the church and its minister are formally affiliated with the Church of Scotland.[^159142242] So, we should be careful not to assume that the various denominational affiliations of eco-congregations are indicative in an absolute way.
+
+A wide variety of historians and sociologists of religion have noted the regional significance of different Christian denominations in Scotland so we sought to assess the relative distribution and concentration of eco-congregations by denomination. Finding comparative statistics is a complex task, made more complicated by several factors. First, most demographic data on religious belonging in Scotland comes in the form of the 2011 census and as such is far more atomised than this data-set which identifies groups at the level of "congregations" rather than individuals. Equating these two is also complex, as participation by members of congregations can be measured in a variety of ways, there are often a small number of active participants in each eco-congregation group, but may also be a large scale, but passive, support by the wider community. 
+
+So why provide this kind of data (i.e. at the level of individual churches) when more granular data (i.e. at the level of individuals persons) is available in the form of the census and related parallel publications such as the 2008 Scottish Environmental Attitudes survey? We believe that mapping places of worship provides a useful intermediate level of analysis and may complement our more atomised understanding of EA which has been assessed at the level of individual persons to date. Because representation within some administrative areas of Scotland, can lead to a small number of data points, we have kept analysis to a National level and have not provided more specific administrative-area level calculations.
+
+![][Figure5]
+
+As one might expect, there is a strong representation of the Church of Scotland, almost 74% of eco-congregations, with this number remaining the same when we only count awarded sites. We can confirm, on the basis of this analysis that ECS has a disproportional representation by Church of Scotland churches. At the 2002 church census count, it only represented 40.20% of Scottish churches (1666 of 4144 total churches). Similarly, on the 2011 Scottish census, only 32.44% of persons claimed to be members of the Church of Scotland. We can adjust this representation to 60%, if one excludes the 2,445,204 persons (46% of the total on the census) who reported either "no religion" or adherence to a religious tradition not currently represented among the eco-congregation sites. There is a slight over-representation by the United Reformed church, though this seems considerably more dramatic when one takes into account the fact that this is a trebling or more of their overall share of Scottish churches. The URC makes up only sightly more than 1% of church buildings in Scotland and a tiny 0.04% of respondents to the 2011 census. The Scottish Episcopal church hovers right around a proportional representation within ECS. More concerning are the significant underrepresentation by Roman Catholic churches, Baptists, the Free Church of Scotland, and other independent churches. 
+
+While Roman Catholic churches make up just over 10% of the church buildings in Scotland, less than 5% of churches registered as eco-congregations are RC. Even more dramatic is the quartering of baptist churches, and the non-existent representation among the significant group of independent churches and small denominations. These make up nearly 25% of all Scottish churches (over a thousand) and yet only 4 have registered as eco-congregations. We provide several tentative advisories in response to these under-representations in the final section of this paper.
+
+# Eco-Congregations, Urban, Rural and Remote
+
+```
+{r ur8fold}
+# read in relevant polygons for UR8fold scale
+urbanrural <- readOGR("data", "SG_UrbanRural_2013_2014")
+
+# This code will generate a table of frequencies for each spatialpointsdataframe in urbanrural
+# calculate count of ECS for fields in urbanrural
+urbanrural$ecs_count <- poly.counts(ecs,urbanrural)
+urbanrural$ecs_percent<- prop.table(urbanrural$ecs_count)
+# calculate count of places of worship in PointX db for fields in urbanrural and provide percentages
+urbanrural$pow_count <- poly.counts(pow_pointX,urbanrural)
+urbanrural$pow_percent<- prop.table(urbanrural$pow_count)
+# calculate count of Transition for fields in urbanrural
+urbanrural$transition_count <- poly.counts(transition,urbanrural)
+urbanrural$transition_percent<- prop.table(urbanrural$transition_count)
+# calculate count of SCDT for fields in urbanrural
+urbanrural$scdt_count <- poly.counts(scdt,urbanrural)
+urbanrural$scdt_percent<- prop.table(urbanrural$scdt_count)
+# calculate count of permaculture for fields in urbanrural
+urbanrural$permaculture_count <- poly.counts(permaculture,urbanrural)
+urbanrural$permaculture_percent<- prop.table(urbanrural$permaculture_count)
+
+# Create dataframe for analysis
+urbanrural_df<-data.frame(urbanrural)
+# Create bar chart
+qplot(OBJECTID, data=urbanrural_df, geom = "bar")
+ggplot(urbanrural_df) aes(x=OBJECTID, geom_bar(position="fill"))
+```
+
+Rather than bifurcate congregations into an urban/rural dichotomy, for this study we used the Scottish Government's eight-point remoteness scale to categorise eco-congregations along a spectrum of highly populated to remote areas. This 8-fold scale (calculated biennially) offers a more nuanced measurement that combines measurements of remoteness and population along the following lines:
+
+1. Large Urban Areas - Settlements of over 125,000 people.
+2. Other Urban Areas - Settlements of 10,000 to 125,000 people. 
+3. Accessible Small Towns - Settlements of between 3,000 and 10,000 people, and within a 30 minute drive time of a Settlement of 10,000 or more. 
+4. Remote Small Towns - Settlements of between 3,000 and 10,000 people, and with a drive time between 30 and 60 minutes to a Settlement of 10,000 or more.
+5. Very Remote Small Towns - Settlements of between 3,000 and 10,000 people, and with a drive time of over 60 minutes to a Settlement of 10,000 or more.
+6. Accessible Rural Areas - Areas with a population of less than 3,000 people, and within a drive time of 30 minutes to a Settlement of 10,000 or more.
+7. Remote Rural Areas - Areas with a population of less than 3,000 people, and with a drive time of between 30 and 60 minutes to a Settlement of 10,000 or more.
+8. Very Remote Rural Areas - Areas with a population of less than 3,000 people, and with a drive time of over 60 minutes to a Settlement of 10,000 or more.
+
+The key question which this analysis seeks to answer is whether ECS, or the other groups surveyed, are more concentrated in Urban or Rural areas, so as is the case below with our analysis of deprivation, we are concerned with the outer conditions, i.e. the urban areas (items 1-2) and remote areas (items 7-8).
+
+Of all the groups surveyed in this study, Eco-Congregation Scotland is the most heavily concentrated in large urban areas (33.53%), exceeding by almost 50% the rate for all places of worship (22.96% in large urban areas). Transition is a much more modest 20% and development trusts a bit lower at 15%. It is interesting to note that the rate of ECS concentration in these large urban areas matches the level of overall population distribution (34.5%). On the other end of the scale, Eco-Congregation Scotland is the least concentrated in remote rural areas (with 3.93% on level 7 and 5.44% on level 8 on the urban-rural scale), though again, they correlate roughly to the general population distribution (3.2% and 2.9% respectively). Places of worship outpace both the population of Scotland and the footprint of Eco-Congregation Scotland, with 14.98% in very remote rural areas, but this is exceeded by transition at 16.47% and both by Scottish community development trusts at 32.14%. So while Eco-Congregation Scotland correlates roughly with Scottish population distribution across the urban-rural scale, it has a considerably more urban profile than either of the other two groups surveyed.
+
+```
+var01 <- admin$ecs_count
+bins <- unique(quantile(var01, seq(0,1,length.out=30)))
+admin$binId01 <- findInterval(var01, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(admin, col=colSet01[admin$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+
+{r create_urbanrural_ecs_choropleth}
+pdf(file="figures/urbanrural_choropleth_ecs.pdf", width=4, height=4)
+bins <- unique(quantile(urbanrural$ecs_count, seq(0,1,length.out=30)))
+urbanrural$binId01 <- findInterval(urbanrural$ecs_count, bins)
+colSet01 <- rev(heat.colors(length(bins)))
+plot(urbanrural, col=colSet01[urbanrural$binId01], border="grey", lwd=0.25)
+par(mar=c(5,3,2,2)+0.1)
+# use the following to add points to the map (with transparency)
+# points(ecs, pch='.', col=rgb(0,0,0,alpha=0.15))
+title(main="Figure 5", sub="Eco-Congregation Scotland\nconcentrations in Urban Rural 8-fold classifications", cex.main=0.75, cex.sub=0.5)
+# save to file
+# dev.copy(png,'figures/urbanrural_choropleth_1.png')
+dev.off()
+```
+
+
+[Figure6 map of ECS concentration by UR Areas Urban - Rural via Brown to Green]
+
+
+# Wealth, Employment, and Literacy
+
+```
+{r simd}
+# read in relevant polygons, Scottish Index of Multiple deprivation
+simd <- readOGR("data", "simd_04-12_all_data")
+
+# STAGE 1, augment each dataset with relevant (geolocated) columns from SIMD
+# examine which ecs fall within each SIMD classification
+cbind(ecs@data, over(ecs, simd))
+# assign combined table with SIMD columns to attribute table slot of ecs table
+ecs@data=cbind(ecs@data,over(ecs,simd))
+# examine where pointX falls within each SIMD classification
+cbind(pow_pointX@data, over(pow_pointX, simd))
+# assign combined table with SIMD columns to attribute table slot of ecs table
+pow_pointX@data=cbind(pow_pointX@data,over(pow_pointX,simd))
+
+# examine which transition fall within each SIMD classifications
+cbind(transition@data, over(transition, simd))
+# assign combined table with SIMD columns to attribute table slot of transition table
+transition@data=cbind(transition@data,over(transition,simd))
+# examine which permaculture fall within each SIMD classifications
+cbind(permaculture@data, over(permaculture, simd))
+# assign combined table with SIMD columns to attribute table slot of permaculture table
+permaculture@data=cbind(permaculture@data,over(permaculture,simd))
+# examine which scdt fall within each SIMD classifications
+cbind(scdt@data, over(scdt, simd))
+# assign combined table with SIMD columns to attribute table slot of scdt table
+scdt@data=cbind(scdt@data,over(scdt,simd))
+
+# STAGE 2, extract NULL cells from each data set to prevent errors in stage 3
+
+# convert back to data frame for null cell extraction
+ecs<-data.frame(ecs)
+# split out null and normal cells
+ecs_clean<-ecs[complete.cases(ecs),]
+ecs_null<-ecs[!complete.cases(ecs),]
+# convert back to spatialpointdataframe
+coordinates(ecs) <- c("X", "Y")
+proj4string(ecs) <- proj4string(admin)
+
+# convert back to data frame for null cell extraction
+transition<-data.frame(transition)
+# split out null and normal cells
+transition_clean<-transition[complete.cases(transition),]
+transition_null<-transition[!complete.cases(transition),]
+# convert back to spatialpointdataframe
+coordinates(transition) <- c("X", "Y")
+proj4string(transition) <- proj4string(admin)
+
+# convert back to data frame for null cell extraction
+permaculture<-data.frame(permaculture)
+# split out null and normal cells
+permaculture_clean<-permaculture[complete.cases(permaculture),]
+permaculture_null<-permaculture[!complete.cases(permaculture),]
+# convert back to spatialpointdataframe
+coordinates(permaculture) <- c("X", "Y")
+proj4string(permaculture) <- proj4string(admin)
+
+# convert back to data frame for null cell extraction
+scdt<-data.frame(scdt)
+# split out null and normal cells
+scdt_clean<-scdt[complete.cases(scdt),]
+scdt_null<-scdt[!complete.cases(scdt),]
+# convert back to spatialpointdataframe
+coordinates(scdt) <- c("X", "Y")
+proj4string(scdt) <- proj4string(admin)
+
+# STAGE 3a, calculate sums based on SIMD12R columns and generate new integer sets with quintile count data
+simd_rownames = c("Quintile 1","Quintile 2","Quintile 3","Quintile 4","Quintile 5")
+simdr12_ecs = c((sum(ecs_clean$SIMDR12<1301)), (sum(ecs_clean$SIMDR12 > 1300 & ecs_clean$SIMDR12 < 2602)), (sum(ecs_clean$SIMDR12 > 2601 & ecs_clean$SIMDR12 < 3903)), (sum(ecs_clean$SIMDR12 > 3902 & ecs_clean$SIMDR12 < 5204)), (sum(ecs_clean$SIMDR12 > 5203 & ecs_clean$SIMDR12 < 6505)))
+# names(simdr12_ecs) <- simd_rownames
+simdr12_transition = c((sum(transition_clean$SIMDR12<1301)), (sum(transition_clean$SIMDR12 > 1300 & transition_clean$SIMDR12 < 2602)), (sum(transition_clean$SIMDR12 > 2601 & transition_clean$SIMDR12 < 3903)), (sum(transition_clean$SIMDR12 > 3902 & transition_clean$SIMDR12 < 5204)), (sum(transition_clean$SIMDR12 > 5203 & transition_clean$SIMDR12 < 6505)))
+# names(simdr12_transition) <- simd_rownames
+simdr12_permaculture = c((sum(permaculture_clean$SIMDR12<1301)), (sum(permaculture_clean$SIMDR12 > 1300 & permaculture_clean$SIMDR12 < 2602)), (sum(permaculture_clean$SIMDR12 > 2601 & permaculture_clean$SIMDR12 < 3903)), (sum(permaculture_clean$SIMDR12 > 3902 & permaculture_clean$SIMDR12 < 5204)), (sum(permaculture_clean$SIMDR12 > 5203 & permaculture_clean$SIMDR12 < 6505)))
+# names(simdr12_permaculture) <- simd_rownames
+simdr12_scdt = c((sum(scdt_clean$SIMDR12<1301)), (sum(scdt_clean$SIMDR12 > 1300 & scdt_clean$SIMDR12 < 2602)), (sum(scdt_clean$SIMDR12 > 2601 & scdt_clean$SIMDR12 < 3903)), (sum(scdt_clean$SIMDR12 > 3902 & scdt_clean$SIMDR12 < 5204)), (sum(scdt_clean$SIMDR12 > 5203 & scdt_clean$SIMDR12 < 6505)))
+# names(simdr12_scdt) <- simd_rownames
+
+# STAGE 3b, calculate sums based on INCR12 columns and generate new integer sets with quintile count data
+incr12_ecs = c((sum(ecs_clean$INCR12<1301)), (sum(ecs_clean$INCR12 > 1300 & ecs_clean$INCR12 < 2602)), (sum(ecs_clean$INCR12 > 2601 & ecs_clean$INCR12 < 3903)), (sum(ecs_clean$INCR12 > 3902 & ecs_clean$INCR12 < 5204)), (sum(ecs_clean$INCR12 > 5203 & ecs_clean$INCR12 < 6505)))
+incr12_transition = c((sum(transition_clean$INCR12<1301)), (sum(transition_clean$INCR12 > 1300 & transition_clean$INCR12 < 2602)), (sum(transition_clean$INCR12 > 2601 & transition_clean$INCR12 < 3903)), (sum(transition_clean$INCR12 > 3902 & transition_clean$INCR12 < 5204)), (sum(transition_clean$INCR12 > 5203 & transition_clean$INCR12 < 6505)))
+incr12_permaculture = c((sum(permaculture_clean$INCR12<1301)), (sum(permaculture_clean$INCR12 > 1300 & permaculture_clean$INCR12 < 2602)), (sum(permaculture_clean$INCR12 > 2601 & permaculture_clean$INCR12 < 3903)), (sum(permaculture_clean$INCR12 > 3902 & permaculture_clean$INCR12 < 5204)), (sum(permaculture_clean$INCR12 > 5203 & permaculture_clean$INCR12 < 6505)))
+incr12_scdt = c((sum(scdt_clean$INCR12<1301)), (sum(scdt_clean$INCR12 > 1300 & scdt_clean$INCR12 < 2602)), (sum(scdt_clean$INCR12 > 2601 & scdt_clean$INCR12 < 3903)), (sum(scdt_clean$INCR12 > 3902 & scdt_clean$INCR12 < 5204)), (sum(scdt_clean$INCR12 > 5203 & scdt_clean$INCR12 < 6505)))
+
+# STAGE 3c, calculate sums based on EMPR12 columns and generate new integer sets with quintile count data
+empr12_ecs = c((sum(ecs_clean$EMPR12<1301)), (sum(ecs_clean$EMPR12 > 1300 & ecs_clean$EMPR12 < 2602)), (sum(ecs_clean$EMPR12 > 2601 & ecs_clean$EMPR12 < 3903)), (sum(ecs_clean$EMPR12 > 3902 & ecs_clean$EMPR12 < 5204)), (sum(ecs_clean$EMPR12 > 5203 & ecs_clean$EMPR12 < 6505)))
+empr12_transition = c((sum(transition_clean$EMPR12<1301)), (sum(transition_clean$EMPR12 > 1300 & transition_clean$EMPR12 < 2602)), (sum(transition_clean$EMPR12 > 2601 & transition_clean$EMPR12 < 3903)), (sum(transition_clean$EMPR12 > 3902 & transition_clean$EMPR12 < 5204)), (sum(transition_clean$EMPR12 > 5203 & transition_clean$EMPR12 < 6505)))
+empr12_permaculture = c((sum(permaculture_clean$EMPR12<1301)), (sum(permaculture_clean$EMPR12 > 1300 & permaculture_clean$EMPR12 < 2602)), (sum(permaculture_clean$EMPR12 > 2601 & permaculture_clean$EMPR12 < 3903)), (sum(permaculture_clean$EMPR12 > 3902 & permaculture_clean$EMPR12 < 5204)), (sum(permaculture_clean$EMPR12 > 5203 & permaculture_clean$EMPR12 < 6505)))
+empr12_scdt = c((sum(scdt_clean$EMPR12<1301)), (sum(scdt_clean$EMPR12 > 1300 & scdt_clean$EMPR12 < 2602)), (sum(scdt_clean$EMPR12 > 2601 & scdt_clean$EMPR12 < 3903)), (sum(scdt_clean$EMPR12 > 3902 & scdt_clean$EMPR12 < 5204)), (sum(scdt_clean$EMPR12 > 5203 & scdt_clean$EMPR12 < 6505)))
+
+# STAGE 3d, calculate sums based on HER12 columns and generate new integer sets with quintile count data
+her12_ecs = c((sum(ecs_clean$HER12<1301)), (sum(ecs_clean$HER12 > 1300 & ecs_clean$HER12 < 2602)), (sum(ecs_clean$HER12 > 2601 & ecs_clean$HER12 < 3903)), (sum(ecs_clean$HER12 > 3902 & ecs_clean$HER12 < 5204)), (sum(ecs_clean$HER12 > 5203 & ecs_clean$HER12 < 6505)))
+her12_transition = c((sum(transition_clean$HER12<1301)), (sum(transition_clean$HER12 > 1300 & transition_clean$HER12 < 2602)), (sum(transition_clean$HER12 > 2601 & transition_clean$HER12 < 3903)), (sum(transition_clean$HER12 > 3902 & transition_clean$HER12 < 5204)), (sum(transition_clean$HER12 > 5203 & transition_clean$HER12 < 6505)))
+her12_permaculture = c((sum(permaculture_clean$HER12<1301)), (sum(permaculture_clean$HER12 > 1300 & permaculture_clean$HER12 < 2602)), (sum(permaculture_clean$HER12 > 2601 & permaculture_clean$HER12 < 3903)), (sum(permaculture_clean$HER12 > 3902 & permaculture_clean$HER12 < 5204)), (sum(permaculture_clean$HER12 > 5203 & permaculture_clean$HER12 < 6505)))
+her12_scdt = c((sum(scdt_clean$HER12<1301)), (sum(scdt_clean$HER12 > 1300 & scdt_clean$HER12 < 2602)), (sum(scdt_clean$HER12 > 2601 & scdt_clean$HER12 < 3903)), (sum(scdt_clean$HER12 > 3902 & scdt_clean$HER12 < 5204)), (sum(scdt_clean$HER12 > 5203 & scdt_clean$HER12 < 6505)))
+
+# STAGE 3e, calculate sums based on ESTR12 columns and generate new integer sets with quintile count data
+estr12_ecs = c((sum(ecs_clean$ESTR12<1301)), (sum(ecs_clean$ESTR12 > 1300 & ecs_clean$ESTR12 < 2602)), (sum(ecs_clean$ESTR12 > 2601 & ecs_clean$ESTR12 < 3903)), (sum(ecs_clean$ESTR12 > 3902 & ecs_clean$ESTR12 < 5204)), (sum(ecs_clean$ESTR12 > 5203 & ecs_clean$ESTR12 < 6505)))
+estr12_transition = c((sum(transition_clean$ESTR12<1301)), (sum(transition_clean$ESTR12 > 1300 & transition_clean$ESTR12 < 2602)), (sum(transition_clean$ESTR12 > 2601 & transition_clean$ESTR12 < 3903)), (sum(transition_clean$ESTR12 > 3902 & transition_clean$ESTR12 < 5204)), (sum(transition_clean$ESTR12 > 5203 & transition_clean$ESTR12 < 6505)))
+estr12_permaculture = c((sum(permaculture_clean$ESTR12<1301)), (sum(permaculture_clean$ESTR12 > 1300 & permaculture_clean$ESTR12 < 2602)), (sum(permaculture_clean$ESTR12 > 2601 & permaculture_clean$ESTR12 < 3903)), (sum(permaculture_clean$ESTR12 > 3902 & permaculture_clean$ESTR12 < 5204)), (sum(permaculture_clean$ESTR12 > 5203 & permaculture_clean$ESTR12 < 6505)))
+estr12_scdt = c((sum(scdt_clean$ESTR12<1301)), (sum(scdt_clean$ESTR12 > 1300 & scdt_clean$ESTR12 < 2602)), (sum(scdt_clean$ESTR12 > 2601 & scdt_clean$ESTR12 < 3903)), (sum(scdt_clean$ESTR12 > 3902 & scdt_clean$ESTR12 < 5204)), (sum(scdt_clean$ESTR12 > 5203 & scdt_clean$ESTR12 < 6505)))
+
+# STAGE 4a - calculate percentages
+simdr12_ecs_percent<- prop.table(simdr12_ecs)
+simdr12_transition_percent<- prop.table(simdr12_transition)
+simdr12_permaculture_percent<- prop.table(simdr12_permaculture)
+simdr12_scdt_percent<- prop.table(simdr12_scdt)
+incr12_ecs_percent<- prop.table(incr12_ecs)
+incr12_transition_percent<- prop.table(incr12_transition)
+incr12_permaculture_percent<- prop.table(incr12_permaculture)
+incr12_scdt_percent<- prop.table(incr12_scdt)
+empr12_ecs_percent<- prop.table(empr12_ecs)
+empr12_transition_percent<- prop.table(empr12_transition)
+empr12_permaculture_percent<- prop.table(empr12_permaculture)
+empr12_scdt_percent<- prop.table(empr12_scdt)
+her12_ecs_percent<- prop.table(her12_ecs)
+her12_transition_percent<- prop.table(her12_transition)
+her12_permaculture_percent<- prop.table(her12_permaculture)
+her12_scdt_percent<- prop.table(her12_scdt)
+estr12_ecs_percent<- prop.table(estr12_ecs)
+estr12_transition_percent<- prop.table(estr12_transition)
+estr12_permaculture_percent<- prop.table(estr12_permaculture)
+estr12_scdt_percent<- prop.table(estr12_scdt)
+
+# STAGE 4b, generate data frame using integer sets
+simd = data.frame(simdr12_ecs, simdr12_ecs_percent, incr12_ecs, incr12_ecs_percent, empr12_ecs, empr12_ecs_percent, her12_ecs, her12_ecs_percent, estr12_ecs, estr12_ecs_percent, simdr12_transition, simdr12_transition_percent, incr12_transition, incr12_transition_percent, empr12_transition, empr12_transition_percent, her12_transition, her12_transition_percent, estr12_transition, estr12_transition_percent, simdr12_permaculture, simdr12_permaculture_percent, incr12_permaculture, incr12_permaculture_percent, empr12_permaculture, empr12_permaculture_percent, her12_permaculture, her12_permaculture_percent, estr12_permaculture, estr12_permaculture_percent, simdr12_scdt, simdr12_scdt_percent, incr12_scdt, incr12_scdt_percent, empr12_scdt, empr12_scdt_percent, her12_scdt, her12_scdt_percent, estr12_scdt, estr12_scdt_percent)
+write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
+
+
+simd_percents_only = data.frame(simd_rownames, simdr12_ecs_percent, incr12_ecs_percent, empr12_ecs_percent, her12_ecs_percent, estr12_ecs_percent, simdr12_transition_percent, incr12_transition_percent, empr12_transition_percent, her12_transition_percent, estr12_transition_percent, simdr12_permaculture_percent, incr12_permaculture_percent, empr12_permaculture_percent, her12_permaculture_percent, estr12_permaculture_percent, simdr12_scdt_percent, incr12_scdt_percent, empr12_scdt_percent, her12_scdt_percent, estr12_scdt_percent)
+write.csv(simd_percents_only, "derivedData/simd_percents_only.csv", row.names=FALSE)
+
+
+# STAGE 5, generate cool charts
+
+# clustered bar charts
+# convert to long format
+library(reshape2)
+simd_percents_only_long <- melt(simd_percents_only, id.vars = "simd_rownames", 
+              measure.vars = grep("^12", names(simd_percents_only), value = TRUE))
+
+qplot(data=simd_percents_only_long , geom="bar", fill=(factor(simd_rownames)))
+
+# jitterplot option, from Teutonico 2015, p. 63
+
+
+Another crucial point of assessment relates to the relation of Eco-Congregation communities to the Scottish Index of Multiple Deprivation. This instrument aggregates a large variety of factors which can lead to deprivation including crime rates, employment levels, access to services (implicating remoteness), and literacy. By assessing ECS, Transition, and SCDT against the deprivation scale, we can assess whether eco-congregations fall within particular demographics and also whether the fully aggregated SIMD measurement provides a useful point of comparison for our purposes. The SIMD essentially divides Scotland into 6407 geographic zones and then ranks them based on their relative deprivation. This data set can be split into any number of groups, but for our purposes we have settled on Quintiles, splitting the SIMD data set at every 1302 entries. We then measured where each transition group, ECS, and SCDT fell within these zones and calculated how they fell into these five quintiles, from more to least deprived.
+
+The first, and most compelling finding is that, in general Eco-Congregation Scotland and Transition Scotland are both roughly the same and match the level of population distribution in the lowest quintile of the general SIMD measurement. 8% of transition groups and eco-congregation groups which have received awards and 9% of the population are located within this quintile. However, taken in relation to the distribution of places of worship in the lowest quintile, we find that eco-congregations are located at half the rate that places of worship are (15%) and SCDTs match this much more closely at 14%. Turning towards the top quintile, this pattern also holds, here both transition groups (21%) and eco-congregations (21% and 29% of awarded congregations) depart from the population distribution in this upper quintile (which is 10%). Again, general places of worship (at 11%) and SCDTs (at 5%) take the opposite direction. We can say decisively that in communities which have been identified as good candidates for intervention to reduce deprivation, ECS and Transition are less likely, and they are over-represented at the areas which fall into the least deprived quintile.
+
+We can find divergence between transition communities and eco-congregation when we split out SIMD domains. In the lowest quartile, measuring exclusively for the income domain, ECS is more represented (11%) - roughly the same as SCDT (12%), and transition is less (6%) represented. In general (as shown on the chart in Appendix D), these trends hold when representation of our groups are measured within other non-remoteness domains of the SIMD. Our basic conclusion is that transition towns are least likely to operate within the lowest quartile of SIMD and SCDTs are most likely, with ECS somewhere in the middle. Given the general disparity against the presence of places of worship, it seems fair to suggest that this might be an area for improvement, perhaps even worth developing a special programme which might target areas in SIMD quartile 1 for eco-congregation outreach. This might be considered particularly in light of the starkest underrepresentation of ECS and transition within the SIMD domain of education, skills, and training.
+
+
+# Appendix A
+
+```{r pander_admin_table}
+admin.shortened <- admin[,c(7,12:22)]
+# Output CSV files for various levels of admin
+write.csv(admin, "derivedData/admin.csv", row.names=FALSE)
+write.csv(admin_lev2, "derivedData/admin_lev2.csv", row.names=FALSE)
+write.csv(admin_lev3, "derivedData/admin_lev3.csv", row.names=FALSE)
+write.csv(admin.shortened, "derivedData/admin.csv", row.names=FALSE)
+write.csv(ecs, "derivedData/ecs.csv", row.names=FALSE)
+write.csv(transition, "derivedData/transition.csv", row.names=FALSE)
+write.csv(permaculture, "derivedData/permaculture.csv", row.names=FALSE)
+write.csv(scdt, "derivedData/scdt.csv", row.names=FALSE)
+
+# write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
+admin.shortened<-data.frame(admin.shortened)
+# Output mmd tables using pander
+panderOptions("digits", 2)
+pander(admin.shortened)
+```
+
+# Appendix B
+
+(JK note to self: same as above, but augmented with multipliers by which categories are different from one another)
+
+# Appendix C - Data by Urban / Rural Classification
+
+```{r pander_urbanrural_table}
+urbanrural.shortened <- urbanrural[,c(2,6,9:18)]
+write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
+write.csv(urbanrural.shortened, "derivedData/urbanrural.csv", row.names=FALSE)
+urbanrural.shortened<-data.frame(urbanrural.shortened)
+panderOptions("digits", 2)
+pander(urbanrural.shortened)
+```
+
+
+# Citations #
+[^15541312]:This research was jointly funded by the AHRC/ESRC under project # AH/K005456/1.
+[^158261118]: This is not to say that there have been no collaborations before 2000, noteworthy in this respect is the WWF who helped to found the Alliance of Religion and Conservation (ARC) in 1985.
+[^159141043]: This suggestion should be qualified - RSPB would greatly exceed ECS both in terms of the number of individual subscribers and budget. The RSPB trustee's report for 2013-2014 suggests that their member base was 1,114,938 people across Britain with a net income of £127m - the latter of which exceeds the Church of Scotland. If we adjust this based on the Scottish share of the population of the United Kingdom as of the 2011 census (8.3%) this leaves us with an income of £9.93m. The British charity commission requires charities to self-report the number of volunteers and staff, and from their most recent statistics we learn that RSPB engaged with 17,600 volunteers and employed 2,110 members of staff. Again, adjusted for population, this leaves 1,460 volunteers in Scotland and 176 staff. However, if we measure environmental groups based on the number of sites they maintain, RSPB has only 40 reserves with varying levels of local community engagement. For comparison, as of Sep 14 2015, Friends of the Earth Scotland had only 10 local groups (concentrated mostly in large urban areas). Depending on how one measures "volunteerism," it may be possible that ECS has more engaged volunteers in Scotland as well - if each ECS group had only 4 "volunteers" then this would exceed RSPB.
+[^15541313]: Kidwell, Jeremy. (2016). Eco-Congregation Scotland, 2014-2016 [dataset]. University of Edinburgh. http://dx.doi.org/10.7488/ds/1357.
+[^15541342]:My dataset on transition towns will be made available later in 2016. Initial data was aquired from the Transition Scotland website http://www.transitionscotland.org/transition-in-scotland on December 10, 2014. We are currently in the process of collaboratively generating a more up-to-date dataset which will reflect their collaboration with SCCAN.
+[^158261232]:Data was acquired from the Development Trusts Association website, http://www.dtascot.org.uk, accessed on 20 July 2015. As above, we are currently in the process of active collaboration with volunteers from the DTAS to co-generate a new dataset.
+[^15541614]:PointX data for "Landscape Data" items is sourced from Ordnance Survey Land-Line and MasterMap(R) and the data points are augmented with additional information provided through research by PointX staff, and data aquired from unidentified "local data companie(s)" and the "118 Information" database (see: http://www.118information.co.uk). This data is under license and cannot be made available for use. It is important to note that I became aware of inaccuracies in this dataset over the course of use and subsequently generated my own dataset in collaboration with churches in Scotland. This will be made available later in 2016. I am in active conversation with OS about improving the quality of the data in PointX regarding places of worship.
+[^15826124]:Interview with Margaret Warnock, 29 Aug 2014.
+[^158261210]:From http://www.forthenvironmentlink.org, accessed 12 July 2015.
+[^1554162]:From the Transition map key, "Green pins are 'official' groups
+Blue pins are active communities who are connected to the Scottish Transition network Yellow pins show interest in this area"
+[^15571030]:This was calculated by calculating a 10m wide footprint for every postcode in Scotland, areas which are not within 10m of a postcode (as of May 2014) are counted as uninhabited.
+[^159142242]: Fiona Tweedia, *Ecumenical Audit: Questionnaire Findings* (2014). 
+[^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.
