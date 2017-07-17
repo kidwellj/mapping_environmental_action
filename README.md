@@ -2,7 +2,7 @@
 
 This repository contains the code and writing towards a (working draft of a) scholarly paper which presents my analysis of the geospatial footprint of eco-groups in the UK. This is based on research I have been conducting since 2013 and which is ongoing. The paper is written in R Markdown and for the most part, I'm using the conventions outlined by Kieran Healy [here](https://kieranhealy.org/blog/archives/2014/01/23/plain-text/) and is best viewed (I think) in [R Studio](https://www.rstudio.com) though it will be reasonably comprehensible to anyone using a Markdown editor. If I'm not working in RStudio, I'm probably in Sublime text, FYI.
 
-As you'll see, R code is integrated into the text of the document. The idea is that this will serve as "reproducible research" by which anyone can download the contents of this repository, execute the R code which will gather data used from open and sustainable repositories, and then conduct the analysis I've done. I'd be extremely happy if someone found errors, or imagined a more efficient means of analysis and either reported them as an issue on this github repository or sent me an email.
+As you'll see, R code is integrated into the text of the document. The idea is that this will serve as "[reproducible research](http://kbroman.org/steps2rr/)" by which anyone can download the contents of this repository, execute the R code which will gather data used from open and sustainable repositories, and then conduct the analysis I've done. I'd be extremely happy if someone found errors, or imagined a more efficient means of analysis and either reported them as an issue on this github repository or sent me an email.
 
 The actual article is in `mapping_draft.Rmd`. 
 
