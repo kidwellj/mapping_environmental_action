@@ -10,7 +10,9 @@ To read a bit more on these things and start on your own path towards plain text
 - Karl Broman's guide, "[Initial Steps Toward Reproducible Research](http://kbroman.org/steps2rr/)"
 - Kieran Healy's guide, "[The Plain Person’s Guide to Plain Text Social Science](http://kieranhealy.org/files/papers/plain-person-text.pdf)"
 
-The other advantage of putting this paper here is that readers and reviewers can suggest changes and point out errors in the document. To do this, I recommend that you create a github issue by clicking on the green "New issue" button [here](https://github.com/kidwellj/mapping_environmental_action/issues). If you must, you can also send me emails. More stuff about me [can be found here](http://jeremykidwell.info). Thanks for reading!
+The other advantage of putting this paper here is that readers and reviewers can suggest changes and point out errors in the document. To do this, I recommend that you create a github issue by clicking on the green "New issue" button [here](https://github.com/kidwellj/mapping_environmental_action/issues). If you must, you can also send me emails. More stuff about me [can be found here](http://jeremykidwell.info). 
+
+To skip ahead and start reading the actual paper, click on [`mapping_draft.rmd`](https://github.com/kidwellj/mapping_environmental_action/blob/master/mapping_draft.Rmd) above. 
 
 Now for...
 
