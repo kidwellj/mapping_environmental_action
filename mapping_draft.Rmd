@@ -96,11 +96,8 @@ Analysis was conducted using QGIS 2.8 and R Studio 0.99.893, and data-sets were 
 Eco-Congregation Scotland began a year before the official launch of Eco-Congregation England and Wales, in 1999, as part of an effort by Kippen Environment Centre (later renamed to Forth Environment Link, or "FEL") a charity devoted to environmental education in central Scotland[^158261210] to broaden the scope of its environmental outreach to churches in central Scotland.[^15826124] Initial funding was provided, through Kippen Environment Centre by way of a "sustainable action grant" (with funds drawn from a government landfill tax) through a government programme called Keep Scotland Beautiful (the Scottish cousin of Keep Britain Tidy). After this initial pilot project concluded, the Church of Scotland provided additional funding for the project in the form of staff time and office space. Additional funding a few years later from the Scottish Government helped subsidise the position of a business manager, and in 2011 the United Reformed Church contributed additional funding which subsidised the position of a full-time environmental chaplain for a 5-year term, bringing the total staff to five.
 
 ```{r calculate_ecs_by_year}
-ecs_complete_cases <- ecs[complete.cases(ecs$year_begun),]
-# Read in longer csv with award dates
-ecs <- read.csv("data/ECS-GIS-Locations_2.9_tidy.csv")
 # Tidy up date fields and convert to date data type
-ecs$registration <- as.Date(ecs$registration, "%d/%m/%Y")
+ecs$registration <- as.Date(ecs$registration, "%Y-%m-%d")
 ecs$award1 <- as.Date(ecs$award1)
 ecs$award2 <- as.Date(ecs$award2)
 ecs$award3 <- as.Date(ecs$award3)
@@ -114,7 +111,6 @@ In the case of Eco-Congregation Scotland, congregations are invited to begin by 
 # Representation by Regional Authorities (Council Areas)
 ```{r import_admin_data}
 # read in polygon for Scottish admin boundaries
-### Need to change to Scottish data----
 # TODO: upload bundle of admin data to new zenodo repository and alter below to use new URLs
 download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_laulevel1_2011.zip", 
               destfile = "data/Scotland_laulevel1_2011.zip")
