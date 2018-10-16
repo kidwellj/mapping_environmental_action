@@ -412,6 +412,7 @@ So why provide this kind of data (i.e. at the level of individual churches) when
 ```{r create_ecs_denomination_table}
 # TODO: Need to find a prettier way to do this:
 table(ecs@data[["denomination"]])
+# TODO: Add dataframe with overall church numbers for the UK from "ScottishChurches" dataset by JK
 ```
 
 ![][Figure5]
@@ -424,7 +425,10 @@ While Roman Catholic churches make up just over 10% of the church buildings in S
 
 ```{r ur8fold}
 # read in relevant polygons for UR8fold scale
-urbanrural <- readOGR("data", "SG_UrbanRural_2013_2014")
+download.file("http://sedsh127.sedsh.gov.uk/Atom_data/ScotGov/ZippedShapefiles/SG_UrbanRural_2016.zip", 
+              destfile = "data/SG_UrbanRural_2016.zip")
+unzip("data/SG_UrbanRural_2016.zip", exdir = "data")
+urbanrural <- readOGR("./data", "SG_UrbanRural_2016") 
 
 # This code will generate a table of frequencies for each spatialpointsdataframe in urbanrural
 # calculate count of ECS for fields in urbanrural
