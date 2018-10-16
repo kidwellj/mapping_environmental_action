@@ -494,7 +494,15 @@ dev.off()
 
 ```{r simd}
 # read in relevant polygons, Scottish Index of Multiple deprivation
-simd <- readOGR("data", "simd_04-12_all_data")
+download.file("http://simd.scot/2016/data/simd2016_withgeog.zip", 
+              destfile = "data/simd2016_withgeog.zip")
+unzip("data/simd2016_withgeog.zip", exdir = "data", junkpaths = TRUE)
+simd_shapes <- readOGR("./data", "sc_dz_11") 
+simd_indicators <- read.csv("./data/simd2016_withinds.csv")
+simd <- merge(x=simd_shapes, y=simd_indicators, by="Data_Zone")
+  
+# commenting out old dataset in light of reproducible version above
+# simd <- readOGR("data", "simd_04-12_all_data")
 
 # STAGE 1, augment each dataset with relevant (geolocated) columns from SIMD
 # examine which ecs fall within each SIMD classification
