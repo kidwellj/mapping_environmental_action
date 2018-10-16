@@ -430,6 +430,8 @@ download.file("http://sedsh127.sedsh.gov.uk/Atom_data/ScotGov/ZippedShapefiles/S
 unzip("data/SG_UrbanRural_2016.zip", exdir = "data")
 urbanrural <- readOGR("./data", "SG_UrbanRural_2016") 
 
+# TODO: worth considering uploading data to zenodo for long-term reproducibility as ScotGov shuffles this stuff around periodically breaking URLs
+
 # This code will generate a table of frequencies for each spatialpointsdataframe in urbanrural
 # calculate count of ECS for fields in urbanrural
 urbanrural$ecs_count <- poly.counts(ecs,urbanrural)
@@ -449,9 +451,10 @@ urbanrural$permaculture_percent<- prop.table(urbanrural$permaculture_count)
 
 # Create dataframe for analysis
 urbanrural_df<-data.frame(urbanrural)
+
 # Create bar chart
-qplot(OBJECTID, data=urbanrural_df, geom = "bar")
-ggplot(urbanrural_df) aes(x=OBJECTID, geom_bar(position="fill"))
+# TODO: use ggplot here to generate stacked bar chart showing representation across 8 urban/rural bands from urbanrural_df
+# TODO: generate map based on urbanrural
 ```
 
 Rather than bifurcate congregations into an urban/rural dichotomy, for this study we used the Scottish Government's eight-point remoteness scale to categorise eco-congregations along a spectrum of highly populated to remote areas. This 8-fold scale (calculated biennially) offers a more nuanced measurement that combines measurements of remoteness and population along the following lines:
