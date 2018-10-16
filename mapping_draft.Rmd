@@ -112,10 +112,10 @@ In the case of Eco-Congregation Scotland, congregations are invited to begin by 
 ```{r import_admin_data}
 # read in polygon for Scottish admin boundaries
 # TODO: upload bundle of admin data to new zenodo repository and alter below to use new URLs
-download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_laulevel1_2011.zip", 
-              destfile = "data/Scotland_laulevel1_2011.zip")
-unzip("data/Scotland_laulevel1_2011.zip", exdir = "data")
-admin_lev1 <- readOGR("./data", "scotland_laulevel1_2011")
+download.file("https://borders.ukdataservice.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_ca_2010.zip", 
+              destfile = "data/Scotland_ca_2010.zip")
+unzip("data/Scotland_ca_2010.zip", exdir = "data")
+admin_lev1 <- readOGR("./data", "scotland_ca_2010") 
 
 # read in polygon for intermediate admin boundary layers
 download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_parlcon_2011.zip", 
@@ -124,7 +124,6 @@ unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
 admin_lev2 <- readOGR("./data", "scotland_parlcon_2011")
 
 # TODO note - need to optimise here, pre-filter sqldf? shapefile on "geo_code"" or "label" begins with "S"
-
 download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/infuse_ward_lyr_2011.zip", 
               destfile = "data/infuse_ward_lyr_2011.zip")
 unzip("data/infuse_ward_lyr_2011.zip", exdir = "data")
@@ -231,11 +230,14 @@ download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/
 unzip("parishes/parishes-1991.zip", exdir = "parishes")
 parishes <- rgdal::readOGR(dsn = "parishes", "england_cp_1991")
 
-admin_pop <- read.csv("./data/scotland_admin_2011pop.csv", stringsAsFactors=FALSE)
+# Load population statistics for normalising data by population on admin_lev1
+# TODO - consider adapting to use ONS mid-year statistics: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland
+admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv", stringsAsFactors=FALSE)
 # commenting out original
 # admin_joined <- merge(x=admin, y=admin_pop, by="CODE")
 # TODO, need to tidy up merging process here as well
-admin_lev1 <- merge(x=admin, y=admin_pop, by="CODE")
+# TODO, merge is broken - need some help on this!
+admin_lev1 <- merge(x=admin_lev1$code, y=admin_lev1_pop, by.x = as.character(admin_lev1$code), by.y = as.character9admin_lev1_pop$CODE)
 # convert numbers to proper characters and ditch commas
 admin_lev1$X2011_pop <- as.numeric(gsub("[,-]","",admin_lev1$X2011_pop))
 # admin_joined$X2011_pop <- as.numeric(gsub("[,-]","",admin_joined$X2011_pop))
@@ -406,6 +408,11 @@ Though these are not numerically significant, it is important to note that some 
 A wide variety of historians and sociologists of religion have noted the regional significance of different Christian denominations in Scotland so we sought to assess the relative distribution and concentration of eco-congregations by denomination. Finding comparative statistics is a complex task, made more complicated by several factors. First, most demographic data on religious belonging in Scotland comes in the form of the 2011 census and as such is far more atomised than this data-set which identifies groups at the level of "congregations" rather than individuals. Equating these two is also complex, as participation by members of congregations can be measured in a variety of ways, there are often a small number of active participants in each eco-congregation group, but may also be a large scale, but passive, support by the wider community. 
 
 So why provide this kind of data (i.e. at the level of individual churches) when more granular data (i.e. at the level of individuals persons) is available in the form of the census and related parallel publications such as the 2008 Scottish Environmental Attitudes survey? We believe that mapping places of worship provides a useful intermediate level of analysis and may complement our more atomised understanding of EA which has been assessed at the level of individual persons to date. Because representation within some administrative areas of Scotland, can lead to a small number of data points, we have kept analysis to a National level and have not provided more specific administrative-area level calculations.
+
+```{r create_ecs_denomination_table}
+# TODO: Need to find a prettier way to do this:
+table(ecs@data[["denomination"]])
+```
 
 ![][Figure5]
 
