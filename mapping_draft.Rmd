@@ -261,15 +261,20 @@ Perhaps the first important question to ask of these groups is, where are they? 
 # Row 1 plot using polygons from admin_lev1 and row 2 plot using ploygons from admin_lev2
 # 3. Need to clip choropleth polygons to buildings shapefile
 
+savePlot <- function(myPlot) {
+        pdf(file="figures/admin_choropleth_ecs.pdf")
+        print(myPlot)
+        dev.off()
+}
+
+myplot <- ggplot() + geom_sf(data = admin_lev1_sf) + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
+#  + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
+
+savePlot(myplot)
 
 
-ggplot() +
-  geom_sf(data = admin_lev1_sf)
-#  geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
-  
 
 
-pdf(file="figures/admin_choropleth_ecs.pdf", width=4, height=4)
 var01 <- admin_lev1$ecs_count
 bins <- unique(quantile(var01, seq(0,1,length.out=30)))
 admin_lev1$binId01 <- findInterval(var01, bins)
