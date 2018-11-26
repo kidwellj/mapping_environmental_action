@@ -19,12 +19,13 @@ knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FA
 
 ```{r load_packages, include=FALSE}
 # TODO: need to alter this to use new sf data class as sp is deprecated
-# require(sf) # new simplefeature data class, supercedes sp in many ways
-require(rgdal) # deprecated by sf()
+require(sf) # new simplefeature data class, supercedes sp in many ways
+require(rgdal)
 require(GISTools) # deprecated by sf()
 require(ggplot2)
+require(broom) # required for tidying SPDF to data.frame for ggplot2
 require(rgeos)
-require(sp) # needed for proj4string
+require(sp) # needed for proj4string, deprecated by sf()
 require(ggmap)
 require(maptools)
 require(RCurl)
@@ -65,10 +66,9 @@ Until recently, environmentalism has been treated by governments and environment
 # read in Eco-Congregation Scotland data and-------------------
 # ...turn it into a SpatialPointsDataFrame---------------------
 # TODO: upload ECS-GIS-Locations_3.0.csv to zenodo repository, i.e.
-# ecs <- read.csv("data/ECS-GIS-Locations_3.0.csv", comment.char="#")
-# TODO: convert from sp() to sf() which will look something like:
-# ecs <- st_read(system.file("pow_osm.gpkg", package = "spData"))
-ecs <- read.csv(text=getURL("https://zenodo.org/record/1413333/files/ECS-GIS-Locations_2.9_enhanced.csv"))
+ecs <- read.csv("data/ECS-GIS-Locations_3.0.csv", comment.char="#")
+ecs_sf <- st_as_sf(ecs, coords = c("X", "Y"), crs=27700)
+# unnecessary with advent of sf (above)
 coordinates(ecs) <- c("X", "Y")
 proj4string(ecs) = CRS(bng)
 ```
@@ -98,10 +98,11 @@ Eco-Congregation Scotland began a year before the official launch of Eco-Congreg
 ```{r calculate_ecs_by_year}
 # Tidy up date fields and convert to date data type
 ecs$registration <- as.Date(ecs$registration, "%Y-%m-%d")
-ecs$award1 <- as.Date(ecs$award1)
-ecs$award2 <- as.Date(ecs$award2)
-ecs$award3 <- as.Date(ecs$award3)
-ecs$award4 <- as.Date(ecs$award4)
+# TODO: Fix issues here with R complaining that "character string is not in a std...
+# ecs$award1 <- as.Date(ecs$award1)
+# ecs$award2 <- as.Date(ecs$award2)
+# ecs$award3 <- as.Date(ecs$award3)
+# ecs$award4 <- as.Date(ecs$award4)
 ```
 
 The programme launched officially in 2001 at Dunblane Cathedral in Stirling and by 2005 the project had `length(ecs_complete_cases[ecs_complete_cases$year_begun < 2006, ])` congregations registered to be a part of the programme and 25 which had completed the curriculum successfully and received an Eco-Congregation award. By 2011, the number of registrations had tripled to `length(ecs_complete_cases[ecs_complete_cases$year_begun < 2012, ])` and the number of awarded congregations had quadrupled to `sum(ecs$award1 < "2012-01-01", na.rm=TRUE)`. This process of taking registrations and using a tiered award or recognition scheme is common to many voluntary organisations. The ECS curriculum was developed in part by consulting the Eco-Congregation England and Wales materials which had been released just a year earlier in 1999, though it has been subsequently revised, particularly with a major redesign in 2010. In the USA, a number of similar groups take a similar approach including Earth Ministry (earthministry.org) and Green Faith (greenfaith.org). 
@@ -112,10 +113,12 @@ In the case of Eco-Congregation Scotland, congregations are invited to begin by 
 ```{r import_admin_data}
 # read in polygon for Scottish admin boundaries
 # TODO: upload bundle of admin data to new zenodo repository and alter below to use new URLs
+# TODO: need to remove readOGR below once st_read is confirmed to be working as sf
 download.file("https://borders.ukdataservice.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_ca_2010.zip", 
               destfile = "data/Scotland_ca_2010.zip")
 unzip("data/Scotland_ca_2010.zip", exdir = "data")
 admin_lev1 <- readOGR("./data", "scotland_ca_2010") 
+admin_lev1_sf <- st_read("data/scotland_ca_2010.shp")
 
 # read in polygon for intermediate admin boundary layers
 download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_parlcon_2011.zip", 
@@ -232,25 +235,18 @@ parishes <- rgdal::readOGR(dsn = "parishes", "england_cp_1991")
 
 # Load population statistics for normalising data by population on admin_lev1
 # TODO - consider adapting to use ONS mid-year statistics: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland
-admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv", stringsAsFactors=FALSE)
-# commenting out original
-# admin_joined <- merge(x=admin, y=admin_pop, by="CODE")
-# TODO, need to tidy up merging process here as well
-# TODO, merge is broken - need some help on this!
-admin_lev1 <- merge(x=admin_lev1$code, y=admin_lev1_pop, by.x = as.character(admin_lev1$code), by.y = as.character9admin_lev1_pop$CODE)
-# convert numbers to proper characters and ditch commas
-admin_lev1$X2011_pop <- as.numeric(gsub("[,-]","",admin_lev1$X2011_pop))
-# admin_joined$X2011_pop <- as.numeric(gsub("[,-]","",admin_joined$X2011_pop))
-admin_lev1$pop_percent<- prop.table(admin_lev1$X2011_pop)
+admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv")
 
-admin_lev2_pop <- read.csv("./data/scotland_and_wales_const_scotland_2011pop.csv",  stringsAsFactors=FALSE)
-admin_joined_lev2 <- merge(x=admin_lev2, y=admin_lev2_pop, by="CODE")
-# convert numbers to proper characters and ditch commas
-admin_joined_lev2$Postcode.Population <- as.numeric(gsub("[,-]","",admin_joined_lev2$Postcode.Population))
+admin_lev1 <- merge(x=admin_lev1, y=admin_lev1_pop, by.x = "code", by.y = "CODE")
+admin_lev1$pop_percent<- prop.table(as.numeric(admin_lev1$X2011_pop))
 
-admin_lev3_pop <- read.csv("./data/district_borough_unitary_ward_scotland_2011pop.csv",  stringsAsFactors=FALSE)
-admin_joined_lev3 <- merge(x=admin_lev3, y=admin_lev3_pop, by="CODE")
-admin_joined_lev3$Postcode.Population <- as.numeric(gsub("[,-]","",admin_joined_lev3$Postcode.Population))
+admin_lev2_pop <- read.csv("./data/scotland_and_wales_const_scotland_2011pop.csv")
+admin_joined_lev2 <- merge(x=admin_lev2, y=admin_lev2_pop, by.x = "code", by.y = "CODE")
+
+# Considering removing admin_lev3 calculations as this seems to be unnecessary level granularity
+# admin_lev3_pop <- read.csv("./data/district_borough_unitary_ward_scotland_2011pop.csv",  stringsAsFactors=FALSE)
+# admin_joined_lev3 <- merge(x=admin_lev3, y=admin_lev3_pop, by="CODE")
+# admin_joined_lev3$Postcode.Population <- as.numeric(gsub("[,-]","",admin_joined_lev3$Postcode.Population))
 ```
 
 Perhaps the first important question to ask of these groups is, where are they? I calculated the spread of eco-congregations and transition groups across each of the 32 council areas in Scotland. Every council area in Scotland has at least one eco-congregation or transition group). The most are located in `as.character(admin_lev1$NAME_2[which.max(admin_lev1$ecs_count)])`, with `max(admin_lev1$ecs_count)`, whereas the mean among all the 32 council areas is `mean(admin_lev1$ecs_count)`, with a median of `median(admin_lev1$ecs_count)`, standard deviation of `sd(admin_lev1$ecs_count)`, and interquartile range of `IQR(admin_lev1$ecs_count)`. The following choropleth maps show the relative concentration of eco-congregations (indicated by yellow to red). 
@@ -265,7 +261,12 @@ Perhaps the first important question to ask of these groups is, where are they? 
 # Row 1 plot using polygons from admin_lev1 and row 2 plot using ploygons from admin_lev2
 # 3. Need to clip choropleth polygons to buildings shapefile
 
-ggplot()
+
+
+ggplot() +
+  geom_sf(data = admin_lev1_sf)
+#  geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
+  
 
 
 pdf(file="figures/admin_choropleth_ecs.pdf", width=4, height=4)
