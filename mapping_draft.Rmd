@@ -283,10 +283,9 @@ Perhaps the first important question to ask of these groups is, where are they? 
 # Row 1 plot using polygons from admin_lev1 and row 2 plot using ploygons from admin_lev2
 # 3. Need to clip choropleth polygons to buildings shapefile
 
-plot(admin_lev1)
-
-myplot <- ggplot() + geom_sf(data = admin_lev1_sf) + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
-#  + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
+admin_lev1_gathered <- gather(admin_lev1_sf, value="number", ecs_count)
+    
+myplot <- ggplot() + geom_sf(data = admin_lev1_gathered) + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
 
 ggsave("figures/admin_choropleth_ecs.pdf")
 ```
@@ -313,16 +312,18 @@ Whereas our initial measurements indicated a prominent lead for Edinburgh, by no
 ```{r create_admin_barplot}
 # comvert admin back to dataframe for analysis
 admin.df <- data.frame(admin_lev1)
-admin.df_gathered <- gather(admin.df, key = "name", convert = TRUE)
-admin.df<-data.frame(admin_lev1)
+
 # Goal here is to generate a grouped bar plot; https://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2/
 # Need to flatten admin_lev1 based on all the count columns and generate using ggplot
 
 admin.df_gathered <- gather(admin.df, key="group_type", value="number", ecs_count, transition_count, dtas_count)
 
 ggplot(admin.df_gathered, aes(fill=group_type, y=number, x=name)) +
-    geom_bar(position="dodge", stat="identity")
+    geom_bar(position="dodge", stat="identity") + coord_flip()
  
+ # ggplot(mtcars, aes(x=as.factor(cyl), fill=as.factor(cyl) )) +
+  geom_bar() + 
+  coord_flip()
 
 ```
 
