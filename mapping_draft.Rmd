@@ -11,8 +11,18 @@ bibliography: /Users/jeremy/Dropbox/bibtex/everything.bib
 linkcolor: black
 fontsize: 12pt
 output:
-    pdf_document:
-        keep_tex: true
+  html_document:
+    keep_md: true
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    fig_caption: true
+  pdf_document:
+    keep_tex: true
+    number_sections: true
+    fig_caption: true
+    citation_package: natbib
+    latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
@@ -283,9 +293,14 @@ Perhaps the first important question to ask of these groups is, where are they? 
 # Row 1 plot using polygons from admin_lev1 and row 2 plot using ploygons from admin_lev2
 # 3. Need to clip choropleth polygons to buildings shapefile
 
+# tidy data
 admin_lev1_gathered <- gather(admin_lev1_sf, value="number", ecs_count)
-    
+
+# plot simple choropleth, as here: https://www.r-graph-gallery.com/327-chloropleth-map-from-geojson-with-ggplot2/
+
 myplot <- ggplot() + geom_sf(data = admin_lev1_gathered) + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
+
+# plot as 
 
 ggsave("figures/admin_choropleth_ecs.pdf")
 ```
@@ -324,6 +339,8 @@ ggplot(admin.df_gathered, aes(fill=group_type, y=number, x=name)) +
  # ggplot(mtcars, aes(x=as.factor(cyl), fill=as.factor(cyl) )) +
   geom_bar() + 
   coord_flip()
+  
+# add bubbleplot on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
 
 ```
 
@@ -335,6 +352,7 @@ We can compare the representation in these various regions against our compariso
 
 [Figure 4, normalised by PointX data; also including agricultural parishes etc. as above]
 
+# plot as chlorogram: https://www.r-graph-gallery.com/331-basic-cartogram/
 # Appendix A
 
 ```{r pander_admin_table}
