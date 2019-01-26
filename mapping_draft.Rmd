@@ -10,6 +10,9 @@ date: “`r Sys.Date()`”
 bibliography: /Users/jeremy/Dropbox/bibtex/everything.bib
 linkcolor: black
 fontsize: 12pt
+output:
+    pdf_document:
+        keep_tex: true
 ---
 
 ```{r setup, include=FALSE}
@@ -301,7 +304,7 @@ admin_lev1$ecs_dtas_factor <- ((admin_lev1$ecs_percent - admin_lev1$dtas_percent
 
 ```
 
-We can use this data to normalise our figures regarding Eco-Congregation Scotland communities and this draws the presence in Edinburgh of ECS communities into even sharper relief, as Edinburgh, though ranked second in terms of population and fifth in terms of places of worship, ranks first for the presence of all ECS congregations and awarded ECS congregations. However, taking population as the basis for normalisation first, we find that Edinburgh is far from the most prominent outlier. In trying to communicate this difference for a lay-audience, we have chosen to list this difference as a multiplier (i.e. there are 2.x times as many congregations as their share of population and an average figure of congregations might allow for) as this conveys the difference in a straight-forward way. Outliers where the disparity between their relative share of the total ECS footprint and their relative share of population is different by a positive ratio of more than double include the Orkney Islands (3.7 times more eco-congregations than their expected average share based on population), Argyll and Bute (`r admin_lev1[CODE=S12000023]$ecs_pop_factor)4.2x), Stirling (2.76x), and Perthshire and Kinross (2.18x). Interestingly, there are no outliers whose relative share of the total footprint of ECS is double or more in the negative direction (see Appendix A chart for full numbers). 
+We can use this data to normalise our figures regarding Eco-Congregation Scotland communities and this draws the presence in Edinburgh of ECS communities into even sharper relief, as Edinburgh, though ranked second in terms of population and fifth in terms of places of worship, ranks first for the presence of all ECS congregations and awarded ECS congregations. However, taking population as the basis for normalisation first, we find that Edinburgh is far from the most prominent outlier. In trying to communicate this difference for a lay-audience, we have chosen to list this difference as a multiplier (i.e. there are 2.x times as many congregations as their share of population and an average figure of congregations might allow for) as this conveys the difference in a straight-forward way. Outliers where the disparity between their relative share of the total ECS footprint and their relative share of population is different by a positive ratio of more than double include the Orkney Islands (3.7 times more eco-congregations than their expected average share based on population), Argyll and Bute (`admin_lev1[CODE=S12000023]$ecs_pop_factor` 4.2x), Stirling (2.76x), and Perthshire and Kinross (2.18x). Interestingly, there are no outliers whose relative share of the total footprint of ECS is double or more in the negative direction (see Appendix A chart for full numbers). 
 
 Turning to the total of `r length(pow_pointX)` "places of worship" in Scotland, we find a slightly different picture of the relative concentration of Eco-Congregations in Scotland. In this case, the outliers are 
 
@@ -309,17 +312,15 @@ Whereas our initial measurements indicated a prominent lead for Edinburgh, by no
 
 ```{r create_admin_barplot}
 # comvert admin back to dataframe for analysis
+admin.df <- data.frame(admin_lev1)
+admin.df_gathered <- gather(admin.df, key = "name", convert = TRUE)
 admin.df<-data.frame(admin_lev1)
 # Goal here is to generate a grouped bar plot; https://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2/
 # Need to flatten admin_lev1 based on all the count columns and generate using ggplot
 
-admin_lev1_flattened <- melt(admin_lev1, id.vars='name')
+admin.df_gathered <- gather(admin.df, key="group_type", value="number", ecs_count, transition_count, dtas_count)
 
-as_tibble(admin_lev1) %>%
-  rownames_to_column(var = "name") %>%
-  gather(ecs_count, transition_count, -name)
-
-ggplot(admin_lev1, aes(fill=condition, y=value, x=specie)) + 
+ggplot(admin.df_gathered, aes(fill=group_type, y=number, x=name)) +
     geom_bar(position="dodge", stat="identity")
  
 
