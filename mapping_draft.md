@@ -1,13 +1,13 @@
 ---
 title:  "Mapping Environmental Action in Scotland"
 abstract:    
-# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: January 26, 2019
+# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: January 27, 2019
 style:  jeremy1
 author: “[Jeremy H. Kidwell](http://jeremykidwell.info)”
 affiliation: University of Birmingham
 institute: University of Birmingham
 e-mail: “[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)”
-date: “2019-01-26”
+date: “2019-01-27”
 bibliography: /Users/jeremy/Dropbox/bibtex/everything.bib
 linkcolor: black
 geometry: margin=1in
@@ -56,7 +56,7 @@ For the sake of comparison, we also measured the geographical footprint of two o
 
 # Technical Background
 
-Analysis was conducted using QGIS 2.8 and R 3.5.1, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics May 2014 postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
+Analysis was conducted using QGIS 2.8 and R 3.5.2, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
 
 # Background and History of Eco-Congregation Scotland
 
@@ -70,29 +70,8 @@ In the case of Eco-Congregation Scotland, congregations are invited to begin by 
 
 # Representation by Regional Authorities (Council Areas)
 
-```
-## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "scotland_ca_2010"
-## with 32 features
-## It has 4 fields
-```
 
-```
-## Reading layer `scotland_ca_2010' from data source `/Users/jeremy/gits/mapping_environmental_action/data/scotland_ca_2010.shp' using driver `ESRI Shapefile'
-## Simple feature collection with 32 features and 4 fields
-## geometry type:  MULTIPOLYGON
-## dimension:      XY
-## bbox:           xmin: 5513 ymin: 530249 xmax: 470332 ymax: 1220302
-## epsg (SRID):    NA
-## proj4string:    +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs
-```
 
-```
-## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "scotland_parlcon_2011"
-## with 73 features
-## It has 3 fields
-```
 
 Perhaps the first important question to ask of these groups is, where are they? I calculated the spread of eco-congregations and transition groups across each of the 32 council areas in Scotland. Every council area in Scotland has at least one eco-congregation or transition group). The most are located in , with 48, whereas the mean among all the 32 council areas is 10.75, with a median of 8, standard deviation of 9.4698162, and interquartile range of 11.5. The following choropleth maps show the relative concentration of eco-congregations (indicated by yellow to red). 
 
@@ -112,7 +91,7 @@ Turning to the total of 4048 "places of worship" in Scotland, we find a slightly
 
 Whereas our initial measurements indicated a prominent lead for Edinburgh, by normalising our data in this way we can highlight the stronger-than-expected presence of several others that might otherwise escape notice because they lie in a region with significantly lower population or numerically less places of worship. Taking the PointX data on "places of worship" in Scotland, we find a less dramatic picture, but also a slightly different one. The positive outliers include East Renfrewshire (3.4x) Edinburgh (2.9x), Stirling (2.2), West Lothian (1.9x) and Aberdeen (1.5x). Again, negative outliers are far less dramatic, with only Midlothian possessing a ratio of more than 100% negative difference from the number of "places of worship" at 1.5x *fewer*.
 
-
+![](figures/create_admin_barplot-1.png)<!-- -->
 
 We can compare the representation in these various regions against our comparison groups to see how other community-based organisations cluster in Scottish administrative districts. Here there are some significant contrasts. Scottish Community Development trusts are most intensely concentrated in the Highlands and Argyll & Bute. But, this is consistent with all the other categories, Eco-Congregations, Places of Worship, and dtass are all over-represented in this area, varying only by the degree. Edinburgh is different, here we find that Eco-Congregations and Transition projects are over-represented, while dtass are under-represented. Finally, the highlands are another strong contrast, here we find a very strong over-representation by transition towns and dtass while the representation of Eco-Congregations is relatively close to the population share for that area. The two areas of greatest contrast for Eco-Congregations from the other groups are unsurprising, Edinburgh is the location of the ECS offices, while Stirling is the area in which ECS first began (see Appendix B for full data). 
 
@@ -122,10 +101,149 @@ We can compare the representation in these various regions against our compariso
 
 [Figure 4, normalised by PointX data; also including agricultural parishes etc. as above]
 
-# plot as chlorogram: https://www.r-graph-gallery.com/331-basic-cartogram/
+todo: plot as chlorogram: https://www.r-graph-gallery.com/331-basic-cartogram/
+
 # Appendix A
 
 
+----------------------------------------------------------------
+           name              ecs_count   pow_count   dtas_count 
+--------------------------- ----------- ----------- ------------
+           Fife                 18          243          11     
+
+      South Ayrshire             3          68           1      
+
+        Inverclyde               2          53           1      
+
+       Aberdeen City            15          96           1      
+
+         Highland               21          435          34     
+
+    West Dunbartonshire          6          52           3      
+
+           Moray                11          103          6      
+
+      Orkney Islands             4          50           10     
+
+       Aberdeenshire            19          244          15     
+
+     East Renfrewshire           8          37           2      
+
+     Clackmannanshire            3          30           1      
+
+       East Ayrshire             4          68           6      
+
+     North Lanarkshire           5          187          1      
+
+        Dundee City              3          94           1      
+
+      Argyll and Bute           18          172          24     
+
+           Angus                12          106          0      
+
+       Glasgow City             25          329          21     
+
+    East Dunbartonshire          7          43           1      
+
+     Shetland Islands            3          89           4      
+
+     Scottish Borders           11          153          9      
+
+ Comhairle nan Eilean Siar       0          114          9      
+
+       Renfrewshire              6          84           5      
+
+      North Ayrshire             7          96           3      
+
+       East Lothian              8          71           2      
+
+          Falkirk                8          83           0      
+
+       West Lothian             11          70           7      
+
+     Perth and Kinross          20          162          10     
+
+   Dumfries and Galloway         7          189          15     
+
+         Stirling               13          73           10     
+
+     City of Edinburgh          48          233          7      
+
+        Midlothian               1          45           4      
+
+     South Lanarkshire          17          176          8      
+----------------------------------------------------------------
+
+Table: Table continues below
+
+ 
+--------------------
+ permaculture_count 
+--------------------
+         1          
+
+         0          
+
+         0          
+
+         0          
+
+         1          
+
+         0          
+
+         0          
+
+         0          
+
+         1          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         3          
+
+         0          
+
+         2          
+
+         0          
+
+         0          
+
+         2          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         1          
+
+         2          
+
+         0          
+
+         0          
+
+         1          
+
+         0          
+--------------------
 
 
 
@@ -143,5 +261,3 @@ We can compare the representation in these various regions against our compariso
 [^1554162]:From the Transition map key, "Green pins are 'official' groups
 Blue pins are active communities who are connected to the Scottish Transition network Yellow pins show interest in this area"
 [^15571030]:This was calculated by calculating a 10m wide footprint for every postcode in Scotland, areas which are not within 10m of a postcode (as of May 2014) are counted as uninhabited.
-[^159142242]: Fiona Tweedia, *Ecumenical Audit: Questionnaire Findings* (2014). 
-[^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.

@@ -269,3 +269,8 @@ write.csv(urbanrural.shortened, "derivedData/urbanrural.csv", row.names=FALSE)
 urbanrural.shortened<-data.frame(urbanrural.shortened)
 panderOptions("digits", 2)
 pander(urbanrural.shortened)
+
+
+
+[^159142242]: Fiona Tweedia, *Ecumenical Audit: Questionnaire Findings* (2014). 
+[^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.

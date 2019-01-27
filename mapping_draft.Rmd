@@ -37,6 +37,8 @@ knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FA
 ## Default repo
 setwd("/Users/jeremy/gits/mapping_environmental_action")
 
+# Set repository to be new standard, e.g. cloud server. 
+# This will avoid a dialogue box if packages are to be installed for below on first run.
 local({r <- getOption("repos")
        r["CRAN"] <- "https://cloud.r-project.org" 
        options(repos=r)
@@ -73,8 +75,10 @@ if (dir.exists("derivedData") == FALSE) {
 }
 
 # Define Coordinate Reference Systems (CRS) for later use
-# Note: I've used British National Grid (27000) in this paper, but have found that it is falling out
-# of use in many cases, so will be defaulting to WGS84 in future data-sets and papers
+# Note: I've used British National Grid (27000) in this paper, but have found that 
+# it is falling out of use in many cases, so will be defaulting to WGS84 in future 
+# data-sets and papers.
+
 # TODO: make canonical CRS definitions and use consistently; remove proj4string(admin_lev1) and other similar instances below
 
 wgs84 = '+proj=longlat +datum=WGS84'
@@ -116,7 +120,7 @@ For the sake of comparison, we also measured the geographical footprint of two o
 
 # Technical Background
 
-Analysis was conducted using QGIS 2.8 and R `r getRversion()`, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics May 2014 postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
+Analysis was conducted using QGIS 2.8 and R `r getRversion()`, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
 
 # Background and History of Eco-Congregation Scotland
 
@@ -130,6 +134,7 @@ ecs$registration <- as.Date(ecs$registration, "%Y-%m-%d")
 # ecs$award2 <- as.Date(ecs$award2)
 # ecs$award3 <- as.Date(ecs$award3)
 # ecs$award4 <- as.Date(ecs$award4)
+# TODO: add "R" to command in paragraph below once this is resolved
 ecs_complete_cases <- ecs[complete.cases(ecs$year_begun),]
 ```
 
@@ -138,7 +143,7 @@ The programme launched officially in 2001 at Dunblane Cathedral in Stirling and 
 In the case of Eco-Congregation Scotland, congregations are invited to begin by "registering" their interest in the programme by completing a basic one-sided form. The next step requires the completion of an award application, which includes a facilitated curriculum called a "church check-up" and after an application is submitted, the site is visited and assessed by third-party volunteer assessors. Sites are invited to complete additional applications for further awards which are incremental (as is the application process). Transition communities, at least in the period reflected on their map, go through a similar process (though this does not involve the use of a supplied curriculum) by which they are marked first as "interested," become "active" and then gain "official" status.[^1554162]
 
 # Representation by Regional Authorities (Council Areas)
-```{r import_admin_data}
+```{r import_admin_data, include=FALSE}
 # read in polygon for Scottish admin boundaries
 # TODO: upload bundle of admin data to new zenodo repository and alter below to use new URLs
 # TODO: need to remove readOGR below once st_read is confirmed to be working as sf
@@ -292,20 +297,24 @@ Perhaps the first important question to ask of these groups is, where are they? 
 
 ```{r admin_ecs_choropleth}
 # TODO: 
-# 1. Need to rewrite create_admin_ecs_choropleth to use ggplot
-# 2. Need to augment plots to display in 2x2 plots (side-by-side comparison 
+# 1. Need to augment plots to display in 2x2 plots (side-by-side comparison 
 # with column 1 normalised by population, i.e. admin_lev1_pop; column 2 normalised by church counts. 
 # Row 1 plot using polygons from admin_lev1 and row 2 plot using ploygons from admin_lev2
-# 3. Need to clip choropleth polygons to buildings shapefile
+# 2. Need to clip choropleth polygons to buildings shapefile
 
-# tidy data
-# admin_lev1_gathered <- gather(admin_lev1_sf, value="number", ecs_count)
+# tidy data to select just ecs_count data
+admin_lev1_gathered <- gather(admin_lev1_sf, value="number", ecs_count)
 
-# plot simple choropleth, as here: https://www.r-graph-gallery.com/327-chloropleth-map-from-geojson-with-ggplot2/
+# plot simple choropleth map using ECS data points, as here: https://www.r-graph-gallery.com/327-chloropleth-map-from-geojson-with-ggplot2/
 
-# myplot <- ggplot() + geom_sf(data = admin_lev1_sf) + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
+# ggplot() +
+#   geom_polygon(data = admin_lev1, aes( x = long, y = lat, group = group)) +
+#   theme_void() +
+#  coord_map()
 
-# plot as 
+myplot <- ggplot() + geom_sf(data = admin_lev1_sf) + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
+
+# save plot to PDF (for testing) 
 
 # ggsave("figures/admin_choropleth_ecs.pdf")
 ```
@@ -336,13 +345,16 @@ admin.df <- data.frame(admin_lev1)
 # Goal here is to generate a grouped bar plot; https://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2/
 # Need to flatten admin_lev1 based on all the count columns and generate using ggplot
 
-admin.df_gathered <- gather(admin.df, key="group_type", value="number", ecs_count, transition_count, dtas_count)
+admin_gathered <- gather(data.frame(admin_lev1), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
 
-# ggplot(admin.df_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(position="dodge", stat="identity")
+ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(position="dodge", stat="identity") + coord_flip()
  
-# ggplot(mtcars, aes(x=as.factor(cyl), fill=as.factor(cyl) )) + geom_bar() + coord_flip()
-  
 # add bubbleplot on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
+
+ggplot() +
+  geom_polygon(data=admin_lev1, aes(x=long, y=lat, group=group), fill="grey", alpha=0.3) +
+  geom_point(data=as.data.frame(ecs), aes(x=X, y=Y)) +
+  theme_void() + ylim(50,59) + coord_map() 
 
 ```
 
@@ -362,20 +374,19 @@ todo: plot as chlorogram: https://www.r-graph-gallery.com/331-basic-cartogram/
 # TODO: uncomment admin.shortened lines below
 # admin.shortened <- admin_lev1[,c(7,12:22)]
 # Output CSV files for various levels of admin
-write.csv(admin_lev1, "derivedData/admin)lev1.csv", row.names=FALSE)
+write.csv(admin_lev1, "derivedData/admin_lev1.csv", row.names=FALSE)
 write.csv(admin_lev2, "derivedData/admin_lev2.csv", row.names=FALSE)
 # write.csv(admin_lev3, "derivedData/admin_lev3.csv", row.names=FALSE)
-# write.csv(admin.shortened, "derivedData/admin.csv", row.names=FALSE)
+write.csv(as_data_frame(admin_lev1[,c(3,5,7,11,13)]), "derivedData/admin.csv", row.names=FALSE)
 write.csv(ecs, "derivedData/ecs.csv", row.names=FALSE)
 write.csv(transition, "derivedData/transition.csv", row.names=FALSE)
 write.csv(permaculture, "derivedData/permaculture.csv", row.names=FALSE)
 write.csv(dtas, "derivedData/dtas.csv", row.names=FALSE)
-
 ## write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
-#admin.shortened<-data.frame(admin.shortened)
+
 ## Output mmd tables using pander
-#panderOptions("digits", 2)
-#pander(admin.shortened)
+panderOptions("digits", 2)
+pander(as_data_frame(admin_lev1[,c(3,5,7,11,13)]))
 ```
 
 
@@ -394,5 +405,3 @@ write.csv(dtas, "derivedData/dtas.csv", row.names=FALSE)
 [^1554162]:From the Transition map key, "Green pins are 'official' groups
 Blue pins are active communities who are connected to the Scottish Transition network Yellow pins show interest in this area"
 [^15571030]:This was calculated by calculating a 10m wide footprint for every postcode in Scotland, areas which are not within 10m of a postcode (as of May 2014) are counted as uninhabited.
-[^159142242]: Fiona Tweedia, *Ecumenical Audit: Questionnaire Findings* (2014). 
-[^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.
