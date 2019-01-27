@@ -197,7 +197,9 @@ proj4string(dtas) <- proj4string(admin_lev1)
 permaculture <- read.csv("data/permaculture_scot-0.8.csv")
 coordinates(permaculture) <- c("X", "Y")
 proj4string(permaculture) <- proj4string(admin_lev1)
+```
 
+```{r process_admin_data}
 # TODO: Code below augments existing dataframes to run calculations and add columns with point counts per polygon, 
 # percentages, and normalising data. I'm pretty sure this can all be done inline under create_admin_ecs_choropleth 
 # code chunk without adding new columns to dataframes here, but how?!
@@ -352,7 +354,8 @@ We can compare the representation in these various regions against our compariso
 
 [Figure 4, normalised by PointX data; also including agricultural parishes etc. as above]
 
-# plot as chlorogram: https://www.r-graph-gallery.com/331-basic-cartogram/
+todo: plot as chlorogram: https://www.r-graph-gallery.com/331-basic-cartogram/
+
 # Appendix A
 
 ```{r pander_admin_table}
