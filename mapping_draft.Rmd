@@ -403,19 +403,17 @@ ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(positi
  
 # add bubbleplot with dots on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
 
-fig5 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count', alpha = .4, size = .3) geom_point( data=ecs, aes(x=long, y=lat)) + labs(title = "Figure 5", subtitle="Concentration of ECS groups", fill = "Groups")
-
-fig2 <- ggplot() + 
+fig5 <- ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_number(admin_lev1_fortified$ecs_count_pownorm, 5)), 
+                   fill = cut_number(admin_lev1_fortified$ecs_count, 5)), 
                data = admin_lev1_fortified, 
                colour = 'black', 
                alpha = .7, 
                size = .3) + 
   viridis::scale_fill_viridis(discrete = TRUE) + 
   labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 2", 
-       subtitle="Concentration of ECS groups, data normalised by places of worship",
+       title = "Figure 1", 
+       subtitle="Concentration of ECS groups",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
                        "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
@@ -428,9 +426,52 @@ fig2 <- ggplot() +
           legend.text = element_text(size = 8),
           legend.position = c(0.9, 0.25))
 
-fig6 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'transition_count', alpha = .4, size = .3) geom_point( data=transition, aes(x=long, y=lat)) + labs(title = "Figure 6", subtitle="Concentration of Transition groups", fill = "Groups")
 
-fig7 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'dtas_count', alpha = .4, size = .3) geom_point( data=dtas, aes(x=long, y=lat)) + labs("Figure 7", subtitle="Concentration of DTAS groups", fill = "Groups")
+fig6 <- ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group, 
+                   fill = cut_number(admin_lev1_fortified$transition_count, 5)), 
+               data = admin_lev1_fortified, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .3) + 
+  viridis::scale_fill_viridis(discrete = TRUE) + 
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 2", 
+       subtitle="Concentration of Transition groups",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n")) + 
+  theme_void() + 
+  theme(text = element_text(family = "Arial Narrow", size = 8),
+          plot.title = element_text(size = 12, face = "bold"),
+          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
+          panel.border = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(size = 8),
+          legend.position = c(0.9, 0.25))
+
+fig7 <- ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group, 
+                   fill = cut_number(admin_lev1_fortified$dtas_count, 5)), 
+               data = admin_lev1_fortified, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .3) + 
+  viridis::scale_fill_viridis(discrete = TRUE) + 
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 2", 
+       subtitle="Concentration of DTAS groups",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n")) + 
+  theme_void() + 
+  theme(text = element_text(family = "Arial Narrow", size = 8),
+          plot.title = element_text(size = 12, face = "bold"),
+          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
+          panel.border = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(size = 8),
+          legend.position = c(0.9, 0.25))
 
 pdf("group-comparison.pdf", width = 8, height = 6) 
 grid.newpage() 
