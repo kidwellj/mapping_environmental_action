@@ -3,12 +3,12 @@ title:  "Mapping Environmental Action in Scotland"
 abstract:    
 # thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: `r format(Sys.time(), '%B %d, %Y')`
 style:  jeremy1
-author: “[Jeremy H. Kidwell](http://jeremykidwell.info)”
+author: "[Jeremy H. Kidwell](http://jeremykidwell.info)"
 affiliation: University of Birmingham
 institute: University of Birmingham
-e-mail: “[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)”
-date: “`r Sys.Date()`”
-bibliography: /Users/jeremy/Dropbox/bibtex/everything.bib
+e-mail: "[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)"
+date: "`r Sys.Date()`"
+bibliography: ~/Dropbox/bibtex/everything.bib
 linkcolor: black
 geometry: margin=1in
 # fontfamily: mathpazo
@@ -35,7 +35,7 @@ knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FA
 
 ```{r load_packages, include=FALSE}
 ## Default repo
-setwd("/Users/jeremy/gits/mapping_environmental_action")
+# setwd("/Users/jeremy/gits/mapping_environmental_action")
 
 # Set repository to be new standard, e.g. cloud server. 
 # This will avoid a dialogue box if packages are to be installed for below on first run.
@@ -57,11 +57,14 @@ require(RCurl)
 require(tibble) # using for grouped bar plot
 require(tidyr)  # using for grouped bar plot
 require(dplyr)
-library(reshape2)  # using for grouped bar plot
+require(plyr)
+require(reshape2)  # using for grouped bar plot
 require(pander)
 require(scales)
 require(sqldf) # using sqldf to filter while loading very large data sets
 require(plotly) # allows for export of plots to dynamic web pages
+require(grid) # for laying out of multiple tables
+require(gridBase)
 
 # Set up local workspace:
 if (dir.exists("data") == FALSE) {
@@ -256,7 +259,7 @@ admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
 
 admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv")
 admin_lev1 <- merge(x=admin_lev1, y=admin_lev1_pop, by.x = "code", by.y = "CODE")
-admin_lev1$ecs_count_popnorm <- admin_lev1$ecs_count / admin_lev1$X2011_pop
+admin_lev1$ecs_count_popnorm <- admin_lev1$ecs_count / as.numeric(admin_lev1$X2011_pop)
 admin_lev1$pop_percent<- prop.table(as.numeric(admin_lev1$X2011_pop))
 admin_lev1$pow_count <- poly.counts(pow_pointX,admin_lev1)
 admin_lev1$ecs_count_pownorm <- admin_lev1$ecs_count / admin_lev1$pow_count
@@ -270,33 +273,94 @@ Perhaps the first important question to ask of these groups is, where are they? 
 
 (*TODO: need to implement*) Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake. Note, for the sake of a more accurate visual communication, we have also marked out areas of Scotland that are uninhabited with hash marks on the map of agricultural parishes. (*TODO: this will be done in the final draft, once I get my image masking fixed!*).[^15571030]
 
-```{r admin_ecs_choropleth}
-# TODO: 
-# 1. Need to augment plots to display in 2x2 plots (side-by-side comparison 
-# with column 1 normalised by population, i.e. admin_lev1_pop; column 2 normalised by church counts. 
-# Row 1 plot using polygons from admin_lev1 and row 2 plot using ploygons from admin_lev2
-# 2. Need to clip choropleth polygons to buildings shapefile
+```{r plot_admin_ecs_choropleth}
+# TODO: Need to clip choropleth polygons to buildings shapefile
 
-# tidy data to select just ecs_count data
-# admin_lev1_gathered <- gather(admin_lev1_sf, value="number", ecs_count)
+# Prepare admin_lev1 for tidyr and reinsert dropped columns
+names(admin_lev1)[names(admin_lev1) == "newcode"] <- "id"
+admin_lev1@data$id <- as.integer(rownames(admin_lev1@data))
+admin_lev1@data$id <- admin_lev1@data$id-1
+admin_lev1_fortified <- tidy(admin_lev1)
+admin_lev1_fortified <- join(admin_lev1_fortified,admin_lev1@data, by="id")
 
-# plot simple choropleth map using ECS data points, as here: https://www.r-graph-gallery.com/327-chloropleth-map-from-geojson-with-ggplot2/
+# Draw initial choropleth map of ECS concentration (using sp, rather than sf data)
+# Note: some ideas taken from here: https://unconj.ca/blog/choropleth-maps-with-r-and-ggplot2.html
+ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group, 
+                   fill = cut_number(admin_lev1_fortified$ecs_count, 5)), 
+               data = admin_lev1_fortified, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .3) + 
+  viridis::scale_fill_viridis(discrete = TRUE) + 
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 1", 
+       subtitle="Concentration of ECS groups",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n")) + 
+  theme_void() + 
+  theme(text = element_text(family = "Arial Narrow", size = 8),
+          plot.title = element_text(size = 12, face = "bold"),
+          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
+          panel.border = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(size = 8),
+          legend.position = c(0.9, 0.25))
 
-admin_lev1_fortified <- fortify(admin_lev1)
-# TODO: resolve issues with dropped columns - note https://stackoverflow.com/questions/22096787/how-keep-information-from-shapefile-after-fortify
-admin_lev1_fortified <- join(admin_lev1_fortified,admin_lev1@data$ecs_count, by="id")
+# Save plot to PDF
+ggsave("admin1_choropleth_ecs.pdf")
 
-# draw map using sp data
-ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = admin_lev1_fortified$ecs_count, alpha = .4, size = .3) + labs(title = "Figure 1", subtitle="Concentration of ECS groups", fill = "Groups")
+# Plot out first figure with normalised data: 
+fig2 <- ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group, 
+                   fill = cut_number(admin_lev1_fortified$ecs_count_pownorm, 5)), 
+               data = admin_lev1_fortified, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .3) + 
+  viridis::scale_fill_viridis(discrete = TRUE) + 
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 2", 
+       subtitle="Concentration of ECS groups, data normalised by places of worship",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n")) + 
+  theme_void() + 
+  theme(text = element_text(family = "Arial Narrow", size = 8),
+          plot.title = element_text(size = 12, face = "bold"),
+          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
+          panel.border = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(size = 8),
+          legend.position = c(0.9, 0.25))
 
-# save plot to PDF (for testing) 
-ggsave("figures/admin1_choropleth_ecs.pdf")
+# TODO: Need to sort out why error: "Insufficient data values to produce 5 bins."
+# Plot out second figure with normalised data:  
+fig3 <- ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group, 
+                   fill = cut_number(admin_lev1_fortified$ecs_count_popnorm, 5)), 
+               data = admin_lev1_fortified, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .3) + 
+  viridis::scale_fill_viridis(discrete = TRUE) + 
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 3", 
+       subtitle="Concentration of ECS groups, data normalised by population",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n")) + 
+  theme_void() + 
+  theme(text = element_text(family = "Arial Narrow", size = 8),
+          plot.title = element_text(size = 12, face = "bold"),
+          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
+          panel.border = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(size = 8),
+          legend.position = c(0.9, 0.25))
 
-fig2 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count_pownorm', alpha = .4, size = .3) + labs(title = "Figure 2", subtitle="Concentration of ECS groups", fill = "Groups")
-
-fig3 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count_popnorm', alpha = .4, size = .3) + labs("Figure 3", subtitle="Concentration of ECS groups", fill = "Groups")
-
-pdf("polishing-layout.pdf", width = 8, height = 6) 
+pdf("normalised_ecs.pdf", width = 8, height = 6) 
 grid.newpage() 
 pushViewport(viewport(layout = grid.layout(1, 2)))
 
@@ -340,6 +404,29 @@ ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(positi
 # add bubbleplot with dots on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
 
 fig5 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count', alpha = .4, size = .3) geom_point( data=ecs, aes(x=long, y=lat)) + labs(title = "Figure 5", subtitle="Concentration of ECS groups", fill = "Groups")
+
+fig2 <- ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group, 
+                   fill = cut_number(admin_lev1_fortified$ecs_count_pownorm, 5)), 
+               data = admin_lev1_fortified, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .3) + 
+  viridis::scale_fill_viridis(discrete = TRUE) + 
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 2", 
+       subtitle="Concentration of ECS groups, data normalised by places of worship",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n")) + 
+  theme_void() + 
+  theme(text = element_text(family = "Arial Narrow", size = 8),
+          plot.title = element_text(size = 12, face = "bold"),
+          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
+          panel.border = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(size = 8),
+          legend.position = c(0.9, 0.25))
 
 fig6 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'transition_count', alpha = .4, size = .3) geom_point( data=transition, aes(x=long, y=lat)) + labs(title = "Figure 6", subtitle="Concentration of Transition groups", fill = "Groups")
 
