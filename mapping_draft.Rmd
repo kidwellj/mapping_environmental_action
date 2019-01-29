@@ -278,14 +278,15 @@ Perhaps the first important question to ask of these groups is, where are they? 
 # 2. Need to clip choropleth polygons to buildings shapefile
 
 # tidy data to select just ecs_count data
-admin_lev1_gathered <- gather(admin_lev1_sf, value="number", ecs_count)
+# admin_lev1_gathered <- gather(admin_lev1_sf, value="number", ecs_count)
 
 # plot simple choropleth map using ECS data points, as here: https://www.r-graph-gallery.com/327-chloropleth-map-from-geojson-with-ggplot2/
 
 admin_lev1_fortified <- fortify(admin_lev1)
+admin_lev1_fortified <- join(admin_lev1_fortified,admin_lev1@data$ecs_count, by="id")
 
 # draw map using sp data
-ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count', alpha = .4, size = .3) + labs(title = "Figure 1", subtitle="Concentration of ECS groups", fill = "Groups")
+ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = admin_lev1_fortified$ecs_count, alpha = .4, size = .3) + labs(title = "Figure 1", subtitle="Concentration of ECS groups", fill = "Groups")
 
 # save plot to PDF (for testing) 
 ggsave("figures/admin1_choropleth_ecs.pdf")
