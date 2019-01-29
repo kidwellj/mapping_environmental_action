@@ -164,12 +164,6 @@ unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
 }
 admin_lev2 <- readOGR("./data", "scotland_parlcon_2011")
 
-## TODO note - need to optimise here, pre-filter sqldf? shapefile on "geo_code"" or "label" begins with "S"
-# download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/infuse_ward_lyr_2011.zip", 
-#              destfile = "data/infuse_ward_lyr_2011.zip")
-# unzip("data/infuse_ward_lyr_2011.zip", exdir = "data")
-# admin_lev3 <- readOGR("./data", "infuse_ward_lyr_2011")
-
 # read in Transition Towns data and turn it into a SpatialPointsDataFrame
 transition <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
 coordinates(transition) <- c("X", "Y")
@@ -246,24 +240,6 @@ admin_lev2$dtas_percent<- prop.table(admin_lev2$dtas_count)
 admin_lev2$permaculture_count <- poly.counts(permaculture,admin_lev2)
 admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
 
-## run totals for intermediate boundaries level 3
-## This code will generate a table of frequencies for each spatialpointsdataframe in admin_lev3
-## calculate count of ECS for fields in admin_lev3 and provide percentages
-#admin_lev3$ecs_count <- poly.counts(ecs,admin_lev3)
-#admin_lev3$ecs_percent<- prop.table(admin_lev3$ecs_count)
-## calculate count of places of worship in PointX db for fields in admin_lev3 and provide percentages
-#admin_lev3$pow_count <- poly.counts(pow_pointX,admin_lev3)
-#admin_lev3$pow_percent<- prop.table(admin_lev3$pow_count)
-## calculate count of Transition for fields in admin_lev3 and provide percentages
-#admin_lev3$transition_count <- poly.counts(transition,admin_lev3)
-#admin_lev3$transition_percent<- prop.table(admin_lev3$transition_count)
-## calculate count of dtas for fields in admin_lev3 and provide percentages
-#admin_lev3$dtas_count <- poly.counts(dtas,admin_lev3)
-#admin_lev3$dtas_percent<- prop.table(admin_lev3$dtas_count)
-## calculate count of permaculture for fields in admin_lev3 and provide percentages
-#admin_lev3$permaculture_count <- poly.counts(permaculture,admin_lev3)
-#admin_lev3$permaculture_percent<- prop.table(admin_lev3$permaculture_count)
-
 # Import csv with population data for each level of administrative subdivision and join to spatialdataframe
 # Add working directory for parish level data (not sure why I've done this)
 
@@ -277,18 +253,17 @@ admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
 
 # Load population statistics for normalising data by population on admin_lev1
 # TODO - consider adapting to use ONS mid-year statistics: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland
-admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv")
 
+admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv")
 admin_lev1 <- merge(x=admin_lev1, y=admin_lev1_pop, by.x = "code", by.y = "CODE")
+admin_lev1$ecs_count_popnorm <- admin_lev1$ecs_count / admin_lev1$X2011_pop
 admin_lev1$pop_percent<- prop.table(as.numeric(admin_lev1$X2011_pop))
+admin_lev1$pow_count <- poly.counts(pow_pointX,admin_lev1)
+admin_lev1$ecs_count_pownorm <- admin_lev1$ecs_count / admin_lev1$pow_count
 
 admin_lev2_pop <- read.csv("./data/scotland_and_wales_const_scotland_2011pop.csv")
-admin_joined_lev2 <- merge(x=admin_lev2, y=admin_lev2_pop, by.x = "code", by.y = "CODE")
+admin_lev2 <- merge(x=admin_lev2, y=admin_lev2_pop, by.x = "code", by.y = "CODE")
 
-# Considering removing admin_lev3 calculations as this seems to be unnecessary level granularity
-# admin_lev3_pop <- read.csv("./data/district_borough_unitary_ward_scotland_2011pop.csv",  stringsAsFactors=FALSE)
-# admin_joined_lev3 <- merge(x=admin_lev3, y=admin_lev3_pop, by="CODE")
-# admin_joined_lev3$Postcode.Population <- as.numeric(gsub("[,-]","",admin_joined_lev3$Postcode.Population))
 ```
 
 Perhaps the first important question to ask of these groups is, where are they? I calculated the spread of eco-congregations and transition groups across each of the 32 council areas in Scotland. Every council area in Scotland has at least one eco-congregation or transition group). The most are located in `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$ecs_count)])`, with `r max(admin_lev1$ecs_count)`, whereas the mean among all the 32 council areas is `r mean(admin_lev1$ecs_count)`, with a median of `r median(admin_lev1$ecs_count)`, standard deviation of `r sd(admin_lev1$ecs_count)`, and interquartile range of `r IQR(admin_lev1$ecs_count)`. The following choropleth maps show the relative concentration of eco-congregations (indicated by yellow to red). 
@@ -307,19 +282,30 @@ admin_lev1_gathered <- gather(admin_lev1_sf, value="number", ecs_count)
 
 # plot simple choropleth map using ECS data points, as here: https://www.r-graph-gallery.com/327-chloropleth-map-from-geojson-with-ggplot2/
 
-# ggplot() +
-#   geom_polygon(data = admin_lev1, aes( x = long, y = lat, group = group)) +
-#   theme_void() +
-#  coord_map()
+admin_lev1_fortified <- fortify(admin_lev1)
 
-myplot <- ggplot() + geom_sf(data = admin_lev1_sf) + geom_point(data=as.data.frame(ecs), aes(x=X, y=Y))
+# draw map using sp data
+ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count', alpha = .4, size = .3) + labs(title = "Figure 1", subtitle="Concentration of ECS groups", fill = "Groups")
 
 # save plot to PDF (for testing) 
+ggsave("figures/admin1_choropleth_ecs.pdf")
 
-# ggsave("figures/admin_choropleth_ecs.pdf")
+fig2 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count_pownorm', alpha = .4, size = .3) + labs(title = "Figure 2", subtitle="Concentration of ECS groups", fill = "Groups")
+
+fig3 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count_popnorm', alpha = .4, size = .3) + labs("Figure 3", subtitle="Concentration of ECS groups", fill = "Groups")
+
+pdf("polishing-layout.pdf", width = 8, height = 6) 
+grid.newpage() 
+pushViewport(viewport(layout = grid.layout(1, 2)))
+
+vplayout <- function(x, y) 
+	viewport(layout.pos.row = x, layout.pos.col = y) 
+print(fig2, vp = vplayout(1, 1)) 
+print(fig3, vp = vplayout(1, 2))
+dev.off()
+
+
 ```
-
-![][Figure2]
 
 Given the way population and places of worship are unevenly distributed across Scotland it is important to represent data in terms of relative distribution. For this study, we attempted to "normalise" our data in two different ways, (1) as shown by Figure 2 above, by taking population figures from the 2011 census (see data sheet in Appendix A) and (2) by adjusting relative to the number of places of worship in each council region.[^15914204] The latter of these two can yield particularly unexpected results. Thus, of the `r length(pow_pointX)` "places of worship" in Scotland, the highest concentration is actually the `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$pow_count)])` region, with `r max(admin_lev1$pow_count)`, second is `r max( admin_lev1$pow_count[admin_lev1$pow_count!=max(admin_lev1$pow_count)] )` (`r as.character(admin_lev1$NAME_2[which.max( admin_lev1$pow_count[admin_lev1$pow_count!=max(admin_lev1$pow_count)])] )`). Rank of Council Areas by population and number of places of worship is also included in Appendix A.
 
@@ -347,24 +333,31 @@ admin.df <- data.frame(admin_lev1)
 
 admin_gathered <- gather(data.frame(admin_lev1), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
 
-ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(position="dodge", stat="identity") + coord_flip()
+ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 4", subtitle="Comparison of Groups by Admin Region", fill = "Groups")
  
-# add bubbleplot on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
+# add bubbleplot with dots on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
 
-ggplot() +
-  geom_polygon(data=admin_lev1, aes(x=long, y=lat, group=group), fill="grey", alpha=0.3) +
-  geom_point(data=as.data.frame(ecs), aes(x=X, y=Y)) +
-  theme_void() + ylim(50,59) + coord_map() 
+fig5 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'ecs_count', alpha = .4, size = .3) geom_point( data=ecs, aes(x=long, y=lat)) + labs(title = "Figure 5", subtitle="Concentration of ECS groups", fill = "Groups")
+
+fig6 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'transition_count', alpha = .4, size = .3) geom_point( data=transition, aes(x=long, y=lat)) + labs(title = "Figure 6", subtitle="Concentration of Transition groups", fill = "Groups")
+
+fig7 <- ggplot() + geom_polygon(aes(x = long, y = lat, group = group), data = admin_lev1_fortified, colour = 'black', fill = 'dtas_count', alpha = .4, size = .3) geom_point( data=dtas, aes(x=long, y=lat)) + labs("Figure 7", subtitle="Concentration of DTAS groups", fill = "Groups")
+
+pdf("group-comparison.pdf", width = 8, height = 6) 
+grid.newpage() 
+pushViewport(viewport(layout = grid.layout(1, 3)))
+
+vplayout <- function(x, y) 
+	viewport(layout.pos.row = x, layout.pos.col = y) 
+print(fig5, vp = vplayout(1, 1)) 
+print(fig6, vp = vplayout(1, 2))
+print(fig7, vp = vplayout(1, 3))
+dev.off()
+
 
 ```
 
-We can compare the representation in these various regions against our comparison groups to see how other community-based organisations cluster in Scottish administrative districts. Here there are some significant contrasts. Scottish Community Development trusts are most intensely concentrated in the Highlands and Argyll & Bute. But, this is consistent with all the other categories, Eco-Congregations, Places of Worship, and dtass are all over-represented in this area, varying only by the degree. Edinburgh is different, here we find that Eco-Congregations and Transition projects are over-represented, while dtass are under-represented. Finally, the highlands are another strong contrast, here we find a very strong over-representation by transition towns and dtass while the representation of Eco-Congregations is relatively close to the population share for that area. The two areas of greatest contrast for Eco-Congregations from the other groups are unsurprising, Edinburgh is the location of the ECS offices, while Stirling is the area in which ECS first began (see Appendix B for full data). 
-
-![][Figure3b]
-
-[Figure 3c, map normalised by population; choropeth map with 6 gradients. with white represented by =/- 0.5; side-by-side with agricultural parishes map; uninhabited areas greyed out]
-
-[Figure 4, normalised by PointX data; also including agricultural parishes etc. as above]
+We can compare the representation in these various regions against our comparison groups to see how other community-based organisations cluster in Scottish administrative districts. Here there are some significant contrasts. Scottish Community Development trusts are most intensely concentrated in the Highlands and Argyll & Bute. But, this is consistent with all the other categories, Eco-Congregations, Places of Worship, and dtas are all over-represented in this area, varying only by the degree. Edinburgh is different, here we find that Eco-Congregations and Transition projects are over-represented, while dtass are under-represented. Finally, the highlands are another strong contrast, here we find a very strong over-representation by transition towns and dtass while the representation of Eco-Congregations is relatively close to the population share for that area. The two areas of greatest contrast for Eco-Congregations from the other groups are unsurprising, Edinburgh is the location of the ECS offices, while Stirling is the area in which ECS first began (see Appendix B for full data). 
 
 todo: plot as chlorogram: https://www.r-graph-gallery.com/331-basic-cartogram/
 
