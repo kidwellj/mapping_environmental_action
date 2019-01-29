@@ -283,6 +283,7 @@ Perhaps the first important question to ask of these groups is, where are they? 
 # plot simple choropleth map using ECS data points, as here: https://www.r-graph-gallery.com/327-chloropleth-map-from-geojson-with-ggplot2/
 
 admin_lev1_fortified <- fortify(admin_lev1)
+# TODO: resolve issues with dropped columns - note https://stackoverflow.com/questions/22096787/how-keep-information-from-shapefile-after-fortify
 admin_lev1_fortified <- join(admin_lev1_fortified,admin_lev1@data$ecs_count, by="id")
 
 # draw map using sp data
