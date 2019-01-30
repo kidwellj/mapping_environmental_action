@@ -31,9 +31,11 @@ output:
 ```{r setup, include=FALSE}
 require(knitr)
 knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE)
+# TODO: consider implementing knitcitations - https://github.com/cboettig/knitcitations
+# TODO: fix simultaneous output towards PDF, see here: https://stackoverflow.com/questions/23621012/display-and-save-the-plot-simultaneously-in-r-rstudio
 ```
 
-```{r load_packages, include=FALSE}
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
 ## Default repo
 # setwd("/Users/jeremy/gits/mapping_environmental_action")
 
@@ -56,8 +58,8 @@ require(maptools)
 require(RCurl)
 require(tibble) # using for grouped bar plot
 require(tidyr)  # using for grouped bar plot
-require(dplyr)
 require(plyr)
+require(dplyr)
 require(reshape2)  # using for grouped bar plot
 require(pander)
 require(scales)
@@ -83,9 +85,7 @@ if (dir.exists("derivedData") == FALSE) {
 # TODO: make canonical CRS definitions and use consistently; remove proj4string(admin_lev1) and other similar instances below
 
 wgs84 = '+proj=longlat +datum=WGS84'
-bng = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000
-+y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy
-+towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
+bng = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
 ```
 
 # Introduction[^15541312]
@@ -94,7 +94,7 @@ Until recently, environmentalism has been treated by governments and environment
 
 # Eco-Congregation Scotland: The Basics
 
-```{r load_ecs_data}
+```{r load_ecs_data, message=FALSE, warning=FALSE}
 # read in Eco-Congregation Scotland data and-------------------
 # ...turn it into a SpatialPointsDataFrame---------------------
 # TODO: upload ECS-GIS-Locations_3.0.csv to zenodo repository, i.e.
@@ -127,7 +127,7 @@ Analysis was conducted using QGIS 2.8 and R `r getRversion()`, and data-sets wer
 
 Eco-Congregation Scotland began a year before the official launch of Eco-Congregation England and Wales, in 1999, as part of an effort by Kippen Environment Centre (later renamed to Forth Environment Link, or "FEL") a charity devoted to environmental education in central Scotland[^158261210] to broaden the scope of its environmental outreach to churches in central Scotland.[^15826124] Initial funding was provided, through Kippen Environment Centre by way of a "sustainable action grant" (with funds drawn from a government landfill tax) through a government programme called Keep Scotland Beautiful (the Scottish cousin of Keep Britain Tidy). After this initial pilot project concluded, the Church of Scotland provided additional funding for the project in the form of staff time and office space. Additional funding a few years later from the Scottish Government helped subsidise the position of a business manager, and in 2011 the United Reformed Church contributed additional funding which subsidised the position of a full-time environmental chaplain for a 5-year term, bringing the total staff to five.
 
-```{r calculate_ecs_by_year}
+```{r calculate_ecs_by_year, message=FALSE, warning=FALSE}
 # Tidy up date fields and convert to date data type
 ecs$registration <- as.Date(ecs$registration, "%Y-%m-%d")
 # TODO: Fix issues here with R complaining that "character string is not in a std...
@@ -252,19 +252,39 @@ admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
 # unzip("parishes/parishes-1991.zip", exdir = "parishes")
 # parishes <- rgdal::readOGR(dsn = "parishes", "england_cp_1991")
 
-# Load population statistics for normalising data by population on admin_lev1
 # TODO - consider adapting to use ONS mid-year statistics: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland
 
+# Load population statistics for normalising data by population and merge with admin_lev1
 admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv")
 admin_lev1 <- merge(x=admin_lev1, y=admin_lev1_pop, by.x = "code", by.y = "CODE")
-admin_lev1$ecs_count_popnorm <- admin_lev1$ecs_count / as.numeric(admin_lev1$X2011_pop)
-admin_lev1$pop_percent<- prop.table(as.numeric(admin_lev1$X2011_pop))
-admin_lev1$pow_count <- poly.counts(pow_pointX,admin_lev1)
-admin_lev1$ecs_count_pownorm <- admin_lev1$ecs_count / admin_lev1$pow_count
+# Convert number stored as string with a comma to an integer
+admin_lev1$X2011_pop <- as.numeric(gsub(",", "", admin_lev1$X2011_pop))
+# Calculate counts as percentages of total for normalising below
+admin_lev1$pop_percent<- prop.table(admin_lev1$X2011_pop)
+admin_lev1$pow_percent<- prop.table(admin_lev1$pow_count)
+# Normalise ecs_count using population figures (using ArcGIS method)
+admin_lev1$ecs_count_popnorm <- admin_lev1$ecs_count * admin_lev1$pop_percent
+# Normalise ecs_count using places of worship counts (using ArcGIS method)
+admin_lev1$ecs_count_pownorm <- admin_lev1$ecs_count * admin_lev1$pow_percent
 
+# Preserve scale
+admin_lev1$ecs_count_popnorm_scaled <- admin_lev1$ecs_count_popnorm*(sum(admin_lev1$ecs_count)/sum(admin_lev1$ecs_count_popnorm))
+
+admin_lev1$ecs_count_pownorm_scaled <- admin_lev1$ecs_count_pownorm*(sum(admin_lev1$ecs_count)/sum(admin_lev1$ecs_count_pownorm))
+
+
+# Load population statistics for normalising data by population on admin_lev2
 admin_lev2_pop <- read.csv("./data/scotland_and_wales_const_scotland_2011pop.csv")
 admin_lev2 <- merge(x=admin_lev2, y=admin_lev2_pop, by.x = "code", by.y = "CODE")
-
+# Convert number stored as string with a comma to an integer (using data.zone data)
+admin_lev2$Data.zone.Population <- as.numeric(gsub(",", "", admin_lev2$Data.zone.Population)) 
+# Calculate counts as percentages of total for normalising below
+admin_lev2$pop_percent <- prop.table(admin_lev2$Data.zone.Population)
+admin_lev2$pow_percent <- prop.table(admin_lev2$pow_count)
+# Normalise ecs_count using population figures (using ArcGIS method)
+admin_lev2$ecs_count_popnorm <- admin_lev2$ecs_count * admin_lev2$pop_percent
+# Normalise ecs_count using places of worship counts (using ArcGIS method)
+admin_lev2$ecs_count_pownorm <- admin_lev2$ecs_count * admin_lev2$pow_percent
 ```
 
 Perhaps the first important question to ask of these groups is, where are they? I calculated the spread of eco-congregations and transition groups across each of the 32 council areas in Scotland. Every council area in Scotland has at least one eco-congregation or transition group). The most are located in `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$ecs_count)])`, with `r max(admin_lev1$ecs_count)`, whereas the mean among all the 32 council areas is `r mean(admin_lev1$ecs_count)`, with a median of `r median(admin_lev1$ecs_count)`, standard deviation of `r sd(admin_lev1$ecs_count)`, and interquartile range of `r IQR(admin_lev1$ecs_count)`. The following choropleth maps show the relative concentration of eco-congregations (indicated by yellow to red). 
@@ -284,9 +304,13 @@ admin_lev1_fortified <- join(admin_lev1_fortified,admin_lev1@data, by="id")
 # Draw initial choropleth map of ECS concentration (using sp, rather than sf data)
 # Note: some ideas taken from here: https://unconj.ca/blog/choropleth-maps-with-r-and-ggplot2.html
 
+# TODO: fix issues with cut_interval / cut_number below. Current error: "'breaks' are not unique calls"
+# See here: https://stackoverflow.com/questions/16184947/cut-error-breaks-are-not-unique
+# Reference here: https://ggplot2.tidyverse.org/reference/cut_interval.html
+
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_number(admin_lev1_fortified$ecs_count, 5)), 
+                   fill = cut_interval(admin_lev1_fortified$ecs_count, 5)), 
                data = admin_lev1_fortified, 
                colour = 'black', 
                alpha = .7, 
@@ -314,7 +338,7 @@ ggplot() +
 # Plot out first figure with normalised data: 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_number(admin_lev1_fortified$ecs_count_pownorm, 5)), 
+                   fill = cut_interval(admin_lev1_fortified$ecs_count_pownorm_scaled, 5)), 
                data = admin_lev1_fortified, 
                colour = 'black', 
                alpha = .7, 
@@ -339,7 +363,7 @@ ggplot() +
 # Plot out second figure with normalised data:  
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_number(admin_lev1_fortified$ecs_count_popnorm, 5)), 
+                   fill = cut_interval(admin_lev1_fortified$ecs_count_popnorm_scaled, 5)), 
                data = admin_lev1_fortified, 
                colour = 'black', 
                alpha = .7, 
@@ -390,13 +414,13 @@ ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(positi
 ```
 
 
-```{r create_choropleth_others, fig.width=2.65, fig.show="hold", fig.cap="Figure 4}
+```{r create_choropleth_others, fig.width=2.65, fig.show="hold", fig.cap="Figure 4"}
 
 # TODO: add bubbleplot with dots on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_number(admin_lev1_fortified$ecs_count, 5)), 
+                   fill = cut_interval(admin_lev1_fortified$ecs_count, 5)), 
                data = admin_lev1_fortified, 
                colour = 'black', 
                alpha = .7, 
@@ -420,7 +444,7 @@ ggplot() +
 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_number(admin_lev1_fortified$transition_count, 5)), 
+                   fill = cut_interval(admin_lev1_fortified$transition_count, 5)), 
                data = admin_lev1_fortified, 
                colour = 'black', 
                alpha = .7, 
@@ -443,7 +467,7 @@ ggplot() +
 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_number(admin_lev1_fortified$dtas_count, 5)), 
+                   fill = cut_interval(admin_lev1_fortified$dtas_count, 5)), 
                data = admin_lev1_fortified, 
                colour = 'black', 
                alpha = .7, 
@@ -464,7 +488,8 @@ ggplot() +
           legend.text = element_text(size = 8),
           legend.position = c(0.9, 0.25))
 
-todo: plot as animated chorogram: https://www.r-graph-gallery.com/331-basic-cartogram/
+# todo: plot as animated chorogram: 
+# https://www.r-graph-gallery.com/331-basic-cartogram/
 
 ```
 
@@ -494,10 +519,11 @@ While Roman Catholic churches make up just over 10% of the church buildings in S
 
 ```{r ur8fold}
 # read in relevant polygons for UR8fold scale
-if (file.exists("data/SG_UrbanRural_2016") == FALSE) {
+if (file.exists("data/SG_UrbanRural_2016.shp") == FALSE) {
 download.file("http://sedsh127.sedsh.gov.uk/Atom_data/ScotGov/ZippedShapefiles/SG_UrbanRural_2016.zip", 
               destfile = "data/SG_UrbanRural_2016.zip")
-unzip("data/SG_UrbanRural_2016.zip", exdir = "data")}
+unzip("data/SG_UrbanRural_2016.zip", exdir = "data")
+}
 urbanrural <- readOGR("./data", "SG_UrbanRural_2016") 
 
 # TODO: worth considering uploading data to zenodo for long-term reproducibility as ScotGov shuffles this stuff around periodically breaking URLs
@@ -539,15 +565,14 @@ The key question which this analysis seeks to answer is whether ECS, or the othe
 Of all the groups surveyed in this study, Eco-Congregation Scotland is the most heavily concentrated in large urban areas (33.53%), exceeding by almost 50% the rate for all places of worship (22.96% in large urban areas). Transition is a much more modest 20% and development trusts a bit lower at 15%. It is interesting to note that the rate of ECS concentration in these large urban areas matches the level of overall population distribution (34.5%). On the other end of the scale, Eco-Congregation Scotland is the least concentrated in remote rural areas (with 3.93% on level 7 and 5.44% on level 8 on the urban-rural scale), though again, they correlate roughly to the general population distribution (3.2% and 2.9% respectively). Places of worship outpace both the population of Scotland and the footprint of Eco-Congregation Scotland, with 14.98% in very remote rural areas, but this is exceeded by transition at 16.47% and both by Scottish community development trusts at 32.14%. So while Eco-Congregation Scotland correlates roughly with Scottish population distribution across the urban-rural scale, it has a considerably more urban profile than either of the other two groups surveyed.
 
 ```{r create_ur_barplot}
-# comvert admin back to dataframe for analysis
-urbanrural.df <- data.frame(urbanrural)
-
 # Need to flatten urbanrural based on all the count columns and generate using ggplot
 
 urbanrural_gathered <- gather(data.frame(urbanrural), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
 
-# TODO: change to ur category column
-ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 7", subtitle="Comparison of Groups by UrbanRural category", fill = "Groups")
+geom_bar( stat="identity", position="fill")
+
+# TODO: switch to stacked percentage plot, see here: https://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2/
+ggplot(urbanrural_gathered, aes(fill=group_type, y=number, x=UR8FOLD)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 7", subtitle="Comparison of Groups by UrbanRural category", fill = "Groups")
 ```
 
 ```{r create_urbanrural_ecs_chart_choropleth}
@@ -563,7 +588,7 @@ urbanrural_fortified <- join(urbanrural_fortified,urbanrural@data, by="id")
 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_number(urbanrural$ecs_count, 5)), 
+                   fill = cut_interval(urbanrural$ecs_count, 5)), 
                data = admin_lev1_fortified, 
                colour = 'black', 
                alpha = .7, 
