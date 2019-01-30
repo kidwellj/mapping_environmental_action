@@ -680,42 +680,43 @@ dtas@data=cbind(dtas@data,over(dtas,simd))
 # STAGE 2, extract NULL cells from each data set to prevent errors in stage 3
 
 # convert back to data frame for null cell extraction
-ecs<-data.frame(ecs)
+ecs_df<-data.frame(ecs)
 # split out null and normal cells
-ecs_clean<-ecs[complete.cases(ecs),]
-ecs_null<-ecs[!complete.cases(ecs),]
-# convert back to spatialpointdataframe
-coordinates(ecs) <- c("X", "Y")
-proj4string(ecs) <- proj4string(admin_lev1)
+ecs_clean<-ecs_df[complete.cases(ecs_df),]
+ecs_null<-ecs_df[!complete.cases(ecs_df),]
 
 # convert back to data frame for null cell extraction
-transition<-data.frame(transition)
+transition_df<-data.frame(transition)
 # split out null and normal cells
-transition_clean<-transition[complete.cases(transition),]
-transition_null<-transition[!complete.cases(transition),]
-# convert back to spatialpointdataframe
-coordinates(transition) <- c("X", "Y")
-proj4string(transition) <- proj4string(admin_lev1)
+transition_clean<-transition_df[complete.cases(transition_df),]
+transition_null<-transition_df[!complete.cases(transition_df),]
 
 # convert back to data frame for null cell extraction
-permaculture<-data.frame(permaculture)
+permaculture_df<-data.frame(permaculture)
 # split out null and normal cells
-permaculture_clean<-permaculture[complete.cases(permaculture),]
-permaculture_null<-permaculture[!complete.cases(permaculture),]
-# convert back to spatialpointdataframe
-coordinates(permaculture) <- c("X", "Y")
-proj4string(permaculture) <- proj4string(admin_lev1)
+permaculture_clean<-permaculture_df[complete.cases(permaculture_df),]
+permaculture_null<-permaculture_df[!complete.cases(permaculture_df),]
 
 # convert back to data frame for null cell extraction
-dtas<-data.frame(dtas)
+dtas_df<-data.frame(dtas)
 # split out null and normal cells
-dtas_clean<-dtas[complete.cases(dtas),]
-dtas_null<-dtas[!complete.cases(dtas),]
-# convert back to spatialpointdataframe
-coordinates(dtas) <- c("X", "Y")
-proj4string(dtas) <- proj4string(admin_lev1)
+dtas_clean<-dtas_df[complete.cases(dtas_df),]
+dtas_null<-dtas_df[!complete.cases(dtas_df),]
 
 # TODO: change names to match simd2016 conventions
+
+# Overal_SIMD16_Rank
+# SIMD_2016_Quintile
+# SIMD_2016_Decile
+# 
+# Income_Domain_2016_Rank
+# Employment_Domain_2016_Rank
+# Health_Domain_2016_Rank
+# Education_Domain_2016_Rank
+# Geographic_Access_Domain_2016_Rank
+# Crime_Domain_2016_Rank
+# Housing_Domain_2016_Rank
+
 # STAGE 3a, calculate sums based on SIMD12R columns and generate new integer sets with quintile count data
 simd_rownames = c("Quintile 1","Quintile 2","Quintile 3","Quintile 4","Quintile 5")
 simdr12_ecs = c((sum(ecs_clean$SIMDR12<1301)), (sum(ecs_clean$SIMDR12 > 1300 & ecs_clean$SIMDR12 < 2602)), (sum(ecs_clean$SIMDR12 > 2601 & ecs_clean$SIMDR12 < 3903)), (sum(ecs_clean$SIMDR12 > 3902 & ecs_clean$SIMDR12 < 5204)), (sum(ecs_clean$SIMDR12 > 5203 & ecs_clean$SIMDR12 < 6505)))
@@ -728,6 +729,7 @@ simdr12_dtas = c((sum(dtas_clean$SIMDR12<1301)), (sum(dtas_clean$SIMDR12 > 1300 
 # names(simdr12_dtas) <- simd_rownames
 
 # STAGE 3b, calculate sums based on INCR12 columns and generate new integer sets with quintile count data
+
 incr12_ecs = c((sum(ecs_clean$INCR12<1301)), (sum(ecs_clean$INCR12 > 1300 & ecs_clean$INCR12 < 2602)), (sum(ecs_clean$INCR12 > 2601 & ecs_clean$INCR12 < 3903)), (sum(ecs_clean$INCR12 > 3902 & ecs_clean$INCR12 < 5204)), (sum(ecs_clean$INCR12 > 5203 & ecs_clean$INCR12 < 6505)))
 incr12_transition = c((sum(transition_clean$INCR12<1301)), (sum(transition_clean$INCR12 > 1300 & transition_clean$INCR12 < 2602)), (sum(transition_clean$INCR12 > 2601 & transition_clean$INCR12 < 3903)), (sum(transition_clean$INCR12 > 3902 & transition_clean$INCR12 < 5204)), (sum(transition_clean$INCR12 > 5203 & transition_clean$INCR12 < 6505)))
 incr12_permaculture = c((sum(permaculture_clean$INCR12<1301)), (sum(permaculture_clean$INCR12 > 1300 & permaculture_clean$INCR12 < 2602)), (sum(permaculture_clean$INCR12 > 2601 & permaculture_clean$INCR12 < 3903)), (sum(permaculture_clean$INCR12 > 3902 & permaculture_clean$INCR12 < 5204)), (sum(permaculture_clean$INCR12 > 5203 & permaculture_clean$INCR12 < 6505)))
