@@ -20,6 +20,7 @@ output:
     toc_depth: 2
     number_sections: true
     fig_caption: true
+    fig_retina: 1
   pdf_document:
     keep_tex: true
     number_sections: true
@@ -57,15 +58,18 @@ require(rgeos)
 require(ggmap)
 require(maptools)
 require(RCurl)
-require(tibble) # using for grouped bar plot
+# require(tibble) # using for grouped bar plot
 require(tidyr)  # using for grouped bar plot
 require(plyr)
 require(dplyr)
 require(reshape2)  # using for grouped bar plot
 require(pander)
 require(scales)
-require(sqldf) # using sqldf to filter while loading very large data sets
+# require(sqldf) # using sqldf to filter while loading very large data sets
 require(plotly) # allows for export of plots to dynamic web pages
+require(gtable) # more powerful package for multi-plot layouts, not necessary for knitr
+require(showtext) # for loading in fonts
+require(extrafont) # font support
 
 # Set up local workspace:
 if (dir.exists("data") == FALSE) {
@@ -92,6 +96,12 @@ bng_epsg <- CRS("+init=epsg:27700")
 osgb36 <- CRS("+init=epsg:7405")
 wgs84_epsg <- CRS("+init=epsg:4326")
 
+# Configure fonts for plots below
+
+## Loading Google fonts (http://www.google.com/fonts)
+font_add_google("Merriweather", "merriweather")
+# The following will load in system fonts (uncomment and run as needed on first execution)
+# font_import(pattern="[A/a]rial", prompt=FALSE)
 ```
 
 # Introduction[^15541312]
@@ -298,7 +308,7 @@ Perhaps the first important question to ask of these groups is, where are they? 
 
 (*TODO: need to implement*) Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake. Note, for the sake of a more accurate visual communication, we have also marked out areas of Scotland that are uninhabited with hash marks on the map of agricultural parishes. (*TODO: this will be done in the final draft, once I get my image masking fixed!*).[^15571030]
 
-```{r plot_admin_ecs_choropleth}
+```{r plot_admin_ecs_choropleth, fig.width=4, fig.cap="Figure 1"}
 # TODO: Need to clip choropleth polygons to buildings shapefile
 
 # Prepare admin_lev1 for tidyr and reinsert dropped columns
@@ -337,7 +347,9 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.9, 0.25))
+# TODO: shift to use of grobs: https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html
 
+# ggsave("figure1.pdf")
 ```
 
 ```{r plot_admin_ecs_normed_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 2"}
@@ -365,6 +377,7 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.9, 0.25))
+# ggsave("figure2.pdf")
 
 # TODO: Need to sort out why error: "Insufficient data values to produce 5 bins."
 # Plot out second figure with normalised data:  
@@ -390,6 +403,7 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.9, 0.25))
+# ggsave("figure3.pdf")
 ```
 
 Given the way population and places of worship are unevenly distributed across Scotland it is important to represent data in terms of relative distribution. For this study, we attempted to "normalise" our data in two different ways, (1) as shown by Figure 2 above, by taking population figures from the 2011 census (see data sheet in Appendix A) and (2) by adjusting relative to the number of places of worship in each council region.[^15914204] The latter of these two can yield particularly unexpected results. Thus, of the `r length(pow_pointX)` "places of worship" in Scotland, the highest concentration is actually the `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$pow_count)])` region, with `r max(admin_lev1$pow_count)`, second is `r max( admin_lev1$pow_count[admin_lev1$pow_count!=max(admin_lev1$pow_count)] )` (`r as.character(admin_lev1$NAME_2[which.max( admin_lev1$pow_count[admin_lev1$pow_count!=max(admin_lev1$pow_count)])] )`). Rank of Council Areas by population and number of places of worship is also included in Appendix A.
@@ -421,7 +435,7 @@ ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(positi
 ```
 
 
-```{r create_choropleth_others, fig.width=2.65, fig.show="hold", fig.cap="Figure 4"}
+```{r create_choropleth_others, fig.width=4, fig.show="hold", fig.cap="Figure 4"}
 
 # TODO: add bubbleplot with dots on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
 
@@ -434,7 +448,7 @@ ggplot() +
                size = .3) + 
   viridis::scale_fill_viridis(discrete = TRUE) + 
   labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 1", 
+       title = "Figure 5", 
        subtitle="Concentration of ECS groups",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
@@ -458,7 +472,7 @@ ggplot() +
                size = .3) + 
   viridis::scale_fill_viridis(discrete = TRUE) + 
   labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 2", 
+       title = "Figure 6", 
        subtitle="Concentration of Transition groups",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
@@ -481,7 +495,7 @@ ggplot() +
                size = .3) + 
   viridis::scale_fill_viridis(discrete = TRUE) + 
   labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 2", 
+       title = "Figure 7", 
        subtitle="Concentration of DTAS groups",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
@@ -551,9 +565,6 @@ urbanrural$dtas_percent<- prop.table(urbanrural$dtas_count)
 # calculate count of permaculture for fields in urbanrural
 urbanrural$permaculture_count <- poly.counts(permaculture,urbanrural)
 urbanrural$permaculture_percent<- prop.table(urbanrural$permaculture_count)
-
-# Create dataframe for analysis
-urbanrural_df<-data.frame(urbanrural)
 ```
 
 Rather than bifurcate congregations into an urban/rural dichotomy, for this study we used the Scottish Government's six-point remoteness scale to categorise eco-congregations along a spectrum of highly populated to remote areas. This 8-fold scale (calculated biennially) offers a more nuanced measurement that combines measurements of remoteness and population along the following lines:
@@ -572,37 +583,44 @@ The key question which this analysis seeks to answer is whether ECS, or the othe
 Of all the groups surveyed in this study, Eco-Congregation Scotland is the most heavily concentrated in large urban areas (33.53%), exceeding by almost 50% the rate for all places of worship (22.96% in large urban areas). Transition is a much more modest 20% and development trusts a bit lower at 15%. It is interesting to note that the rate of ECS concentration in these large urban areas matches the level of overall population distribution (34.5%). On the other end of the scale, Eco-Congregation Scotland is the least concentrated in remote rural areas (with 3.93% on level 7 and 5.44% on level 8 on the urban-rural scale), though again, they correlate roughly to the general population distribution (3.2% and 2.9% respectively). Places of worship outpace both the population of Scotland and the footprint of Eco-Congregation Scotland, with 14.98% in very remote rural areas, but this is exceeded by transition at 16.47% and both by Scottish community development trusts at 32.14%. So while Eco-Congregation Scotland correlates roughly with Scottish population distribution across the urban-rural scale, it has a considerably more urban profile than either of the other two groups surveyed.
 
 ```{r create_ur_barplot}
+# Create dataframe for analysis
+# urbanrural_df<-data.frame(urbanrural)
+
 # Need to flatten urbanrural based on all the count columns and generate using ggplot
 
 urbanrural_gathered <- gather(data.frame(urbanrural), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
 
-geom_bar( stat="identity", position="fill")
+# geom_bar( stat="identity", position="fill")
 
 # TODO: switch to stacked percentage plot, see here: https://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2/
-ggplot(urbanrural_gathered, aes(fill=group_type, y=number, x=UR8FOLD)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 7", subtitle="Comparison of Groups by UrbanRural category", fill = "Groups")
+ggplot(urbanrural_gathered, aes(fill=group_type, y=number, x=UR8FOLD)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 8", subtitle="Comparison of Groups by UrbanRural category", fill = "Groups")
 ```
 
 ```{r create_urbanrural_ecs_chart_choropleth}
 
 # Prepare urbanrural for tidyr and reinsert dropped columns
-# TODO: change to relevant urbanrural column names
 
 names(admin_lev1)[names(admin_lev1) == "newcode"] <- "id"
-urbanrural@data$id <- as.integer(rownames(admin_lev1@data))
-urbanrural@data$id <- urbanrural@data$id-1
+urbanrural@data$id <- as.integer(rownames(urbanrural@data))
+urbanrural@data$id <- urbanrural@data$id - 1
 urbanrural_fortified <- tidy(urbanrural)
+ecs_df <- as.data.frame(ecs)
 urbanrural_fortified <- join(urbanrural_fortified,urbanrural@data, by="id")
 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_interval(urbanrural$ecs_count, 5)), 
-               data = admin_lev1_fortified, 
+                   fill = cut_interval(urbanrural_fortified$ecs_count, 5)), 
+               data = urbanrural_fortified, 
                colour = 'black', 
                alpha = .7, 
                size = .3) + 
+  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
+             colour = 'white',
+             size = .3,
+             show.legend = FALSE) +
   viridis::scale_fill_viridis(discrete = TRUE) + 
   labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 1", 
+       title = "Figure 9", 
        subtitle="Eco-Congregation Scotland concentrations in Urban Rural 8-fold classifications",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
@@ -615,26 +633,12 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.9, 0.25))
-          
-
-pdf(file="figures/urbanrural_choropleth_ecs.pdf", width=4, height=4)
-bins <- unique(quantile(urbanrural$ecs_count, seq(0,1,length.out=30)))
-urbanrural$binId01 <- findInterval(urbanrural$ecs_count, bins)
-colSet01 <- rev(heat.colors(length(bins)))
-plot(urbanrural, col=colSet01[urbanrural$binId01], border="grey", lwd=0.25)
-par(mar=c(5,3,2,2)+0.1)
-# use the following to add points to the map (with transparency)
-# points(ecs, pch='.', col=rgb(0,0,0,alpha=0.15))
-title(main="Figure 5", sub="Eco-Congregation Scotland\nconcentrations in Urban Rural 8-fold classifications", cex.main=0.75, cex.sub=0.5)
-# save to file
-# dev.copy(png,'figures/urbanrural_choropleth_1.png')
-dev.off()
 ```
 
 
 # Wealth, Employment, and Literacy
 
-```{r simd}
+```{r simd data, message=FALSE, warning=FALSE}
 # read in relevant polygons, Scottish Index of Multiple deprivation
 if (file.exists("data/c_dz_11.shp") == FALSE) {
 download.file("http://simd.scot/2016/data/simd2016_withgeog.zip", 
@@ -643,9 +647,11 @@ unzip("data/simd2016_withgeog.zip", exdir = "data", junkpaths = TRUE)
 }
 simd_shapes <- readOGR("./data", "sc_dz_11") 
 simd_indicators <- read.csv("./data/simd2016_withinds.csv")
-simd <- merge(x=simd_shapes, y=simd_indicators, by="Data_Zone")
-  
-# commenting out old dataset in light of reproducible version above
+simd_wgs <- merge(x=simd_shapes, y=simd_indicators, by.x = "DataZone", by.y = "Data_Zone")
+simd <- spTransform(simd_wgs, bng)
+
+
+# commenting out old 2012 dataset in light of reproducible (and new) version above
 # simd <- readOGR("data", "simd_04-12_all_data")
 
 # STAGE 1, augment each dataset with relevant (geolocated) columns from SIMD
