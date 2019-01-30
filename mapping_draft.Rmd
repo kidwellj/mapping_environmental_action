@@ -38,6 +38,7 @@ knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FA
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
 ## Default repo
 # setwd("/Users/jeremy/gits/mapping_environmental_action")
+# setwd("/Users/kidwellj/OneDrive\ -\ bham.ac.uk/writing/201708_mapping_environmental_action")
 
 # Set repository to be new standard, e.g. cloud server. 
 # This will avoid a dialogue box if packages are to be installed for below on first run.
@@ -82,10 +83,15 @@ if (dir.exists("derivedData") == FALSE) {
 # it is falling out of use in many cases, so will be defaulting to WGS84 in future 
 # data-sets and papers.
 
-# TODO: make canonical CRS definitions and use consistently; remove proj4string(admin_lev1) and other similar instances below
+# TODO: make canonical CRS definitions and use consistently; remove proj4string(admin_lev1) and other similar instances below. 
+wgs84 <- "+proj=longlat +datum=WGS84"
+bng <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
 
-wgs84 = '+proj=longlat +datum=WGS84'
-bng = "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
+# Note, shifting to EPSG codes given the usage of this approach with sf()
+bng_epsg <- CRS("+init=epsg:27700")
+osgb36 <- CRS("+init=epsg:7405")
+wgs84_epsg <- CRS("+init=epsg:4326")
+
 ```
 
 # Introduction[^15541312]
@@ -166,9 +172,10 @@ unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
 admin_lev2 <- readOGR("./data", "scotland_parlcon_2011")
 
 # read in Transition Towns data and turn it into a SpatialPointsDataFrame
-transition <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
-coordinates(transition) <- c("X", "Y")
-proj4string(transition) <- CRS(wgs84)
+transition_wgs <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
+coordinates(transition_wgs) <- c("X", "Y")
+proj4string(transition_wgs) <- CRS(wgs84)
+transition <- spTransform(transition_wgs, bng)
 
 # read in all_churches data and turn it into a SpatialPointsDataFrame
 # TODO: need to remove all data points which are outside BNG area to 
