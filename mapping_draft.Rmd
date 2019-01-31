@@ -650,10 +650,6 @@ simd_indicators <- read.csv("./data/simd2016_withinds.csv")
 simd_wgs <- merge(x=simd_shapes, y=simd_indicators, by.x = "DataZone", by.y = "Data_Zone")
 simd <- spTransform(simd_wgs, bng)
 
-
-# commenting out old 2012 dataset in light of reproducible (and new) version above
-# simd <- readOGR("data", "simd_04-12_all_data")
-
 # STAGE 1, augment each dataset with relevant (geolocated) columns from SIMD
 # examine which ecs fall within each SIMD classification
 cbind(ecs@data, over(ecs, simd))
@@ -663,7 +659,6 @@ ecs@data=cbind(ecs@data,over(ecs,simd))
 cbind(pow_pointX@data, over(pow_pointX, simd))
 # assign combined table with SIMD columns to attribute table slot of ecs table
 pow_pointX@data=cbind(pow_pointX@data,over(pow_pointX,simd))
-
 # examine which transition fall within each SIMD classifications
 cbind(transition@data, over(transition, simd))
 # assign combined table with SIMD columns to attribute table slot of transition table
@@ -716,6 +711,43 @@ dtas_null<-dtas_df[!complete.cases(dtas_df),]
 # Geographic_Access_Domain_2016_Rank
 # Crime_Domain_2016_Rank
 # Housing_Domain_2016_Rank
+
+# Augment simd with group counts
+
+simd$ecs_count <- poly.counts(ecs,simd)
+simd$transition_count <- poly.counts(transition,simd)
+simd$dtas_count <- poly.counts(dtas,simd)
+simd$permaculture_count <- poly.counts(permaculture,simd)
+simd$pointx_count <- poly.counts(pointx,simd)
+
+# Run plots
+
+# Simplify dataframes to: name, simd categories (above) then add row and fill with group_type
+# bind tables together
+# flatten simd columns into two with value and simd_domain as resulting columns for faceting
+
+y bars by group_type, fill = quantiles via cut_interval() or mutate ntile()
+x value
+facet: simd_domain
+
+ecs_simd_min <- ecs[1:4, ]
+two <- mtcars[11:14, ]
+
+# You can supply data frames as arguments:
+bind_rows(ecs_simd_min, two)
+
+# Faceted stacked bar plot
+
+ggplot(data, aes(y=value, x=Overal_SIMD16_Rank, color=specie, fill=cut_interval(Overal_SIMD16_Rank, 5))) + 
+    geom_bar( stat="group_type") +    
+    facet_wrap(~condition)
+
+cut_interval(x, n = NULL, length = NULL, ...)
+
+# Boxplot
+
+ggplot(dat, aes(x=cond, y=rating, fill=cond)) + geom_boxplot()
+
 
 # STAGE 3a, calculate sums based on SIMD12R columns and generate new integer sets with quintile count data
 simd_rownames = c("Quintile 1","Quintile 2","Quintile 3","Quintile 4","Quintile 5")
@@ -786,6 +818,12 @@ write.csv(simd_percents_only, "derivedData/simd_percents_only.csv", row.names=FA
 ```{r create_simd_barplot}
 # STAGE 5, generate cool charts
 
+# simd boxplot
+
+simd_df <- data.frame(simd)
+ggplot(simd, aes(x=cond, y=rating, fill=cond)) + geom_boxplot()
+
+
 # comvert admin back to dataframe for analysis
 urbanrural.df <- data.frame(urbanrural)
 
@@ -806,7 +844,7 @@ simd_percents_only_long <- melt(simd_percents_only, id.vars = "simd_rownames",
 qplot(data=simd_percents_only_long , geom="bar", fill=(factor(simd_rownames)))
 
 # jitterplot option, from Teutonico 2015, p. 63
-https://ggplot2.tidyverse.org/reference/geom_jitter.html
+# https://ggplot2.tidyverse.org/reference/geom_jitter.html
 ```
 
 Another crucial point of assessment relates to the relation of Eco-Congregation communities to the Scottish Index of Multiple Deprivation. This instrument aggregates a large variety of factors which can lead to deprivation including crime rates, employment levels, access to services (implicating remoteness), and literacy. By assessing ECS, Transition, and dtas against the deprivation scale, we can assess whether eco-congregations fall within particular demographics and also whether the fully aggregated SIMD measurement provides a useful point of comparison for our purposes. The SIMD essentially divides Scotland into 6407 geographic zones and then ranks them based on their relative deprivation. This data set can be split into any number of groups, but for our purposes we have settled on Quintiles, splitting the SIMD data set at every 1302 entries. We then measured where each transition group, ECS, and dtas fell within these zones and calculated how they fell into these five quintiles, from more to least deprived.
