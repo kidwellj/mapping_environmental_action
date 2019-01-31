@@ -99,7 +99,7 @@ wgs84_epsg <- CRS("+init=epsg:4326")
 # Configure fonts for plots below
 
 ## Loading Google fonts (http://www.google.com/fonts)
-font_add_google("Merriweather", "merriweather")
+# font_add_google("Merriweather", "merriweather")
 # The following will load in system fonts (uncomment and run as needed on first execution)
 # font_import(pattern="[A/a]rial", prompt=FALSE)
 ```
@@ -431,6 +431,8 @@ admin.df <- data.frame(admin_lev1)
 
 admin_gathered <- gather(data.frame(admin_lev1), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
 
+# TODO: make custom legend labels, remove X axis label
+# Ambitious TODO: can we link Admin area titles to locations on adjacent map with lines
 ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 4", subtitle="Comparison of Groups by Admin Region", fill = "Groups")
 ```
 
@@ -583,14 +585,9 @@ The key question which this analysis seeks to answer is whether ECS, or the othe
 Of all the groups surveyed in this study, Eco-Congregation Scotland is the most heavily concentrated in large urban areas (33.53%), exceeding by almost 50% the rate for all places of worship (22.96% in large urban areas). Transition is a much more modest 20% and development trusts a bit lower at 15%. It is interesting to note that the rate of ECS concentration in these large urban areas matches the level of overall population distribution (34.5%). On the other end of the scale, Eco-Congregation Scotland is the least concentrated in remote rural areas (with 3.93% on level 7 and 5.44% on level 8 on the urban-rural scale), though again, they correlate roughly to the general population distribution (3.2% and 2.9% respectively). Places of worship outpace both the population of Scotland and the footprint of Eco-Congregation Scotland, with 14.98% in very remote rural areas, but this is exceeded by transition at 16.47% and both by Scottish community development trusts at 32.14%. So while Eco-Congregation Scotland correlates roughly with Scottish population distribution across the urban-rural scale, it has a considerably more urban profile than either of the other two groups surveyed.
 
 ```{r create_ur_barplot}
-# Create dataframe for analysis
-# urbanrural_df<-data.frame(urbanrural)
-
 # Need to flatten urbanrural based on all the count columns and generate using ggplot
 
 urbanrural_gathered <- gather(data.frame(urbanrural), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
-
-# geom_bar( stat="identity", position="fill")
 
 # TODO: switch to stacked percentage plot, see here: https://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2/
 ggplot(urbanrural_gathered, aes(fill=group_type, y=number, x=UR8FOLD)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 8", subtitle="Comparison of Groups by UrbanRural category", fill = "Groups")
@@ -604,9 +601,11 @@ names(admin_lev1)[names(admin_lev1) == "newcode"] <- "id"
 urbanrural@data$id <- as.integer(rownames(urbanrural@data))
 urbanrural@data$id <- urbanrural@data$id - 1
 urbanrural_fortified <- tidy(urbanrural)
+# Convert ecs to df for representation as points on the map
 ecs_df <- as.data.frame(ecs)
 urbanrural_fortified <- join(urbanrural_fortified,urbanrural@data, by="id")
 
+# Make dots smaller - add outlines, & lines thinner
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
                    fill = cut_interval(urbanrural_fortified$ecs_count, 5)), 
@@ -649,6 +648,25 @@ simd_shapes <- readOGR("./data", "sc_dz_11")
 simd_indicators <- read.csv("./data/simd2016_withinds.csv")
 simd_wgs <- merge(x=simd_shapes, y=simd_indicators, by.x = "DataZone", by.y = "Data_Zone")
 simd <- spTransform(simd_wgs, bng)
+simd_df <- data.frame(simd)
+simd_min <- simd[,-(26:55)]
+simd_min <- simd[,-(3:13)]
+
+
+simd@data[c(1:2,14:25)]
+simd@data[-c(3:13,26:55)]
+simd[, -(3:13)]
+
+# SIMD_2016_Quintile
+# SIMD_2016_Decile
+# 
+# Income_Domain_2016_Rank
+# Employment_Domain_2016_Rank
+# Health_Domain_2016_Rank
+# Education_Domain_2016_Rank
+# Geographic_Access_Domain_2016_Rank
+# Crime_Domain_2016_Rank
+# Housing_Domain_2016_Rank
 
 
 # commenting out old 2012 dataset in light of reproducible (and new) version above
