@@ -593,7 +593,7 @@ urbanrural_gathered <- gather(data.frame(urbanrural), key="group_type", value="n
 ggplot(urbanrural_gathered, aes(fill=group_type, y=number, x=UR8FOLD)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 8", subtitle="Comparison of Groups by UrbanRural category", fill = "Groups")
 ```
 
-```{r create_urbanrural_ecs_chart_choropleth}
+```{r create_urbanrural_ecs_chart_choropleth, fig.width=4, fig.cap="Figure 9"}
 
 # Prepare urbanrural for tidyr and reinsert dropped columns
 
@@ -706,7 +706,7 @@ ggplot(data=allgroups_gathered, aes(x=simd_category, y=rank)) +
 # TODO modify fill = quantiles via cut_interval() or mutate ntile()
 # cut_interval(x, n = NULL, length = NULL, ...)
 
-write.csv(simd_percents_only, "derivedData/simd_percents_only.csv", row.names=FALSE)
+# write.csv(simd_percents_only, "derivedData/simd_percents_only.csv", row.names=FALSE)
 ```
 
 ```{r create_simd_boxplot}
@@ -745,13 +745,12 @@ We can find divergence between transition communities and eco-congregation when 
 # Output CSV files for various levels of admin
 write.csv(admin_lev1, "derivedData/admin_lev1.csv", row.names=FALSE)
 write.csv(admin_lev2, "derivedData/admin_lev2.csv", row.names=FALSE)
-# write.csv(admin_lev3, "derivedData/admin_lev3.csv", row.names=FALSE)
 write.csv(as_data_frame(admin_lev1[,c(3,5,7,11,13)]), "derivedData/admin.csv", row.names=FALSE)
 write.csv(ecs, "derivedData/ecs.csv", row.names=FALSE)
 write.csv(transition, "derivedData/transition.csv", row.names=FALSE)
 write.csv(permaculture, "derivedData/permaculture.csv", row.names=FALSE)
 write.csv(dtas, "derivedData/dtas.csv", row.names=FALSE)
-## write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
+write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
 
 ## Output mmd tables using pander
 panderOptions("digits", 2)
@@ -765,22 +764,19 @@ pander(as_data_frame(admin_lev1[,c(3,5,7,11,13)]))
 # Appendix C - Data by Urban / Rural Classification
 
 ```{r pander_urbanrural_table}
-urbanrural.shortened <- urbanrural[,c(2,6,9:18)]
-write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
-write.csv(urbanrural.shortened, "derivedData/urbanrural.csv", row.names=FALSE)
-urbanrural.shortened<-data.frame(urbanrural.shortened)
-panderOptions("digits", 2)
-pander(urbanrural.shortened)
-
-
-
+# urbanrural.shortened <- urbanrural[,c(2,6,9:18)]
+# write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
+# write.csv(urbanrural.shortened, "derivedData/urbanrural.csv", row.names=FALSE)
+# urbanrural.shortened<-data.frame(urbanrural.shortened)
+# panderOptions("digits", 2)
+# pander(urbanrural.shortened)
 
 # Citations
 
 [^15541312]: This research was jointly funded by the AHRC/ESRC under project numnbers AH/K005456/1 and AH/P005063/1.
 [^158261118]: This is not to say that there have been no collaborations before 2000, noteworthy in this respect is the WWF who helped to found the Alliance of Religion and Conservation (ARC) in 1985.
 [^159141043]: This suggestion should be qualified - RSPB would greatly exceed ECS both in terms of the number of individual subscribers and budget. The RSPB trustee's report for 2013-2014 suggests that their member base was 1,114,938 people across Britain with a net income of £127m - the latter of which exceeds the Church of Scotland. If we adjust this based on the Scottish share of the population of the United Kingdom as of the 2011 census (8.3%) this leaves us with an income of £9.93m. The British charity commission requires charities to self-report the number of volunteers and staff, and from their most recent statistics we learn that RSPB engaged with 17,600 volunteers and employed 2,110 members of staff. Again, adjusted for population, this leaves 1,460 volunteers in Scotland and 176 staff. However, if we measure environmental groups based on the number of sites they maintain, RSPB has only 40 reserves with varying levels of local community engagement. For comparison, as of Sep 14 2015, Friends of the Earth Scotland had only 10 local groups (concentrated mostly in large urban areas). Depending on how one measures "volunteerism," it may be possible that ECS has more engaged volunteers in Scotland as well - if each ECS group had only 4 "volunteers" then this would exceed RSPB.
-[^15541313]: Kidwell, Jeremy. (2016). Eco-Congregation Scotland, 2014-2016 [dataset]. University of Edinburgh. http://dx.doi.org/10.7488/ds/1357.
+[^15541313]: Kidwell, Jeremy. (2016). Eco-Congregation Scotland, 2014-2016. University of Edinburgh. http://dx.doi.org/10.7488/ds/1357.
 [^15541342]:My dataset on transition towns will be made available later in 2016. Initial data was aquired from the Transition Scotland website http://www.transitionscotland.org/transition-in-scotland on December 10, 2014. We are currently in the process of collaboratively generating a more up-to-date dataset which will reflect their collaboration with SCCAN.
 [^177171536]: For further detail on Dataset generation, see Kidwell, Forthcoming, 2018.
 [^158261232]:Data was acquired from the Development Trusts Association website, http://www.dtascot.org.uk, accessed on 20 July 2015. As above, we are currently in the process of active collaboration with volunteers from the DTAS to co-generate a new dataset.
