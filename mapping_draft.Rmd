@@ -320,7 +320,7 @@ admin_lev1_fortified <- join(admin_lev1_fortified,admin_lev1@data, by="id")
 
 # Draw initial choropleth map of ECS concentration (using sp, rather than sf data)
 # Note: some ideas taken from here: https://unconj.ca/blog/choropleth-maps-with-r-and-ggplot2.html
-
+# See also here: https://timogrossenbacher.ch/2016/12/beautiful-thematic-maps-with-ggplot2-only/
 # TODO: fix issues with cut_interval / cut_number below. Current error: "'breaks' are not unique calls"
 # See here: https://stackoverflow.com/questions/16184947/cut-error-breaks-are-not-unique
 # Reference here: https://ggplot2.tidyverse.org/reference/cut_interval.html
@@ -646,220 +646,84 @@ unzip("data/simd2016_withgeog.zip", exdir = "data", junkpaths = TRUE)
 }
 simd_shapes <- readOGR("./data", "sc_dz_11") 
 simd_indicators <- read.csv("./data/simd2016_withinds.csv")
-simd_wgs <- merge(x=simd_shapes, y=simd_indicators, by.x = "DataZone", by.y = "Data_Zone")
+simd_indicators_min <- simd_indicators[c(1,6:17)]
+simd_wgs <- merge(x=simd_shapes, y=simd_indicators_min, by.x = "DataZone", by.y = "Data_Zone")
 simd <- spTransform(simd_wgs, bng)
-simd_df <- data.frame(simd)
-simd_min <- simd[,-(26:55)]
-simd_min <- simd[,-(3:13)]
 
-
-simd@data[c(1:2,14:25)]
-simd@data[-c(3:13,26:55)]
-simd[, -(3:13)]
-
-# SIMD_2016_Quintile
-# SIMD_2016_Decile
-# 
-# Income_Domain_2016_Rank
-# Employment_Domain_2016_Rank
-# Health_Domain_2016_Rank
-# Education_Domain_2016_Rank
-# Geographic_Access_Domain_2016_Rank
-# Crime_Domain_2016_Rank
-# Housing_Domain_2016_Rank
-
-# STAGE 1, augment each dataset with relevant (geolocated) columns from SIMD
-# examine which ecs fall within each SIMD classification
-cbind(ecs@data, over(ecs, simd))
+# Augment each dataset with relevant (geolocated) columns from SIMD
 # assign combined table with SIMD columns to attribute table slot of ecs table
 ecs@data=cbind(ecs@data,over(ecs,simd))
-# examine where pointX falls within each SIMD classification
-cbind(pow_pointX@data, over(pow_pointX, simd))
 # assign combined table with SIMD columns to attribute table slot of ecs table
 pow_pointX@data=cbind(pow_pointX@data,over(pow_pointX,simd))
-# examine which transition fall within each SIMD classifications
-cbind(transition@data, over(transition, simd))
 # assign combined table with SIMD columns to attribute table slot of transition table
 transition@data=cbind(transition@data,over(transition,simd))
-# examine which permaculture fall within each SIMD classifications
-cbind(permaculture@data, over(permaculture, simd))
 # assign combined table with SIMD columns to attribute table slot of permaculture table
 permaculture@data=cbind(permaculture@data,over(permaculture,simd))
-# examine which dtas fall within each SIMD classifications
-cbind(dtas@data, over(dtas, simd))
 # assign combined table with SIMD columns to attribute table slot of dtas table
 dtas@data=cbind(dtas@data,over(dtas,simd))
 
-# STAGE 2, extract NULL cells from each data set to prevent errors in stage 3
-
-# convert back to data frame for null cell extraction
-ecs_df<-data.frame(ecs)
-# split out null and normal cells
-ecs_clean<-ecs_df[complete.cases(ecs_df),]
-ecs_null<-ecs_df[!complete.cases(ecs_df),]
-
-# convert back to data frame for null cell extraction
-transition_df<-data.frame(transition)
-# split out null and normal cells
-transition_clean<-transition_df[complete.cases(transition_df),]
-transition_null<-transition_df[!complete.cases(transition_df),]
-
-# convert back to data frame for null cell extraction
-permaculture_df<-data.frame(permaculture)
-# split out null and normal cells
-permaculture_clean<-permaculture_df[complete.cases(permaculture_df),]
-permaculture_null<-permaculture_df[!complete.cases(permaculture_df),]
-
-# convert back to data frame for null cell extraction
-dtas_df<-data.frame(dtas)
-# split out null and normal cells
-dtas_clean<-dtas_df[complete.cases(dtas_df),]
-dtas_null<-dtas_df[!complete.cases(dtas_df),]
-
-# TODO: change names to match simd2016 conventions
-
-# Overal_SIMD16_Rank
-# SIMD_2016_Quintile
-# SIMD_2016_Decile
-# 
-# Income_Domain_2016_Rank
-# Employment_Domain_2016_Rank
-# Health_Domain_2016_Rank
-# Education_Domain_2016_Rank
-# Geographic_Access_Domain_2016_Rank
-# Crime_Domain_2016_Rank
-# Housing_Domain_2016_Rank
-
-# Augment simd with group counts
+# Augment SIMD with group counts
 
 simd$ecs_count <- poly.counts(ecs,simd)
 simd$transition_count <- poly.counts(transition,simd)
 simd$dtas_count <- poly.counts(dtas,simd)
 simd$permaculture_count <- poly.counts(permaculture,simd)
-simd$pointx_count <- poly.counts(pointx,simd)
+simd$pow_count <- poly.counts(pow_pointX,simd)
 
-# Run plots
+# Generate simplified dataframes with counts for each group
+ecs_simd <- data.frame(ecs[c(1,16,25,30:36)])
+colnames(ecs_simd)[1] <- "group_name"
+ecs_simd$group_type <- "ecs"
+transition_simd <- data.frame(transition[c(2,5,14,19:25)])
+colnames(transition_simd)[1] <- "group_name"
+transition_simd$group_type <- "transition"
+dtas_simd <- data.frame(dtas[c(1,5,14,19:25)])
+colnames(dtas_simd)[1] <- "group_name"
+dtas_simd$group_type <- "dtas"
+permaculture_simd <- data.frame(permaculture[c(1,11,20,25:31)])
+colnames(permaculture_simd)[1] <- "group_name"
+permaculture_simd$group_type <- "permaculture"
 
-# Simplify dataframes to: name, simd categories (above) then add row and fill with group_type
-# bind tables together
-# flatten simd columns into two with value and simd_domain as resulting columns for faceting
+# Bind into single long data frame
+allgroups_simd <- bind_rows(ecs_simd, transition_simd)
+allgroups_simd <- bind_rows(allgroups_simd, dtas_simd)
+allgroups_simd <- bind_rows(allgroups_simd, permaculture_simd)
 
-y bars by group_type, fill = quantiles via cut_interval() or mutate ntile()
-x value
-facet: simd_domain
-
-ecs_simd_min <- ecs[1:4, ]
-two <- mtcars[11:14, ]
-
-# You can supply data frames as arguments:
-bind_rows(ecs_simd_min, two)
-
-# Faceted stacked bar plot
-
-ggplot(data, aes(y=value, x=Overal_SIMD16_Rank, color=specie, fill=cut_interval(Overal_SIMD16_Rank, 5))) + 
-    geom_bar( stat="group_type") +    
-    facet_wrap(~condition)
-
-cut_interval(x, n = NULL, length = NULL, ...)
-
-# Boxplot
-
-ggplot(dat, aes(x=cond, y=rating, fill=cond)) + geom_boxplot()
-
-
-# STAGE 3a, calculate sums based on SIMD12R columns and generate new integer sets with quintile count data
-simd_rownames = c("Quintile 1","Quintile 2","Quintile 3","Quintile 4","Quintile 5")
-simdr12_ecs = c((sum(ecs_clean$SIMDR12<1301)), (sum(ecs_clean$SIMDR12 > 1300 & ecs_clean$SIMDR12 < 2602)), (sum(ecs_clean$SIMDR12 > 2601 & ecs_clean$SIMDR12 < 3903)), (sum(ecs_clean$SIMDR12 > 3902 & ecs_clean$SIMDR12 < 5204)), (sum(ecs_clean$SIMDR12 > 5203 & ecs_clean$SIMDR12 < 6505)))
-# names(simdr12_ecs) <- simd_rownames
-simdr12_transition = c((sum(transition_clean$SIMDR12<1301)), (sum(transition_clean$SIMDR12 > 1300 & transition_clean$SIMDR12 < 2602)), (sum(transition_clean$SIMDR12 > 2601 & transition_clean$SIMDR12 < 3903)), (sum(transition_clean$SIMDR12 > 3902 & transition_clean$SIMDR12 < 5204)), (sum(transition_clean$SIMDR12 > 5203 & transition_clean$SIMDR12 < 6505)))
-# names(simdr12_transition) <- simd_rownames
-simdr12_permaculture = c((sum(permaculture_clean$SIMDR12<1301)), (sum(permaculture_clean$SIMDR12 > 1300 & permaculture_clean$SIMDR12 < 2602)), (sum(permaculture_clean$SIMDR12 > 2601 & permaculture_clean$SIMDR12 < 3903)), (sum(permaculture_clean$SIMDR12 > 3902 & permaculture_clean$SIMDR12 < 5204)), (sum(permaculture_clean$SIMDR12 > 5203 & permaculture_clean$SIMDR12 < 6505)))
-# names(simdr12_permaculture) <- simd_rownames
-simdr12_dtas = c((sum(dtas_clean$SIMDR12<1301)), (sum(dtas_clean$SIMDR12 > 1300 & dtas_clean$SIMDR12 < 2602)), (sum(dtas_clean$SIMDR12 > 2601 & dtas_clean$SIMDR12 < 3903)), (sum(dtas_clean$SIMDR12 > 3902 & dtas_clean$SIMDR12 < 5204)), (sum(dtas_clean$SIMDR12 > 5203 & dtas_clean$SIMDR12 < 6505)))
-# names(simdr12_dtas) <- simd_rownames
-
-# STAGE 3b, calculate sums based on INCR12 columns and generate new integer sets with quintile count data
-
-incr12_ecs = c((sum(ecs_clean$INCR12<1301)), (sum(ecs_clean$INCR12 > 1300 & ecs_clean$INCR12 < 2602)), (sum(ecs_clean$INCR12 > 2601 & ecs_clean$INCR12 < 3903)), (sum(ecs_clean$INCR12 > 3902 & ecs_clean$INCR12 < 5204)), (sum(ecs_clean$INCR12 > 5203 & ecs_clean$INCR12 < 6505)))
-incr12_transition = c((sum(transition_clean$INCR12<1301)), (sum(transition_clean$INCR12 > 1300 & transition_clean$INCR12 < 2602)), (sum(transition_clean$INCR12 > 2601 & transition_clean$INCR12 < 3903)), (sum(transition_clean$INCR12 > 3902 & transition_clean$INCR12 < 5204)), (sum(transition_clean$INCR12 > 5203 & transition_clean$INCR12 < 6505)))
-incr12_permaculture = c((sum(permaculture_clean$INCR12<1301)), (sum(permaculture_clean$INCR12 > 1300 & permaculture_clean$INCR12 < 2602)), (sum(permaculture_clean$INCR12 > 2601 & permaculture_clean$INCR12 < 3903)), (sum(permaculture_clean$INCR12 > 3902 & permaculture_clean$INCR12 < 5204)), (sum(permaculture_clean$INCR12 > 5203 & permaculture_clean$INCR12 < 6505)))
-incr12_dtas = c((sum(dtas_clean$INCR12<1301)), (sum(dtas_clean$INCR12 > 1300 & dtas_clean$INCR12 < 2602)), (sum(dtas_clean$INCR12 > 2601 & dtas_clean$INCR12 < 3903)), (sum(dtas_clean$INCR12 > 3902 & dtas_clean$INCR12 < 5204)), (sum(dtas_clean$INCR12 > 5203 & dtas_clean$INCR12 < 6505)))
-
-# STAGE 3c, calculate sums based on EMPR12 columns and generate new integer sets with quintile count data
-empr12_ecs = c((sum(ecs_clean$EMPR12<1301)), (sum(ecs_clean$EMPR12 > 1300 & ecs_clean$EMPR12 < 2602)), (sum(ecs_clean$EMPR12 > 2601 & ecs_clean$EMPR12 < 3903)), (sum(ecs_clean$EMPR12 > 3902 & ecs_clean$EMPR12 < 5204)), (sum(ecs_clean$EMPR12 > 5203 & ecs_clean$EMPR12 < 6505)))
-empr12_transition = c((sum(transition_clean$EMPR12<1301)), (sum(transition_clean$EMPR12 > 1300 & transition_clean$EMPR12 < 2602)), (sum(transition_clean$EMPR12 > 2601 & transition_clean$EMPR12 < 3903)), (sum(transition_clean$EMPR12 > 3902 & transition_clean$EMPR12 < 5204)), (sum(transition_clean$EMPR12 > 5203 & transition_clean$EMPR12 < 6505)))
-empr12_permaculture = c((sum(permaculture_clean$EMPR12<1301)), (sum(permaculture_clean$EMPR12 > 1300 & permaculture_clean$EMPR12 < 2602)), (sum(permaculture_clean$EMPR12 > 2601 & permaculture_clean$EMPR12 < 3903)), (sum(permaculture_clean$EMPR12 > 3902 & permaculture_clean$EMPR12 < 5204)), (sum(permaculture_clean$EMPR12 > 5203 & permaculture_clean$EMPR12 < 6505)))
-empr12_dtas = c((sum(dtas_clean$EMPR12<1301)), (sum(dtas_clean$EMPR12 > 1300 & dtas_clean$EMPR12 < 2602)), (sum(dtas_clean$EMPR12 > 2601 & dtas_clean$EMPR12 < 3903)), (sum(dtas_clean$EMPR12 > 3902 & dtas_clean$EMPR12 < 5204)), (sum(dtas_clean$EMPR12 > 5203 & dtas_clean$EMPR12 < 6505)))
-
-# STAGE 3d, calculate sums based on HER12 columns and generate new integer sets with quintile count data
-her12_ecs = c((sum(ecs_clean$HER12<1301)), (sum(ecs_clean$HER12 > 1300 & ecs_clean$HER12 < 2602)), (sum(ecs_clean$HER12 > 2601 & ecs_clean$HER12 < 3903)), (sum(ecs_clean$HER12 > 3902 & ecs_clean$HER12 < 5204)), (sum(ecs_clean$HER12 > 5203 & ecs_clean$HER12 < 6505)))
-her12_transition = c((sum(transition_clean$HER12<1301)), (sum(transition_clean$HER12 > 1300 & transition_clean$HER12 < 2602)), (sum(transition_clean$HER12 > 2601 & transition_clean$HER12 < 3903)), (sum(transition_clean$HER12 > 3902 & transition_clean$HER12 < 5204)), (sum(transition_clean$HER12 > 5203 & transition_clean$HER12 < 6505)))
-her12_permaculture = c((sum(permaculture_clean$HER12<1301)), (sum(permaculture_clean$HER12 > 1300 & permaculture_clean$HER12 < 2602)), (sum(permaculture_clean$HER12 > 2601 & permaculture_clean$HER12 < 3903)), (sum(permaculture_clean$HER12 > 3902 & permaculture_clean$HER12 < 5204)), (sum(permaculture_clean$HER12 > 5203 & permaculture_clean$HER12 < 6505)))
-her12_dtas = c((sum(dtas_clean$HER12<1301)), (sum(dtas_clean$HER12 > 1300 & dtas_clean$HER12 < 2602)), (sum(dtas_clean$HER12 > 2601 & dtas_clean$HER12 < 3903)), (sum(dtas_clean$HER12 > 3902 & dtas_clean$HER12 < 5204)), (sum(dtas_clean$HER12 > 5203 & dtas_clean$HER12 < 6505)))
-
-# STAGE 3e, calculate sums based on ESTR12 columns and generate new integer sets with quintile count data
-estr12_ecs = c((sum(ecs_clean$ESTR12<1301)), (sum(ecs_clean$ESTR12 > 1300 & ecs_clean$ESTR12 < 2602)), (sum(ecs_clean$ESTR12 > 2601 & ecs_clean$ESTR12 < 3903)), (sum(ecs_clean$ESTR12 > 3902 & ecs_clean$ESTR12 < 5204)), (sum(ecs_clean$ESTR12 > 5203 & ecs_clean$ESTR12 < 6505)))
-estr12_transition = c((sum(transition_clean$ESTR12<1301)), (sum(transition_clean$ESTR12 > 1300 & transition_clean$ESTR12 < 2602)), (sum(transition_clean$ESTR12 > 2601 & transition_clean$ESTR12 < 3903)), (sum(transition_clean$ESTR12 > 3902 & transition_clean$ESTR12 < 5204)), (sum(transition_clean$ESTR12 > 5203 & transition_clean$ESTR12 < 6505)))
-estr12_permaculture = c((sum(permaculture_clean$ESTR12<1301)), (sum(permaculture_clean$ESTR12 > 1300 & permaculture_clean$ESTR12 < 2602)), (sum(permaculture_clean$ESTR12 > 2601 & permaculture_clean$ESTR12 < 3903)), (sum(permaculture_clean$ESTR12 > 3902 & permaculture_clean$ESTR12 < 5204)), (sum(permaculture_clean$ESTR12 > 5203 & permaculture_clean$ESTR12 < 6505)))
-estr12_dtas = c((sum(dtas_clean$ESTR12<1301)), (sum(dtas_clean$ESTR12 > 1300 & dtas_clean$ESTR12 < 2602)), (sum(dtas_clean$ESTR12 > 2601 & dtas_clean$ESTR12 < 3903)), (sum(dtas_clean$ESTR12 > 3902 & dtas_clean$ESTR12 < 5204)), (sum(dtas_clean$ESTR12 > 5203 & dtas_clean$ESTR12 < 6505)))
-
-# STAGE 4a - calculate percentages
-simdr12_ecs_percent<- prop.table(simdr12_ecs)
-simdr12_transition_percent<- prop.table(simdr12_transition)
-simdr12_permaculture_percent<- prop.table(simdr12_permaculture)
-simdr12_dtas_percent<- prop.table(simdr12_dtas)
-incr12_ecs_percent<- prop.table(incr12_ecs)
-incr12_transition_percent<- prop.table(incr12_transition)
-incr12_permaculture_percent<- prop.table(incr12_permaculture)
-incr12_dtas_percent<- prop.table(incr12_dtas)
-empr12_ecs_percent<- prop.table(empr12_ecs)
-empr12_transition_percent<- prop.table(empr12_transition)
-empr12_permaculture_percent<- prop.table(empr12_permaculture)
-empr12_dtas_percent<- prop.table(empr12_dtas)
-her12_ecs_percent<- prop.table(her12_ecs)
-her12_transition_percent<- prop.table(her12_transition)
-her12_permaculture_percent<- prop.table(her12_permaculture)
-her12_dtas_percent<- prop.table(her12_dtas)
-estr12_ecs_percent<- prop.table(estr12_ecs)
-estr12_transition_percent<- prop.table(estr12_transition)
-estr12_permaculture_percent<- prop.table(estr12_permaculture)
-estr12_dtas_percent<- prop.table(estr12_dtas)
-
-# STAGE 4b, generate data frame using integer sets
-simd = data.frame(simdr12_ecs, simdr12_ecs_percent, incr12_ecs, incr12_ecs_percent, empr12_ecs, empr12_ecs_percent, her12_ecs, her12_ecs_percent, estr12_ecs, estr12_ecs_percent, simdr12_transition, simdr12_transition_percent, incr12_transition, incr12_transition_percent, empr12_transition, empr12_transition_percent, her12_transition, her12_transition_percent, estr12_transition, estr12_transition_percent, simdr12_permaculture, simdr12_permaculture_percent, incr12_permaculture, incr12_permaculture_percent, empr12_permaculture, empr12_permaculture_percent, her12_permaculture, her12_permaculture_percent, estr12_permaculture, estr12_permaculture_percent, simdr12_dtas, simdr12_dtas_percent, incr12_dtas, incr12_dtas_percent, empr12_dtas, empr12_dtas_percent, her12_dtas, her12_dtas_percent, estr12_dtas, estr12_dtas_percent)
-write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
-
-simd_percents_only = data.frame(simd_rownames, simdr12_ecs_percent, incr12_ecs_percent, empr12_ecs_percent, her12_ecs_percent, estr12_ecs_percent, simdr12_transition_percent, incr12_transition_percent, empr12_transition_percent, her12_transition_percent, estr12_transition_percent, simdr12_permaculture_percent, incr12_permaculture_percent, empr12_permaculture_percent, her12_permaculture_percent, estr12_permaculture_percent, simdr12_dtas_percent, incr12_dtas_percent, empr12_dtas_percent, her12_dtas_percent, estr12_dtas_percent)
-write.csv(simd_percents_only, "derivedData/simd_percents_only.csv", row.names=FALSE)
+allgroups_gathered <- gather(allgroups_simd, key = "simd_category", value = "rank", Overal_SIMD16_Rank, Income_Domain_2016_Rank, Employment_Domain_2016_Rank, Health_Domain_2016_Rank, Education_Domain_2016_Rank, Geographic_Access_Domain_2016_Rank, Crime_Domain_2016_Rank, Housing_Domain_2016_Rank)
 ```
 
 ```{r create_simd_barplot}
-# STAGE 5, generate cool charts
+# Run plots
+
+# Faceted stacked bar plot
+# See here: http://theduke.at/blog/science/beginners-guide-to-creating-grouped-and-stacked-bar-charts-in-r-with-ggplot2/
+# Reference here: https://ggplot2.tidyverse.org/reference/geom_bar.html
+
+ggplot(data=allgroups_gathered, aes(x=simd_category, y=rank)) + 
+  geom_bar(stat="identity") + 
+  facet_grid(~group_type)
+
+# TODO modify fill = quantiles via cut_interval() or mutate ntile()
+# cut_interval(x, n = NULL, length = NULL, ...)
+
+write.csv(simd_percents_only, "derivedData/simd_percents_only.csv", row.names=FALSE)
+```
+
+```{r create_simd_boxplot}
 
 # simd boxplot
 
-simd_df <- data.frame(simd)
-ggplot(simd, aes(x=cond, y=rating, fill=cond)) + geom_boxplot()
-
-
-# comvert admin back to dataframe for analysis
-urbanrural.df <- data.frame(urbanrural)
-
-# Need to flatten urbanrural based on all the count columns and generate using ggplot
-
-urbanrural_gathered <- gather(data.frame(urbanrural), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
-
-# TODO: change to ur category column
-ggplot(admin_gathered, aes(fill=group_type, y=number, x=name)) + geom_bar(position="dodge", stat="identity") + coord_flip() + labs(title = "Figure 7", subtitle="Comparison of Groups by UrbanRural category", fill = "Groups")
+# Work in progress below - uncomment when ready.
+# simd_df <- data.frame(simd)
+# ggplot(simd, aes(x=cond, y=rating, fill=cond)) + geom_boxplot()
 
 # clustered bar charts
 # convert to long format
 
-library(reshape2)
-simd_percents_only_long <- melt(simd_percents_only, id.vars = "simd_rownames", 
-              measure.vars = grep("^12", names(simd_percents_only), value = TRUE))
+# library(reshape2)
+# simd_percents_only_long <- melt(simd_percents_only, id.vars = "simd_rownames", measure.vars = grep("^12", names(simd_percents_only), value = TRUE))
 
-qplot(data=simd_percents_only_long , geom="bar", fill=(factor(simd_rownames)))
+# qplot(data=simd_percents_only_long , geom="bar", fill=(factor(simd_rownames)))
 
 # jitterplot option, from Teutonico 2015, p. 63
 # https://ggplot2.tidyverse.org/reference/geom_jitter.html
