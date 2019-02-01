@@ -89,7 +89,9 @@ if (dir.exists("derivedData") == FALSE) {
 
 # TODO: make canonical CRS definitions and use consistently; remove proj4string(admin_lev1) and other similar instances below. 
 wgs84 <- "+proj=longlat +datum=WGS84"
-bng <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
+bng_old <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
+bng <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"
+osgb36 <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
 
 # Note, shifting to EPSG codes given the usage of this approach with sf()
 bng_epsg <- CRS("+init=epsg:27700")
@@ -160,7 +162,7 @@ The programme launched officially in 2001 at Dunblane Cathedral in Stirling and 
 In the case of Eco-Congregation Scotland, congregations are invited to begin by "registering" their interest in the programme by completing a basic one-sided form. The next step requires the completion of an award application, which includes a facilitated curriculum called a "church check-up" and after an application is submitted, the site is visited and assessed by third-party volunteer assessors. Sites are invited to complete additional applications for further awards which are incremental (as is the application process). Transition communities, at least in the period reflected on their map, go through a similar process (though this does not involve the use of a supplied curriculum) by which they are marked first as "interested," become "active" and then gain "official" status.[^1554162]
 
 # Representation by Regional Authorities (Council Areas)
-```{r import_admin_data, include=FALSE}
+```{r import_admin_data, message=FALSE, warning=FALSE, include=FALSE}
 # read in polygon for Scottish admin boundaries
 # TODO: upload bundle of admin data to new zenodo repository and alter below to use new URLs
 # TODO: need to remove readOGR below once st_read is confirmed to be working as sf
@@ -180,12 +182,16 @@ download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/
 unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
 }
 admin_lev2 <- readOGR("./data", "scotland_parlcon_2011")
+admin_lev2_sf <- st_read("data/scotland_parlcon_2011.shp")
+```
 
+```{r import_groups_data, message=FALSE, warning=FALSE, include=FALSE}
 # read in Transition Towns data and turn it into a SpatialPointsDataFrame
 transition_wgs <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
 coordinates(transition_wgs) <- c("X", "Y")
 proj4string(transition_wgs) <- CRS(wgs84)
 transition <- spTransform(transition_wgs, bng)
+transition_sf <- st_as_sf(transition, coords = c("X", "Y"), crs=27700)
 
 # read in all_churches data and turn it into a SpatialPointsDataFrame
 # TODO: need to remove all data points which are outside BNG area to 
@@ -204,16 +210,21 @@ pow_pointX <- read.csv("./data/poi_2015_12_scot06340459.csv", sep="|")
 coordinates(pow_pointX) <- c("feature_easting", "feature_northing")
 # TODO: need to alter to draw from wgs84 or bng defined in preamble above
 proj4string(pow_pointX) <- proj4string(admin_lev1)
+pow_pointX_sf <- st_as_sf(pow_pointX, coords = c("X", "Y"), crs=27700)
+
 
 # read in Scottish Community Dev. trust data and turn it into a SpatialPointsDataFrame
 dtas <- read.csv("data/community-dev-trusts-2.6.csv")
 coordinates(dtas) <- c("X", "Y")
 proj4string(dtas) <- proj4string(admin_lev1)
+dtas_sf <- st_as_sf(dtas, coords = c("X", "Y"), crs=27700)
 
 # read in permaculture data and turn it into a SpatialPointsDataFrame
 permaculture <- read.csv("data/permaculture_scot-0.8.csv")
 coordinates(permaculture) <- c("X", "Y")
 proj4string(permaculture) <- proj4string(admin_lev1)
+permaculture_sf <- st_as_sf(permaculture, coords = c("X", "Y"), crs=27700)
+
 ```
 
 ```{r process_admin_data}
@@ -380,7 +391,6 @@ ggplot() +
           legend.position = c(0.25, 0.85))
 # ggsave("figure2.pdf")
 
-# TODO: Need to sort out why error: "Insufficient data values to produce 5 bins."
 # Plot out second figure with normalised data:  
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
@@ -629,16 +639,18 @@ urbanrural_fortified <- join(urbanrural_fortified,urbanrural@data, by="id")
 # Make dots smaller - add outlines, & lines thinner
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_interval(urbanrural_fortified$ecs_count, 5)), 
+                   fill = UR8FOLD), 
                data = urbanrural_fortified, 
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
   geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
-             colour = 'white',
-             size = .3,
-             show.legend = FALSE) +
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+             colour = "black", 
+             fill = "white",
+             size = .15,
+             stroke = .002,
+             alpha = .6, 
+             show.legend = TRUE) +
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 9", 
        subtitle="Eco-Congregation Scotland concentrations in Urban Rural 8-fold classifications",
@@ -660,7 +672,7 @@ ggplot() +
 
 ```{r simd data, message=FALSE, warning=FALSE}
 # read in relevant polygons, Scottish Index of Multiple deprivation
-if (file.exists("data/simd2016_withgeog/c_dz_11.shp") == FALSE) {
+if (file.exists("data/sc_dz_11.shp") == FALSE) {
 download.file("http://simd.scot/2016/data/simd2016_withgeog.zip", 
               destfile = "data/simd2016_withgeog.zip")
 unzip("data/simd2016_withgeog.zip", exdir = "data", junkpaths = TRUE)
@@ -763,6 +775,7 @@ ggplot(data=allgroups_gathered,
 #  facet_grid(~group_type)
 
 # TODO: add calculations inline to text below using data
+
 ```
 
 Another crucial point of assessment relates to the relation of Eco-Congregation communities to the Scottish Index of Multiple Deprivation. This instrument aggregates a large variety of factors which can lead to deprivation including crime rates, employment levels, access to services (implicating remoteness), and literacy. By assessing ECS, Transition, and dtas against the deprivation scale, we can assess whether eco-congregations fall within particular demographics and also whether the fully aggregated SIMD measurement provides a useful point of comparison for our purposes. The SIMD essentially divides Scotland into 6407 geographic zones and then ranks them based on their relative deprivation. This data set can be split into any number of groups, but for our purposes we have settled on Quintiles, splitting the SIMD data set at every 1302 entries. We then measured where each transition group, ECS, and dtas fell within these zones and calculated how they fell into these five quintiles, from more to least deprived.
@@ -771,41 +784,29 @@ The first, and most compelling finding is that, in general Eco-Congregation Scot
 
 We can find divergence between transition communities and eco-congregation when we split out SIMD domains. In the lowest quartile, measuring exclusively for the income domain, ECS is more represented (11%) - roughly the same as DTAS (12%), and transition is less (6%) represented. In general (as shown on the chart in Appendix D), these trends hold when representation of our groups are measured within other non-remoteness domains of the SIMD. Our basic conclusion is that transition towns are least likely to operate within the lowest quartile of SIMD and DTASs are most likely, with ECS somewhere in the middle. Given the general disparity against the presence of places of worship, it seems fair to suggest that this might be an area for improvement, perhaps even worth developing a special programme which might target areas in SIMD quartile 1 for eco-congregation outreach. This might be considered particularly in light of the starkest underrepresentation of ECS and transition within the SIMD domain of education, skills, and training.
 
-# Proximity to "Wilderness"
-
-Chasing down a curiosity, I decided to try and calculate whether proximity to "wilderness" or "scenic nature" or just trees might have some impact on generating more mobilised communities. I realised that there would be several problems with this kind of calculation up front, first being that "nature" is a deeply problematic construct, reviled by geographers and philosophers alike. With this in mind, I identified several different ways of reckoning wilderness, starting with the highly anachronistic "Scenic Land" designation from the 1970s. Then I pursued the more carefully calculated "core wild areas" generated by SNH just a few years ago. However, even the core wile areas concept has been criticised heavily, so I also expanded out my search to include all sites of special scientific interest and then went even wider to include the Scottish Forestry Service's "Native Woodland" and finally, the most generic possible measurement, any land identified as forested at the last Forest Inventory.
-
-Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
-
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only 5 places of worship out of over 4k, 2 transition towns, (or 2%) and 7 community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie 3 Eco-Congregations (or just under 1%), which compares favourably with the 61 places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land 
-
 ```{r wilderness_data_prep} 
 
-https://gateway.snh.gov.uk/natural-spaces/connectors/licence.html?t=opengovernment
-
 # Download data for SSSI:
-# http://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=SSSI
 
 if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
+# TODO: get reliable URL for data download
+# http://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=SSSI
 # download.file("", destfile = "data/SSSI_SCOTLAND_ESRI.zip")
 unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
-sssi <- st_read("data/")
-
-st_crs(sssi)
-st_buffer(sssi, 
-st_within(ecs, sssi)
+sssi <- st_read("data/SSSI_SCOTLAND.shp")
 
 # Download wild land areas:
-# https://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=WILDLAND
 
 if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
+# TODO: get reliable URL for data download
+# https://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=WILDLAND
 # download.file("", destfile = "data/WILDLAND_SCOTLAND_ESRI.zip")
 unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
-wildland <- st_read("data/")
+wildland <- st_read("data/WILDLAND_SCOTLAND.shp")
 
 # Download data for National Forest Inventory:
 # Note: UK-wide data is here: https://opendata.arcgis.com/datasets/bcd6742a2add4b68962aec073ab44138_0.zip?outSR=%7B%22wkid%22%3A27700%2C%22latestWkid%22%3A27700%7D
@@ -815,12 +816,71 @@ download.file("https://opendata.arcgis.com/datasets/3cb1abc185a247a48b9d53e4c4a8
               destfile = "data/National_Forest_Inventory_Woodland_Scotland_2017.zip")
 unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data")
 }
+
 forest_inventory <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
 
+# Set symmetrical CRS for analysis below
+st_crs(sssi) <- 27700
+st_crs(ecs_sf) <- 27700
+st_crs(pow_pointX_sf) <- 27700
+
+# Define buffer and measure number of ECS groups within 0.5 miles of all SSSI
+# CRS uses meters for units, so buffer for 0.5 miles will use 805 meters)
+```
+
+# Proximity to "Wilderness"
+
+Chasing down a curiosity, I decided to try and calculate whether proximity to "wilderness" or "scenic nature" or just trees might have some impact on generating more mobilised communities. I realised that there would be several problems with this kind of calculation up front, first being that "nature" is a deeply problematic construct, reviled by geographers and philosophers alike. With this in mind, I identified several different ways of reckoning wilderness, starting with the highly anachronistic "Scenic Land" designation from the 1970s. Then I pursued the more carefully calculated "core wild areas" generated by SNH just a few years ago. However, even the core wile areas concept has been criticised heavily, so I also expanded out my search to include all sites of special scientific interest and then went even wider to include the Scottish Forestry Service's "Native Woodland" and finally, the most generic possible measurement, any land identified as forested at the last Forest Inventory.
+
+Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
+
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of over 4k, 2 transition towns, (or 2%) and 7 community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land.
+
+```{r wilderness_table} 
+# Calculate number of groups within polygons
+
+# Sample code for use below
+# sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any))
+# sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any))
+
+ecs_wilderness_row <- c(sum(apply(st_within(ecs_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+
+ecs_wilderness_row
+
+pow_wilderness_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+
+pow_wilderness_row
+
+```
+
+
+```{r wilderness_plots} 
+
+# Plot SSSI polygons with ECS points
+
+if (utils::packageVersion("ggplot2") > "2.2.1")
+  ggplot() + geom_sf(data = sssi) +
+  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
+             colour = "black", 
+             fill = "white",
+             size = .3,
+             stroke = .1,
+             show.legend = FALSE) +
+  labs(x = NULL, 
+       title = "Figure 11", 
+       subtitle="Sites of Special Scientific Interest with points marked",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n"))
+
+# Plot Forest Inventory
+  
 ggplot() +
   geom_sf(data = forest_inventory)
 
 ```
+
 
 # Appendix A
 
@@ -873,4 +933,4 @@ write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
 Blue pins are active communities who are connected to the Scottish Transition network Yellow pins show interest in this area"
 [^15571030]:This was calculated by calculating a 10m wide footprint for every postcode in Scotland, areas which are not within 10m of a postcode (as of May 2014) are counted as uninhabited.
 [^159142242]: Fiona Tweedia, *Ecumenical Audit: Questionnaire Findings* (2014). 
-[^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.
+[^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.adition and religion further below.
