@@ -793,6 +793,8 @@ unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
 
 sssi <- st_read("data/")
 
+st_crs(sssi)
+st_buffer(sssi, 
 st_within(ecs, sssi)
 
 # Download wild land areas:
