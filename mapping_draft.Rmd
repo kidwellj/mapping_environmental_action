@@ -748,24 +748,21 @@ ggplot(data=allgroups_gathered,
 # write.csv(simd_percents_only, "derivedData/simd_percents_only.csv", row.names=FALSE)
 ```
 
+```{r create_simd_jitterplot}
+# simd jitterplot
+# jitterplot option, from Teutonico 2015, p. 63
+# https://ggplot2.tidyverse.org/reference/geom_jitter.html
+```
+
 ```{r create_simd_boxplot}
 
 # simd boxplot
 
-# Work in progress below - uncomment when ready.
-# simd_df <- data.frame(simd)
-# ggplot(simd, aes(x=cond, y=rating, fill=cond)) + geom_boxplot()
+# ggplot(data=allgroups_gathered, aes(x=simd_category, y=rank)) + 
+#  geom_boxplot(stat="identity") + 
+#  facet_grid(~group_type)
 
-# clustered bar charts
-# convert to long format
-
-# library(reshape2)
-# simd_percents_only_long <- melt(simd_percents_only, id.vars = "simd_rownames", measure.vars = grep("^12", names(simd_percents_only), value = TRUE))
-
-# qplot(data=simd_percents_only_long , geom="bar", fill=(factor(simd_rownames)))
-
-# jitterplot option, from Teutonico 2015, p. 63
-# https://ggplot2.tidyverse.org/reference/geom_jitter.html
+# TODO: add calculations inline to text below using data
 ```
 
 Another crucial point of assessment relates to the relation of Eco-Congregation communities to the Scottish Index of Multiple Deprivation. This instrument aggregates a large variety of factors which can lead to deprivation including crime rates, employment levels, access to services (implicating remoteness), and literacy. By assessing ECS, Transition, and dtas against the deprivation scale, we can assess whether eco-congregations fall within particular demographics and also whether the fully aggregated SIMD measurement provides a useful point of comparison for our purposes. The SIMD essentially divides Scotland into 6407 geographic zones and then ranks them based on their relative deprivation. This data set can be split into any number of groups, but for our purposes we have settled on Quintiles, splitting the SIMD data set at every 1302 entries. We then measured where each transition group, ECS, and dtas fell within these zones and calculated how they fell into these five quintiles, from more to least deprived.
@@ -781,6 +778,47 @@ Chasing down a curiosity, I decided to try and calculate whether proximity to "w
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
 So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only 5 places of worship out of over 4k, 2 transition towns, (or 2%) and 7 community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie 3 Eco-Congregations (or just under 1%), which compares favourably with the 61 places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land 
+
+```{r wilderness_data_prep} 
+
+https://gateway.snh.gov.uk/natural-spaces/connectors/licence.html?t=opengovernment
+
+# Download data for SSSI:
+# http://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=SSSI
+
+if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
+# download.file("", destfile = "data/SSSI_SCOTLAND_ESRI.zip")
+unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
+}
+
+sssi <- st_read("data/")
+
+st_within(ecs, sssi)
+
+# Download wild land areas:
+# https://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=WILDLAND
+
+if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
+# download.file("", destfile = "data/WILDLAND_SCOTLAND_ESRI.zip")
+unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
+}
+
+wildland <- st_read("data/")
+
+# Download data for National Forest Inventory:
+# Note: UK-wide data is here: https://opendata.arcgis.com/datasets/bcd6742a2add4b68962aec073ab44138_0.zip?outSR=%7B%22wkid%22%3A27700%2C%22latestWkid%22%3A27700%7D
+
+if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
+download.file("https://opendata.arcgis.com/datasets/3cb1abc185a247a48b9d53e4c4a8be87_0.zip?outSR=%7B%22wkid%22%3A27700%2C%22latestWkid%22%3A27700%7D", 
+              destfile = "data/National_Forest_Inventory_Woodland_Scotland_2017.zip")
+unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data")
+}
+forest_inventory <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
+
+ggplot() +
+  geom_sf(data = forest_inventory)
+
+```
 
 # Appendix A
 
