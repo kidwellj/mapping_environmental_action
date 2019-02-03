@@ -15,13 +15,17 @@ geometry: margin=1in
 fontsize: 11pt
 output:
   html_document:
+    theme: readable
     keep_md: true
+    code_folding: hide
+    self_contained: false
     toc: true
     toc_depth: 2
     number_sections: true
     fig_caption: true
     fig_retina: 1
   pdf_document:
+    toc: false
     keep_tex: true
     number_sections: true
     fig_caption: true
