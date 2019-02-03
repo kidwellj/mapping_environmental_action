@@ -31,7 +31,7 @@ output:
 
 ```{r setup, include=FALSE}
 require(knitr)
-knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE)
+knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE, dpi=300, fig.width=7)
 # TODO: consider implementing knitcitations - https://github.com/cboettig/knitcitations
 # TODO: fix simultaneous output towards PDF, see here: https://stackoverflow.com/questions/23621012/display-and-save-the-plot-simultaneously-in-r-rstudio
 ```
@@ -459,6 +459,9 @@ ggplot(admin_gathered,
   scale_color_manual(labels = c("DTAS", "ECS", "Permaculture", "Transition"))
 ```
 
+## Concentration of groups {.tabset}
+
+### Choropleth
 
 ```{r create_choropleth_others, fig.width=4, fig.show="hold", fig.cap="Figure 4"}
 
@@ -533,10 +536,53 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
+```
+
+### Cartogram
+
+```{r create_cartograms, fig.width=4, fig.show="hold", fig.cap="Figure 4"}
 
 # todo: plot as animated chorogram: 
 # https://www.r-graph-gallery.com/331-basic-cartogram/
+# see here for example using sf: https://github.com/dreamRs/topogRam
 
+library(cartogram)
+ 
+# construct a cartogram using the population in 2005
+afr_cartogram <- cartogram(afr, "POP2005", itermax=5)
+
+# It is a new geospatial object: we can use all the usual techniques on it! Let's start with a basic ggplot2 chloropleth map:
+library(tidyverse)
+library(broom)
+spdf_fortified <- tidy(afr_cartogram)
+spdf_fortified = spdf_fortified %>% left_join(. , afr_cartogram@data, by=c("id"="ISO3")) 
+ggplot() +
+  geom_polygon(data = spdf_fortified, aes(fill = POP2005, x = long, y = lat, group = group) , size=0, alpha=0.9) +
+  coord_map() +
+  theme_void()
+  
+  # As seen before, we can do better with a bit of customization
+library(viridis)
+ggplot() +
+  geom_polygon(data = spdf_fortified, aes(fill = POP2005/1000000, x = long, y = lat, group = group) , size=0, alpha=0.9) +
+  theme_void() +
+  scale_fill_viridis(name="Population (M)", breaks=c(1,50,100, 140), guide = guide_legend( keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1)) +
+  labs( title = "Africa 2005 Population" ) +
+  ylim(-35,35) +
+  theme(
+    text = element_text(color = "#22211d"), 
+    plot.background = element_rect(fill = "#f5f5f4", color = NA), 
+    panel.background = element_rect(fill = "#f5f5f4", color = NA), 
+    legend.background = element_rect(fill = "#f5f5f4", color = NA),
+    plot.title = element_text(size= 22, hjust=0.5, color = "#4e4d47", margin = margin(b = -0.1, t = 0.4, l = 2, unit = "cm")),
+    legend.position = c(0.2, 0.26)
+  ) +
+  coord_map()
+  
+# Add animated version:
+
+https://github.com/thomasp85/gganimate
+ 
 ```
 
 We can compare the representation in these various regions against our comparison groups to see how other community-based organisations cluster in Scottish administrative districts. Here there are some significant contrasts. Scottish Community Development trusts are most intensely concentrated in the Highlands and Argyll & Bute. But, this is consistent with all the other categories, Eco-Congregations, Places of Worship, and dtas are all over-represented in this area, varying only by the degree. Edinburgh is different, here we find that Eco-Congregations and Transition projects are over-represented, while dtass are under-represented. Finally, the highlands are another strong contrast, here we find a very strong over-representation by transition towns and dtass while the representation of Eco-Congregations is relatively close to the population share for that area. The two areas of greatest contrast for Eco-Congregations from the other groups are unsurprising, Edinburgh is the location of the ECS offices, while Stirling is the area in which ECS first began (see Appendix B for full data). 
@@ -625,6 +671,12 @@ ggplot(urbanrural_gathered,
 ```
 
 ```{r create_urbanrural_ecs_chart_choropleth, fig.width=4, fig.cap="Figure 9"}
+
+# Clipping work
+#title("difference(x,y)")
+#plot(x, border = 'grey')
+#plot(st_difference(st_union(y),st_union(x)), col = 'lightblue', add = TRUE)
+#https://r-spatial.github.io/sf/articles/sf3.html
 
 # Prepare urbanrural for tidyr and reinsert dropped columns
 
@@ -725,6 +777,18 @@ allgroups_simd <- bind_rows(allgroups_simd, permaculture_simd)
 allgroups_gathered <- gather(allgroups_simd, key = "simd_category", value = "rank", Overal_SIMD16_Rank, Income_Domain_2016_Rank, Employment_Domain_2016_Rank, Health_Domain_2016_Rank, Education_Domain_2016_Rank, Geographic_Access_Domain_2016_Rank, Crime_Domain_2016_Rank, Housing_Domain_2016_Rank)
 ```
 
+## SIMD representation across domains by group {.tabset}
+
+### Jitterplot
+
+```{r create_simd_jitterplot}
+# simd jitterplot
+# jitterplot option, from Teutonico 2015, p. 63
+# https://ggplot2.tidyverse.org/reference/geom_jitter.html
+```
+
+### Barplot
+
 ```{r create_simd_barplot}
 # Run plots
 
@@ -760,11 +824,8 @@ ggplot(data=allgroups_gathered,
 # write.csv(simd_percents_only, "derivedData/simd_percents_only.csv", row.names=FALSE)
 ```
 
-```{r create_simd_jitterplot}
-# simd jitterplot
-# jitterplot option, from Teutonico 2015, p. 63
-# https://ggplot2.tidyverse.org/reference/geom_jitter.html
-```
+### Boxplot
+
 
 ```{r create_simd_boxplot}
 
@@ -838,6 +899,7 @@ So what did I discover? The results were inconclusive. First, it is important to
 
 ```{r wilderness_table} 
 # Calculate number of groups within polygons
+# TODO: add other groups, run on additional shapefiles
 
 # Sample code for use below
 # sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any))
