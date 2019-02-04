@@ -53,21 +53,21 @@ local({r <- getOption("repos")
 })
 # TODO: need to alter this to use new sf data class as sp is deprecated
 require(sf) # new simplefeature data class, supercedes sp in many ways
-require(rgdal)
+require(rgdal) # deprecated by sf()
 require(GISTools) # deprecated by sf()
 require(sp) # needed for proj4string, deprecated by sf()
 require(ggplot2)
 require(broom) # required for tidying SPDF to data.frame for ggplot2
-require(rgeos)
+require(rgeos) # deprecated by sf()
 require(ggmap)
 require(maptools)
-require(RCurl)
+require(RCurl) # used for fetching reproducible datasets
 # require(tibble) # using for grouped bar plot
 require(tidyr)  # using for grouped bar plot
 require(plyr)
 require(dplyr)
 require(reshape2)  # using for grouped bar plot
-require(pander)
+require(pander) # produces tidy formatted tables
 require(scales)
 # require(sqldf) # using sqldf to filter while loading very large data sets
 require(plotly) # allows for export of plots to dynamic web pages
@@ -861,6 +861,7 @@ unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
 sssi <- st_read("data/SSSI_SCOTLAND.shp")
+sssi_sp <- readOGR("./data", "SSSI_SCOTLAND.shp") 
 
 # Download wild land areas:
 
@@ -872,6 +873,7 @@ unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
 wildland <- st_read("data/WILDLAND_SCOTLAND.shp")
+wildland_sp <- readOGR("./data", "WILDLAND_SCOTLAND.shp") 
 
 # Download data for National Forest Inventory:
 # Note: UK-wide data is here: https://opendata.arcgis.com/datasets/bcd6742a2add4b68962aec073ab44138_0.zip?outSR=%7B%22wkid%22%3A27700%2C%22latestWkid%22%3A27700%7D
@@ -883,6 +885,7 @@ unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data
 }
 
 forest_inventory <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
+forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017.shp") 
 
 # Set symmetrical CRS for analysis below
 st_crs(sssi) <- 27700
@@ -922,6 +925,29 @@ pow_wilderness_row
 
 ```{r wilderness_plots} 
 
+# Plot using sp
+
+ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group), 
+               data = sssi_sp, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .005) + 
+  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
+             colour = "black", 
+             fill = "white",
+             size = .15,
+             stroke = .002,
+             alpha = .6, 
+             show.legend = TRUE) +
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 11", 
+       subtitle="Sites of Special Scientific Interest with points marked",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n"))
+
 # Plot SSSI polygons with ECS points
 
 if (utils::packageVersion("ggplot2") > "2.2.1")
@@ -941,7 +967,28 @@ if (utils::packageVersion("ggplot2") > "2.2.1")
                        sep = "\n"))
 
 # Plot Forest Inventory
-  
+
+ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group), 
+               data = forest_inventory_sp, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .005) + 
+  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
+             colour = "black", 
+             fill = "white",
+             size = .15,
+             stroke = .002,
+             alpha = .6, 
+             show.legend = TRUE) +
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 11", 
+       subtitle="Sites of Special Scientific Interest with points marked",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n"))
+
 ggplot() +
   geom_sf(data = forest_inventory)
 
@@ -951,8 +998,6 @@ ggplot() +
 # Appendix A
 
 ```{r pander_admin_table}
-# TODO: uncomment admin.shortened lines below
-# admin.shortened <- admin_lev1[,c(7,12:22)]
 # Output CSV files for various levels of admin
 write.csv(admin_lev1, "derivedData/admin_lev1.csv", row.names=FALSE)
 write.csv(admin_lev2, "derivedData/admin_lev2.csv", row.names=FALSE)
@@ -963,9 +1008,9 @@ write.csv(permaculture, "derivedData/permaculture.csv", row.names=FALSE)
 write.csv(dtas, "derivedData/dtas.csv", row.names=FALSE)
 write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
 
-## Output mmd tables using pander
-# panderOptions("digits", 2)
-# pander(as_data_frame(admin_lev1[,c(3,5,7,11,13)]))
+# Output mmd tables using pander
+panderOptions("digits", 2)
+pander(as_data_frame(admin_lev1[,c(3,5,7,11,13)]))
 ```
 
 # Appendix B
