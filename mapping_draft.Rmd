@@ -890,6 +890,7 @@ forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Sco
 # Download data for scenic areas
 # https://opendata.arcgis.com/datasets/d7f6b987c7224a72a185ce012258d500_23.zip
 # International Union for Conservation of Nature (IUCN), Category V Protected Landscapes
+# for England: https://environment.data.gov.uk/DefraDataDownload/?mapService=NE/AreasOfOutstandingNaturalBeautyEngland&Mode=spatial
 
 download.file("https://opendata.arcgis.com/datasets/d7f6b987c7224a72a185ce012258d500_23.zip", destfile = "data/ScenicAreas.zip")
 unzip("data/ScenicAreas.zip", exdir = "data")
