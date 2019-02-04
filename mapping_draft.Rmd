@@ -52,16 +52,16 @@ local({r <- getOption("repos")
        options(repos=r)
 })
 # TODO: need to alter this to use new sf data class as sp is deprecated
+require(RCurl) # used for fetching reproducible datasets
 require(sf) # new simplefeature data class, supercedes sp in many ways
+require(sp) # needed for proj4string, deprecated by sf()
 require(rgdal) # deprecated by sf()
 require(GISTools) # deprecated by sf()
-require(sp) # needed for proj4string, deprecated by sf()
-require(ggplot2)
-require(broom) # required for tidying SPDF to data.frame for ggplot2
 require(rgeos) # deprecated by sf()
-require(ggmap)
 require(maptools)
-require(RCurl) # used for fetching reproducible datasets
+require(ggplot2)
+require(ggmap)
+require(broom) # required for tidying SPDF to data.frame for ggplot2
 # require(tibble) # using for grouped bar plot
 require(tidyr)  # using for grouped bar plot
 require(plyr)
@@ -861,7 +861,7 @@ unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
 sssi <- st_read("data/SSSI_SCOTLAND.shp")
-sssi_sp <- readOGR("./data", "SSSI_SCOTLAND.shp") 
+sssi_sp <- readOGR("./data", "SSSI_SCOTLAND") 
 
 # Download wild land areas:
 
@@ -873,7 +873,7 @@ unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
 wildland <- st_read("data/WILDLAND_SCOTLAND.shp")
-wildland_sp <- readOGR("./data", "WILDLAND_SCOTLAND.shp") 
+wildland_sp <- readOGR("./data", "WILDLAND_SCOTLAND") 
 
 # Download data for National Forest Inventory:
 # Note: UK-wide data is here: https://opendata.arcgis.com/datasets/bcd6742a2add4b68962aec073ab44138_0.zip?outSR=%7B%22wkid%22%3A27700%2C%22latestWkid%22%3A27700%7D
@@ -885,7 +885,7 @@ unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data
 }
 
 forest_inventory <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
-forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017.shp") 
+forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
 
 # Set symmetrical CRS for analysis below
 st_crs(sssi) <- 27700
@@ -902,11 +902,11 @@ Chasing down a curiosity, I decided to try and calculate whether proximity to "w
 
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of over 4k, 2 transition towns, (or 2%) and 7 community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land.
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land.
 
 ```{r wilderness_table} 
 # Calculate number of groups within polygons
-# TODO: add other groups, run on additional shapefiles
+# TODO: run on additional shapefiles
 
 # Sample code for use below
 # sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any))
@@ -920,12 +920,24 @@ pow_wilderness_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 
 
 pow_wilderness_row
 
+dtas_wilderness_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+
+dtas_wilderness_row
+
+transition_wilderness_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+
+transition_wilderness_row
+
+permaculture_wilderness_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+
+permaculture_wilderness_row
+
 ```
 
 
 ```{r wilderness_plots} 
 
-# Plot using sp
+# Plot SSSI polygons with ECS points (using sp, for now)
 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group), 
@@ -948,23 +960,22 @@ ggplot() +
                        "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
                        sep = "\n"))
 
-# Plot SSSI polygons with ECS points
-
-if (utils::packageVersion("ggplot2") > "2.2.1")
-  ggplot() + geom_sf(data = sssi) +
-  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
-             colour = "black", 
-             fill = "white",
-             size = .3,
-             stroke = .1,
-             show.legend = FALSE) +
-  labs(x = NULL, 
-       title = "Figure 11", 
-       subtitle="Sites of Special Scientific Interest with points marked",
-       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
-                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
-                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
-                       sep = "\n"))
+# # ggplot using sf seems to be severely broken for now. Commenting out and reverting to sp
+# if (utils::packageVersion("ggplot2") > "2.2.1")
+#   ggplot() + geom_sf(data = sssi) +
+#   geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
+#              colour = "black", 
+#              fill = "white",
+#              size = .3,
+#              stroke = .1,
+#              show.legend = FALSE) +
+#   labs(x = NULL, 
+#        title = "Figure 11", 
+#        subtitle="Sites of Special Scientific Interest with points marked",
+#        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+#                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+#                        "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+#                        sep = "\n"))
 
 # Plot Forest Inventory
 
@@ -989,8 +1000,9 @@ ggplot() +
                        "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
                        sep = "\n"))
 
-ggplot() +
-  geom_sf(data = forest_inventory)
+# # ggplot using sf seems to be severely broken for now. Commenting out and reverting to sp
+# ggplot() +
+#   geom_sf(data = forest_inventory)
 
 ```
 
@@ -1020,12 +1032,12 @@ pander(as_data_frame(admin_lev1[,c(3,5,7,11,13)]))
 # Appendix C - Data by Urban / Rural Classification
 
 ```{r pander_urbanrural_table}
-# urbanrural.shortened <- urbanrural[,c(2,6,9:18)]
-# write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
-# write.csv(urbanrural.shortened, "derivedData/urbanrural.csv", row.names=FALSE)
-# urbanrural.shortened<-data.frame(urbanrural.shortened)
-# panderOptions("digits", 2)
-# pander(urbanrural.shortened)
+# Output CSV files for urbanrural tables
+write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
+
+# Output mmd tables using pander
+panderOptions("digits", 2)
+pander(as_data_frame(urbanrural[,c(1,7:16)]))
 ```
 
 # Citations
