@@ -1,0 +1,1 @@
+Rscript -e 'library(rmarkdown); rmarkdown::render("./mapping_draft.Rmd", "pdf_document")'
