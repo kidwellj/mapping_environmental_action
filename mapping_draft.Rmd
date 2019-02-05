@@ -917,102 +917,44 @@ So what did I discover? The results were inconclusive. First, it is important to
 ```{r wilderness_table} 
 # Calculate number of groups within polygons
 # TODO: run on additional shapefiles
+# TODO: more efficient code using do.call() function or sapply() as here https://stackoverflow.com/questions/3642535/creating-an-r-dataframe-row-by-row
 
 # Sample code for use below
 # sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any))
 # sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any))
 
+titles <- c("Within SSSIs", "...50m", "...500m")
+
 ecs_wilderness_row <- c(sum(apply(st_within(ecs_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-ecs_wilderness_row
+ecs_wilderness_row <- rbind(titles, ecs_wilderness_row)
 
 pow_wilderness_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-pow_wilderness_row
+sssi_counts <- rbind(ecs_wilderness_row, pow_wilderness_row)
 
 dtas_wilderness_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-dtas_wilderness_row
+sssi_counts <- rbind(sssi_counts, dtas_wilderness_row)
 
 transition_wilderness_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-transition_wilderness_row
+sssi_counts <- rbind(sssi_counts, transition_wilderness_row)
 
 permaculture_wilderness_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-permaculture_wilderness_row
+sssi_counts <- rbind(sssi_counts, permaculture_wilderness_row)
+
+# Output mmd tables using pander
+panderOptions("digits", 2)
+pander(sssi_counts)
 
 ```
 
 
 ```{r wilderness_plots} 
 
-# Plot SSSI polygons with ECS points (using sp, for now)
 
-ggplot() + 
-  geom_polygon(aes(x = long, y = lat, group = group), 
-               data = sssi_sp, 
-               colour = 'black', 
-               alpha = .7, 
-               size = .005) + 
-  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
-             colour = "black", 
-             fill = "white",
-             size = .15,
-             stroke = .002,
-             alpha = .6, 
-             show.legend = TRUE) +
-  labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 11", 
-       subtitle="Sites of Special Scientific Interest with points marked",
-       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
-                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
-                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
-                       sep = "\n"))
-
-# # ggplot using sf seems to be severely broken for now. Commenting out and reverting to sp
-# if (utils::packageVersion("ggplot2") > "2.2.1")
-#   ggplot() + geom_sf(data = sssi) +
-#   geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
-#              colour = "black", 
-#              fill = "white",
-#              size = .3,
-#              stroke = .1,
-#              show.legend = FALSE) +
-#   labs(x = NULL, 
-#        title = "Figure 11", 
-#        subtitle="Sites of Special Scientific Interest with points marked",
-#        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
-#                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
-#                        "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
-#                        sep = "\n"))
-
-# Plot Forest Inventory
-
-ggplot() + 
-  geom_polygon(aes(x = long, y = lat, group = group), 
-               data = forest_inventory_sp, 
-               colour = 'black', 
-               alpha = .7, 
-               size = .005) + 
-  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
-             colour = "black", 
-             fill = "white",
-             size = .15,
-             stroke = .002,
-             alpha = .6, 
-             show.legend = TRUE) +
-  labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 11", 
-       subtitle="Sites of Special Scientific Interest with points marked",
-       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
-                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
-                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
-                       sep = "\n"))
-
-# # ggplot using sf seems to be severely broken for now. Commenting out and reverting to sp
-# ggplot() +
-#   geom_sf(data = forest_inventory)
 
 ```
 

@@ -15,9 +15,12 @@ if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == 
 forest_inventory <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
 forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
 
-
+system.time(
 ggplot() +
   geom_sf(data = forest_inventory)
+  )
 
+system.time(
 ggplot() +
   geom_polygon(data = forest_inventory_sp)
+  )
