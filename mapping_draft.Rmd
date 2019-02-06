@@ -35,6 +35,7 @@ output:
 
 ```{r setup, include=FALSE}
 require(knitr)
+library(kableExtra)
 knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE, dpi=300, fig.width=7)
 # TODO: consider implementing knitcitations - https://github.com/cboettig/knitcitations
 # TODO: fix simultaneous output towards PDF, see here: https://stackoverflow.com/questions/23621012/display-and-save-the-plot-simultaneously-in-r-rstudio
@@ -62,14 +63,12 @@ require(maptools)
 require(ggplot2)
 require(ggmap)
 require(broom) # required for tidying SPDF to data.frame for ggplot2
-# require(tibble) # using for grouped bar plot
 require(tidyr)  # using for grouped bar plot
 require(plyr)
 require(dplyr)
 require(reshape2)  # using for grouped bar plot
-require(pander) # produces tidy formatted tables
 require(scales)
-# require(sqldf) # using sqldf to filter while loading very large data sets
+# require(sqldf) # using sqldf to filter before loading very large data sets
 require(plotly) # allows for export of plots to dynamic web pages
 require(gtable) # more powerful package for multi-plot layouts, not necessary for knitr
 require(showtext) # for loading in fonts
@@ -165,7 +164,7 @@ The programme launched officially in 2001 at Dunblane Cathedral in Stirling and 
 
 In the case of Eco-Congregation Scotland, congregations are invited to begin by "registering" their interest in the programme by completing a basic one-sided form. The next step requires the completion of an award application, which includes a facilitated curriculum called a "church check-up" and after an application is submitted, the site is visited and assessed by third-party volunteer assessors. Sites are invited to complete additional applications for further awards which are incremental (as is the application process). Transition communities, at least in the period reflected on their map, go through a similar process (though this does not involve the use of a supplied curriculum) by which they are marked first as "interested," become "active" and then gain "official" status.[^1554162]
 
-# Representation by Regional Authorities (Council Areas)
+# Representation by Regional Authorities (Council Areas) {.tabset}
 ```{r import_admin_data, message=FALSE, warning=FALSE, include=FALSE}
 # read in polygon for Scottish admin boundaries
 # TODO: upload bundle of admin data to new zenodo repository and alter below to use new URLs
@@ -274,12 +273,8 @@ admin_lev2$permaculture_count <- poly.counts(permaculture,admin_lev2)
 admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
 
 # Import csv with population data for each level of administrative subdivision and join to spatialdataframe
-# Add working directory for parish level data (not sure why I've done this)
 
-# JK Note: not using parish data below - have temporarily removed the following.
-# if (dir.exists("parishes") == FALSE) {
-#  dir.create("parishes")
-# }
+# Placeholder for England parish data for later implementation
 # download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/England_cp_1991.zip", destfile = "parishes/parishes-1991.zip")
 # unzip("parishes/parishes-1991.zip", exdir = "parishes")
 # parishes <- rgdal::readOGR(dsn = "parishes", "england_cp_1991")
@@ -290,7 +285,7 @@ admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
 admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv")
 admin_lev1 <- merge(x=admin_lev1, y=admin_lev1_pop, by.x = "code", by.y = "CODE")
 # Convert number stored as string with a comma to an integer
-admin_lev1$X2011_pop <- as.numeric(gsub(",", "", admin_lev1$X2011_pop))
+admin_lev1$X2011_pop <- as.numeric(gsub(",", "", admin_lev1@data$X2011_pop))
 # Calculate counts as percentages of total for normalising below
 admin_lev1$pop_percent<- prop.table(admin_lev1$X2011_pop)
 admin_lev1$pow_percent<- prop.table(admin_lev1$pow_count)
@@ -323,8 +318,12 @@ Perhaps the first important question to ask of these groups is, where are they? 
 
 (*TODO: need to implement*) Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake. Note, for the sake of a more accurate visual communication, we have also marked out areas of Scotland that are uninhabited with hash marks on the map of agricultural parishes. (*TODO: this will be done in the final draft, once I get my image masking fixed!*).[^15571030]
 
+## Eco-Congregation Scotland groups shown by concentration in administrative regions (NUTS3)
+
 ```{r plot_admin_ecs_choropleth, fig.width=4, fig.cap="Figure 1"}
+# Note: for more information on EU administrative levels, see here: https://ec.europa.eu/eurostat/web/nuts/national-structures-eu
 # TODO: Need to clip choropleth polygons to buildings shapefile
+
 
 # Prepare admin_lev1 for tidyr and reinsert dropped columns
 names(admin_lev1)[names(admin_lev1) == "newcode"] <- "id"
@@ -350,7 +349,7 @@ ggplot() +
                size = .005) + 
   viridis::scale_fill_viridis(discrete = TRUE) + 
   labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 1", 
+       title = "Figure 1a", 
        subtitle="Concentration of ECS groups",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
@@ -366,7 +365,45 @@ ggplot() +
 # TODO: shift to use of grobs: https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html
 
 # ggsave("figure1.pdf")
+
 ```
+
+## Eco-Congregation Scotland groups shown by concentration in administrative regions (LAU)
+
+```{r plot_admin_ecs_admin2_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 3"}
+
+# Prepare admin_lev2 for tidyr and reinsert dropped columns
+names(admin_lev2)[names(admin_lev2) == "newcode"] <- "id"
+admin_lev2@data$id <- as.integer(rownames(admin_lev2@data))
+admin_lev2@data$id <- admin_lev2@data$id-1
+admin_lev2_fortified <- tidy(admin_lev2)
+admin_lev2_fortified <- join(admin_lev2_fortified,admin_lev2@data, by="id")
+
+ggplot() + 
+  geom_polygon(aes(x = long, y = lat, group = group, 
+                   fill = cut_interval(admin_lev2_fortified$ecs_count, 5)), 
+               data = admin_lev2_fortified, 
+               colour = 'black', 
+               alpha = .7, 
+               size = .005) + 
+  scale_fill_brewer(palette = "Oranges") + 
+  labs(x = NULL, y = NULL, fill = "Groups",
+       title = "Figure 1b", 
+       subtitle="Concentration of ECS groups (LAU)",
+       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
+                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
+                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
+                       sep = "\n")) + 
+  theme_void() + 
+  theme(text = element_text(family = "Arial Narrow", size = 9),
+          plot.title = element_text(size = 12, face = "bold"),
+          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
+          panel.border = element_rect(fill = NA, colour = "#cccccc"),
+          legend.text = element_text(size = 9),
+          legend.position = c(0.25, 0.85))
+```
+
+
 
 ```{r plot_admin_ecs_normed_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 2"}
 
@@ -860,19 +897,18 @@ if (file.exists("data/SSSI_SCOTLAND.shp") == FALSE) {
 unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
-sssi <- st_read("data/SSSI_SCOTLAND.shp")
+sssi <- st_read("data/SSSI_SCOTLAND.shp") %>% st_transform(27700)
 sssi_sp <- readOGR("./data", "SSSI_SCOTLAND") 
-
 # Download wild land areas:
 
-if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
+if (file.exists("data/WILDLAND_SCOTLAND.shp") == FALSE) {
 # TODO: get reliable URL for data download
 # https://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=WILDLAND
 # download.file("", destfile = "data/WILDLAND_SCOTLAND_ESRI.zip")
 unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
-wildland <- st_read("data/WILDLAND_SCOTLAND.shp")
+wildland <- st_read("data/WILDLAND_SCOTLAND.shp") %>% st_transform(27700)
 wildland_sp <- readOGR("./data", "WILDLAND_SCOTLAND") 
 
 # Download data for National Forest Inventory:
@@ -884,7 +920,7 @@ download.file("https://opendata.arcgis.com/datasets/3cb1abc185a247a48b9d53e4c4a8
 unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data")
 }
 
-forest_inventory <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
+forest_inventory <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") %>% st_transform(27700)
 forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
 
 # Download data for scenic areas
@@ -897,7 +933,7 @@ forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Sco
 # scenicareas <- st_read("data/ScenicAreas.shp")
 # scenicareas_sp <- readOGR("./data", "ScenicAreas") 
 
-# Set symmetrical CRS for analysis below
+# Set symmetrical CRS for analysis below (inserted here in order to correct errors, may be deprecated)
 st_crs(sssi) <- 27700
 st_crs(ecs_sf) <- 27700
 st_crs(pow_pointX_sf) <- 27700
@@ -909,17 +945,6 @@ st_crs(permaculture_sf) <- 27700
 # Define buffer and measure number of ECS groups within 0.5 miles of all SSSI
 # CRS uses meters for units, so a buffer for 0.5 miles would use 805 meters)
 
-```
-
-# Proximity to "Wilderness"
-
-Chasing down a curiosity, I decided to try and calculate whether proximity to "wilderness" or "scenic nature" or just trees might have some impact on generating more mobilised communities. I realised that there would be several problems with this kind of calculation up front, first being that "nature" is a deeply problematic construct, reviled by geographers and philosophers alike. With this in mind, I identified several different ways of reckoning wilderness, starting with the highly anachronistic "Scenic Land" designation from the 1970s. Then I pursued the more carefully calculated "core wild areas" generated by SNH just a few years ago. However, even the core wile areas concept has been criticised heavily, so I also expanded out my search to include all sites of special scientific interest and then went even wider to include the Scottish Forestry Service's "Native Woodland" and finally, the most generic possible measurement, any land identified as forested at the last Forest Inventory.
-
-Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
-
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `r st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `r st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `r st_within(transition_sf, sssi)` transition towns, (or 2%) and `r st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `r st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `r st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `r st_within(ecs_sf, forest_inventory)` Eco-Congregation lies within either native or generally forested land.
-
-```{r wilderness_table} 
 # Calculate number of groups within polygons
 # TODO: run on additional shapefiles
 # TODO: more efficient code using do.call() function or sapply() as here https://stackoverflow.com/questions/3642535/creating-an-r-dataframe-row-by-row
@@ -928,31 +953,71 @@ So what did I discover? The results were inconclusive. First, it is important to
 # sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any))
 # sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any))
 
+# Generate dataframe based on SSSI buffers
+
 titles <- c("Within SSSIs", "...50m", "...500m")
 
-ecs_wilderness_row <- c(sum(apply(st_within(ecs_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+ecs_sssi_row <- c(sum(apply(st_within(ecs_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-ecs_wilderness_row <- rbind(titles, ecs_wilderness_row)
+ecs_sssi_row <- rbind(titles, ecs_sssi_row)
 
-pow_wilderness_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-sssi_counts <- rbind(ecs_wilderness_row, pow_wilderness_row)
+sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
 
-dtas_wilderness_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-sssi_counts <- rbind(sssi_counts, dtas_wilderness_row)
+sssi_counts <- rbind(sssi_counts, dtas_sssi_row)
 
-transition_wilderness_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-sssi_counts <- rbind(sssi_counts, transition_wilderness_row)
+sssi_counts <- rbind(sssi_counts, transition_sssi_row)
 
-permaculture_wilderness_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
 
-sssi_counts <- rbind(sssi_counts, permaculture_wilderness_row)
+sssi_counts <- rbind(sssi_counts, permaculture_sssi_row)
 
-# Output mmd tables using pander
-panderOptions("digits", 2)
-pander(sssi_counts)
+# Generate dataframe based on wildland buffers
+
+titles <- c("Within Wildland Areas", "...50m", "...500m")
+
+ecs_wildland_row <- c(sum(apply(st_within(ecs_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+
+# TODO: add additional column with counts converted to percentages - use prop.table()?
+ecs_wildland_row <- rbind(titles, ecs_wildland_row)
+
+pow_wildland_row <- c(sum(apply(st_within(pow_pointX_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+
+wildland_counts <- rbind(ecs_wildland_row, pow_wildland_row)
+
+dtas_wildland_row <- c(sum(apply(st_within(dtas_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+
+wildland_counts <- rbind(wildland_counts, dtas_wildland_row)
+
+transition_wildland_row <- c(sum(apply(st_within(transition_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+
+wildland_counts <- rbind(wildland_counts, transition_wildland_row)
+
+permaculture_wildland_row <- c(sum(apply(st_within(permaculture_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+
+wildland_counts <- rbind(wildland_counts, permaculture_wildland_row)
+
+```
+
+# Proximity to "Wilderness"
+
+Chasing down a curiosity, I decided to try and calculate whether proximity to "wilderness" or "scenic nature" or just trees might have some impact on generating more mobilised communities. I realised that there would be several problems with this kind of calculation up front, first being that "nature" is a deeply problematic construct, reviled by geographers and philosophers alike. With this in mind, I identified several different ways of reckoning wilderness, starting with the highly anachronistic "Scenic Land" designation from the 1970s. Then I pursued the more carefully calculated "core wild areas" generated by SNH just a few years ago. However, even the core wile areas concept has been criticised heavily, so I also expanded out my search to include all sites of special scientific interest and then went even wider to include the Scottish Forestry Service's "Native Woodland" and finally, the most generic possible measurement, any land identified as forested at the last Forest Inventory.
+
+Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
+
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs_sf, forest_inventory)` Eco-Congregation lies within either native or generally forested land.
+
+```{r wilderness_table} 
+
+# Output mmd tables using kable
+
+knitr::kable(sssi_counts, caption = 'Group Counts within SSSIs')
+knitr::kable(wildland_counts, caption = 'Group Counts within Wildland Areas')
 
 ```
 
@@ -966,35 +1031,45 @@ pander(sssi_counts)
 
 # Appendix A
 
-```{r pander_admin_table}
+```{r admin_table}
 # Output CSV files for various levels of admin
 write.csv(admin_lev1, "derivedData/admin_lev1.csv", row.names=FALSE)
 write.csv(admin_lev2, "derivedData/admin_lev2.csv", row.names=FALSE)
-write.csv(as_data_frame(admin_lev1[,c(3,5,7,11,13)]), "derivedData/admin.csv", row.names=FALSE)
 write.csv(ecs, "derivedData/ecs.csv", row.names=FALSE)
 write.csv(transition, "derivedData/transition.csv", row.names=FALSE)
 write.csv(permaculture, "derivedData/permaculture.csv", row.names=FALSE)
 write.csv(dtas, "derivedData/dtas.csv", row.names=FALSE)
 write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
 
-# Output mmd tables using pander
-panderOptions("digits", 2)
-pander(as_data_frame(admin_lev1[,c(3,5,7,11,13)]))
+# Output mmd tables using kable
+admin_lev1_df <- as_data_frame(admin_lev1[,c(3,5,7,11,13)])
+
+admin_lev1_df %>%
+  kable(format = "html", col.names = colnames(admin_lev1_df)) %>%
+    kable_styling() %>%
+    kableExtra::scroll_box(width = "100%", height = "400px")
 ```
 
 # Appendix B
 
-(JK note to self: same as above, but augmented with multipliers by which categories are different from one another)
+```{r admin_table_withproportions}
+
+admin_lev1_prop_df <- as_data_frame(admin_lev1[,c(3:14,23:26)])
+
+admin_lev1_prop_df %>%
+  kable(format = "html", col.names = colnames(admin_lev1_prop_df)) %>%
+    kable_styling() %>%
+    kableExtra::scroll_box(width = "100%", height = "400px")
+```
 
 # Appendix C - Data by Urban / Rural Classification
 
-```{r pander_urbanrural_table}
+```{r urbanrural_table}
 # Output CSV files for urbanrural tables
 write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
 
-# Output mmd tables using pander
-panderOptions("digits", 2)
-pander(as_data_frame(urbanrural[,c(1,7:16)]))
+# Output mmd tables using kable
+knitr::kable(as_data_frame(urbanrural[,c(1,7:16)]), caption = 'Group Counts by Urban Rural Scale')
 ```
 
 # Citations
@@ -1012,5 +1087,5 @@ pander(as_data_frame(urbanrural[,c(1,7:16)]))
 [^1554162]:From the Transition map key, "Green pins are 'official' groups
 Blue pins are active communities who are connected to the Scottish Transition network Yellow pins show interest in this area"
 [^15571030]:This was calculated by calculating a 10m wide footprint for every postcode in Scotland, areas which are not within 10m of a postcode (as of May 2014) are counted as uninhabited.
-[^159142242]: Fiona Tweedia, *Ecumenical Audit: Questionnaire Findings* (2014). 
+[^159142242]: Fiona Tweedie, *Ecumenical Audit: Questionnaire Findings* (2014). 
 [^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.adition and religion further below.
