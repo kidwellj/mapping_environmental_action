@@ -1,13 +1,13 @@
 ---
 title:  "Mapping Environmental Action in Scotland"
 abstract:    
-# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 01, 2019
+# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 05, 2019
 style:  jeremy1
 author: "[Jeremy H. Kidwell](http://jeremykidwell.info)"
 affiliation: University of Birmingham
 institute: University of Birmingham
 e-mail: "[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)"
-date: "2019-02-01"
+date: "2019-02-05"
 bibliography: biblio.bib
 linkcolor: black
 geometry: margin=1in
@@ -15,13 +15,17 @@ geometry: margin=1in
 fontsize: 11pt
 output:
   html_document:
+    theme: readable
     keep_md: true
+    code_folding: hide
+    self_contained: false
     toc: true
     toc_depth: 2
     number_sections: true
     fig_caption: true
     fig_retina: 1
   pdf_document:
+    toc: false
     keep_tex: true
     number_sections: true
     fig_caption: true
@@ -57,7 +61,7 @@ For the sake of comparison, we also measured the geographical footprint of two o
 
 # Technical Background
 
-Analysis was conducted using QGIS 2.8 and R 3.5.1, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
+Analysis was conducted using QGIS 2.8 and R 3.5.2, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
 
 # Background and History of Eco-Congregation Scotland
 
@@ -70,6 +74,8 @@ The programme launched officially in 2001 at Dunblane Cathedral in Stirling and 
 In the case of Eco-Congregation Scotland, congregations are invited to begin by "registering" their interest in the programme by completing a basic one-sided form. The next step requires the completion of an award application, which includes a facilitated curriculum called a "church check-up" and after an application is submitted, the site is visited and assessed by third-party volunteer assessors. Sites are invited to complete additional applications for further awards which are incremental (as is the application process). Transition communities, at least in the period reflected on their map, go through a similar process (though this does not involve the use of a supplied curriculum) by which they are marked first as "interested," become "active" and then gain "official" status.[^1554162]
 
 # Representation by Regional Authorities (Council Areas)
+
+
 
 
 
@@ -94,8 +100,15 @@ Whereas our initial measurements indicated a prominent lead for Edinburgh, by no
 
 ![](figures/create_admin_barplot-1.png)<!-- -->
 
+## Concentration of groups {.tabset}
+
+### Choropleth
 
 ![Figure 4](figures/create_choropleth_others-1.png)![Figure 4](figures/create_choropleth_others-2.png)![Figure 4](figures/create_choropleth_others-3.png)
+
+### Cartogram
+
+
 
 We can compare the representation in these various regions against our comparison groups to see how other community-based organisations cluster in Scottish administrative districts. Here there are some significant contrasts. Scottish Community Development trusts are most intensely concentrated in the Highlands and Argyll & Bute. But, this is consistent with all the other categories, Eco-Congregations, Places of Worship, and dtas are all over-represented in this area, varying only by the degree. Edinburgh is different, here we find that Eco-Congregations and Transition projects are over-represented, while dtass are under-represented. Finally, the highlands are another strong contrast, here we find a very strong over-representation by transition towns and dtass while the representation of Eco-Congregations is relatively close to the population share for that area. The two areas of greatest contrast for Eco-Congregations from the other groups are unsurprising, Edinburgh is the location of the ECS offices, while Stirling is the area in which ECS first began (see Appendix B for full data). 
 
@@ -139,7 +152,7 @@ While Roman Catholic churches make up just over 10% of the church buildings in S
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "SG_UrbanRural_2016"
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "SG_UrbanRural_2016"
 ## with 8 features
 ## It has 6 fields
 ```
@@ -169,12 +182,23 @@ Of all the groups surveyed in this study, Eco-Congregation Scotland is the most 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "sc_dz_11"
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "sc_dz_11"
 ## with 6976 features
 ## It has 9 fields
 ```
 
+## SIMD representation across domains by group {.tabset}
+
+### Jitterplot
+
+
+
+### Barplot
+
 ![](figures/create_simd_barplot-1.png)<!-- -->
+
+### Boxplot
+
 
 
 
@@ -184,17 +208,228 @@ The first, and most compelling finding is that, in general Eco-Congregation Scot
 
 We can find divergence between transition communities and eco-congregation when we split out SIMD domains. In the lowest quartile, measuring exclusively for the income domain, ECS is more represented (11%) - roughly the same as DTAS (12%), and transition is less (6%) represented. In general (as shown on the chart in Appendix D), these trends hold when representation of our groups are measured within other non-remoteness domains of the SIMD. Our basic conclusion is that transition towns are least likely to operate within the lowest quartile of SIMD and DTASs are most likely, with ECS somewhere in the middle. Given the general disparity against the presence of places of worship, it seems fair to suggest that this might be an area for improvement, perhaps even worth developing a special programme which might target areas in SIMD quartile 1 for eco-congregation outreach. This might be considered particularly in light of the starkest underrepresentation of ECS and transition within the SIMD domain of education, skills, and training.
 
+
+```
+## Reading layer `SSSI_SCOTLAND' from data source `/Users/jeremy/gits/mapping_environmental_action/data/SSSI_SCOTLAND.shp' using driver `ESRI Shapefile'
+## Simple feature collection with 15872 features and 7 fields
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: -296506.9 ymin: 530237.9 xmax: 467721.5 ymax: 1220310
+## epsg (SRID):    NA
+## proj4string:    +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs
+```
+
+```
+## OGR data source with driver: ESRI Shapefile 
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "SSSI_SCOTLAND"
+## with 15872 features
+## It has 7 fields
+## Integer64 fields read as strings:  PA_CODE
+```
+
+```
+## Reading layer `WILDLAND_SCOTLAND' from data source `/Users/jeremy/gits/mapping_environmental_action/data/WILDLAND_SCOTLAND.shp' using driver `ESRI Shapefile'
+## Simple feature collection with 42 features and 3 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 76877.24 ymin: 578454.1 xmax: 435367.1 ymax: 1190510
+## epsg (SRID):    NA
+## proj4string:    +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs
+```
+
+```
+## OGR data source with driver: ESRI Shapefile 
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "WILDLAND_SCOTLAND"
+## with 42 features
+## It has 3 fields
+```
+
+```
+## Reading layer `National_Forest_Inventory_Woodland_Scotland_2017' from data source `/Users/jeremy/gits/mapping_environmental_action/data/National_Forest_Inventory_Woodland_Scotland_2017.shp' using driver `ESRI Shapefile'
+## Simple feature collection with 199698 features and 7 fields
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: 65210.1 ymin: 532547.9 xmax: 461253.7 ymax: 1209179
+## epsg (SRID):    NA
+## proj4string:    +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs
+```
+
+```
+## OGR data source with driver: ESRI Shapefile 
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "National_Forest_Inventory_Woodland_Scotland_2017"
+## with 199698 features
+## It has 7 fields
+## Integer64 fields read as strings:  OBJECTID
+```
+
 # Proximity to "Wilderness"
 
 Chasing down a curiosity, I decided to try and calculate whether proximity to "wilderness" or "scenic nature" or just trees might have some impact on generating more mobilised communities. I realised that there would be several problems with this kind of calculation up front, first being that "nature" is a deeply problematic construct, reviled by geographers and philosophers alike. With this in mind, I identified several different ways of reckoning wilderness, starting with the highly anachronistic "Scenic Land" designation from the 1970s. Then I pursued the more carefully calculated "core wild areas" generated by SNH just a few years ago. However, even the core wile areas concept has been criticised heavily, so I also expanded out my search to include all sites of special scientific interest and then went even wider to include the Scottish Forestry Service's "Native Woodland" and finally, the most generic possible measurement, any land identified as forested at the last Forest Inventory.
 
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only 5 places of worship out of over 4k, 2 transition towns, (or 2%) and 7 community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie 3 Eco-Congregations (or just under 1%), which compares favourably with the 61 places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land 
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of 4048, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land.
+
+
+--------------------------------- -------------- -------- ---------
+           **titles**              Within SSSIs   ...50m   ...500m 
+
+     **ecs_wilderness_row**             0           3        59    
+
+     **pow_wilderness_row**             7           62       610   
+
+     **dtas_wilderness_row**            7           11       49    
+
+  **transition_wilderness_row**         0           1        17    
+
+ **permaculture_wilderness_row**        0           0         3    
+--------------------------------- -------------- -------- ---------
+
+
+
+
 
 # Appendix A
 
 
+----------------------------------------------------------------
+           name              ecs_count   pow_count   dtas_count 
+--------------------------- ----------- ----------- ------------
+           Fife                 18          243          11     
+
+      South Ayrshire             3          68           1      
+
+        Inverclyde               2          53           1      
+
+       Aberdeen City            15          96           1      
+
+         Highland               21          435          34     
+
+    West Dunbartonshire          6          52           3      
+
+           Moray                11          103          6      
+
+      Orkney Islands             4          50           10     
+
+       Aberdeenshire            19          244          15     
+
+     East Renfrewshire           8          37           2      
+
+     Clackmannanshire            3          30           1      
+
+       East Ayrshire             4          68           6      
+
+     North Lanarkshire           5          187          1      
+
+        Dundee City              3          94           1      
+
+      Argyll and Bute           18          172          24     
+
+           Angus                12          106          0      
+
+       Glasgow City             25          329          21     
+
+    East Dunbartonshire          7          43           1      
+
+     Shetland Islands            3          89           4      
+
+     Scottish Borders           11          153          9      
+
+ Comhairle nan Eilean Siar       0          114          9      
+
+       Renfrewshire              6          84           5      
+
+      North Ayrshire             7          96           3      
+
+       East Lothian              8          71           2      
+
+          Falkirk                8          83           0      
+
+       West Lothian             11          70           7      
+
+     Perth and Kinross          20          162          10     
+
+   Dumfries and Galloway         7          189          15     
+
+         Stirling               13          73           10     
+
+     City of Edinburgh          48          233          7      
+
+        Midlothian               1          45           4      
+
+     South Lanarkshire          17          176          8      
+----------------------------------------------------------------
+
+Table: Table continues below
+
+ 
+--------------------
+ permaculture_count 
+--------------------
+         1          
+
+         0          
+
+         0          
+
+         0          
+
+         1          
+
+         0          
+
+         0          
+
+         0          
+
+         1          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         3          
+
+         0          
+
+         2          
+
+         0          
+
+         0          
+
+         2          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         0          
+
+         1          
+
+         2          
+
+         0          
+
+         0          
+
+         1          
+
+         0          
+--------------------
 
 # Appendix B
 
@@ -203,6 +438,71 @@ So what did I discover? The results were inconclusive. First, it is important to
 # Appendix C - Data by Urban / Rural Classification
 
 
+--------------------------------------------------------------------------------
+ UR8FOLD   ecs_count   ecs_percent   pow_count   pow_percent   transition_count 
+--------- ----------- ------------- ----------- ------------- ------------------
+    1         111         0.32          907         0.22              35        
+
+    2         98          0.28         1015         0.25              16        
+
+    3         30          0.087         265         0.065             7         
+
+    4          9          0.026         100         0.025             2         
+
+    5          6          0.017         87          0.021             2         
+
+    6         54          0.16          696         0.17              14        
+
+    7         16          0.047         372         0.092             7         
+
+    8         20          0.058         606         0.15              11        
+--------------------------------------------------------------------------------
+
+Table: Table continues below
+
+ 
+---------------------------------------------------------------------
+ transition_percent   dtas_count   dtas_percent   permaculture_count 
+-------------------- ------------ -------------- --------------------
+        0.37              35           0.15               2          
+
+        0.17              25           0.11               1          
+
+       0.074              20          0.087               1          
+
+       0.021              7            0.03               0          
+
+       0.021              1           0.0043              1          
+
+        0.15              46           0.2                2          
+
+       0.074              27           0.12               3          
+
+        0.12              69           0.3                4          
+---------------------------------------------------------------------
+
+Table: Table continues below
+
+ 
+----------------------
+ permaculture_percent 
+----------------------
+         0.14         
+
+        0.071         
+
+        0.071         
+
+          0           
+
+        0.071         
+
+         0.14         
+
+         0.21         
+
+         0.29         
+----------------------
 
 # Citations
 
@@ -220,4 +520,4 @@ So what did I discover? The results were inconclusive. First, it is important to
 Blue pins are active communities who are connected to the Scottish Transition network Yellow pins show interest in this area"
 [^15571030]:This was calculated by calculating a 10m wide footprint for every postcode in Scotland, areas which are not within 10m of a postcode (as of May 2014) are counted as uninhabited.
 [^159142242]: Fiona Tweedia, *Ecumenical Audit: Questionnaire Findings* (2014). 
-[^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.
+[^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.adition and religion further below.

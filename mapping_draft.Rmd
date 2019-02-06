@@ -853,7 +853,7 @@ We can find divergence between transition communities and eco-congregation when 
 
 # Download data for SSSI:
 
-if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
+if (file.exists("data/SSSI_SCOTLAND.shp") == FALSE) {
 # TODO: get reliable URL for data download
 # http://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=SSSI
 # download.file("", destfile = "data/SSSI_SCOTLAND_ESRI.zip")
@@ -892,18 +892,23 @@ forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Sco
 # International Union for Conservation of Nature (IUCN), Category V Protected Landscapes
 # for England: https://environment.data.gov.uk/DefraDataDownload/?mapService=NE/AreasOfOutstandingNaturalBeautyEngland&Mode=spatial
 
-download.file("https://opendata.arcgis.com/datasets/d7f6b987c7224a72a185ce012258d500_23.zip", destfile = "data/ScenicAreas.zip")
-unzip("data/ScenicAreas.zip", exdir = "data")
-scenicareas <- st_read("data/ScenicAreas.shp")
-scenicareas_sp <- readOGR("./data", "ScenicAreas") 
+# download.file("https://opendata.arcgis.com/datasets/d7f6b987c7224a72a185ce012258d500_23.zip", destfile = "data/ScenicAreas.zip")
+# unzip("data/ScenicAreas.zip", exdir = "data")
+# scenicareas <- st_read("data/ScenicAreas.shp")
+# scenicareas_sp <- readOGR("./data", "ScenicAreas") 
 
 # Set symmetrical CRS for analysis below
 st_crs(sssi) <- 27700
 st_crs(ecs_sf) <- 27700
 st_crs(pow_pointX_sf) <- 27700
+st_crs(dtas_sf) <- 27700
+st_crs(transition_sf) <- 27700
+st_crs(permaculture_sf) <- 27700
+
 
 # Define buffer and measure number of ECS groups within 0.5 miles of all SSSI
-# CRS uses meters for units, so buffer for 0.5 miles will use 805 meters)
+# CRS uses meters for units, so a buffer for 0.5 miles would use 805 meters)
+
 ```
 
 # Proximity to "Wilderness"
@@ -912,7 +917,7 @@ Chasing down a curiosity, I decided to try and calculate whether proximity to "w
 
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land.
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `r st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `r st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `r st_within(transition_sf, sssi)` transition towns, (or 2%) and `r st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `r st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `r st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `r st_within(ecs_sf, forest_inventory)` Eco-Congregation lies within either native or generally forested land.
 
 ```{r wilderness_table} 
 # Calculate number of groups within polygons
