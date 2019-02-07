@@ -348,7 +348,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 1a", 
        subtitle="Concentration of ECS groups",
@@ -363,8 +363,7 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 9),
           legend.position = c(0.25, 0.85))
-# TODO: shift to use of grobs: https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html
-# Adapt colour above to use oranges - scale_fill_brewer(palette = "Oranges") + 
+# TODO: consider a shift to use of grobs: https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html
 
 ```
 
@@ -415,7 +414,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 2", 
        subtitle="Concentration of ECS groups, data normalised by places of worship",
@@ -430,10 +429,6 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
-# ggsave("figure2.pdf")
-# Adapt colour above to use oranges - scale_fill_brewer(palette = "Oranges") + 
-
-
 
 # Plot out second figure with normalised data:  
 ggplot() + 
@@ -443,7 +438,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 3", 
        subtitle="Concentration of ECS groups, data normalised by population",
@@ -459,7 +454,6 @@ ggplot() +
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
 
-# Adapt colour above to use oranges - scale_fill_brewer(palette = "Oranges") + 
 # TODO: Force bins to be consistently at count of 5?
 
 ```
@@ -519,7 +513,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 5", 
        subtitle="Concentration of ECS groups",
@@ -535,8 +529,6 @@ ggplot() +
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
 
-# Adapt colour above to use oranges - scale_fill_brewer(palette = "Oranges") + 
-
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
                    fill = cut_interval(admin_lev1_fortified$transition_count, 5)), 
@@ -544,7 +536,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 6", 
        subtitle="Concentration of Transition groups",
@@ -560,9 +552,6 @@ ggplot() +
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
 
-# Adapt colour above to use oranges - scale_fill_brewer(palette = "Oranges") + 
-
-
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
                    fill = cut_interval(admin_lev1_fortified$dtas_count, 5)), 
@@ -570,7 +559,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 7", 
        subtitle="Concentration of DTAS groups",
@@ -585,8 +574,6 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
-
-# Adapt colour above to use oranges - scale_fill_brewer(palette = "Oranges") + 
 
 ```
 
@@ -742,22 +729,22 @@ ecs_df <- as.data.frame(ecs)
 urbanrural_fortified <- join(urbanrural_fortified,urbanrural@data, by="id")
 
 # Make dots smaller - add outlines, & lines thinner
-# Adapt colour above to use oranges - scale_fill_brewer(palette = "BrBG") + 
+# Need to add scale_fill_brewer(palette = "BrBG") + 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
                    fill = UR8FOLD), 
                data = urbanrural_fortified, 
-               colour = 'black', 
+               colour = "black", 
                alpha = .7, 
                size = .005) + 
-  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data = ecs_df, 
+    geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data = ecs_df, 
              colour = "black", 
              fill = "white",
              size = .15,
              stroke = .002,
              alpha = .6, 
              show.legend = TRUE) +
-  labs(x = NULL, y = NULL, fill = "Groups",
+    labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 9", 
        subtitle="Eco-Congregation Scotland concentrations in Urban Rural 8-fold classifications",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
@@ -971,27 +958,38 @@ st_crs(permaculture_sf) <- 27700
 
 # Generate dataframe based on SSSI buffers
 
-titles <- c("Within SSSIs", "...50m", "...500m")
-
+# Calculate incidence of ecs within SSSI and within buffers at 50/500m
 ecs_sssi_row <- c(sum(apply(st_within(ecs_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-
-ecs_sssi_row <- rbind(titles, ecs_sssi_row)
+# Calculate row based on percentage of total
+ecs_sssi_row_pct <- ecs_sssi_row/length(ecs)
 
 pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-
-sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
+pow_sssi_row_pct <- pow_sssi_row/length(pow_pointX)
 
 dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-
-sssi_counts <- rbind(sssi_counts, dtas_sssi_row)
+dtas_sssi_row_pct <- dtas_sssi_row/length(dtas)
 
 transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-
-sssi_counts <- rbind(sssi_counts, transition_sssi_row)
+transition_sssi_row_pct <- transition_sssi_row/length(transition)
 
 permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+permaculture_sssi_row_pct <- permaculture_sssi_row/length(permaculture)
 
+sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
+sssi_counts <- rbind(sssi_counts, dtas_sssi_row)
+sssi_counts <- rbind(sssi_counts, transition_sssi_row)
 sssi_counts <- rbind(sssi_counts, permaculture_sssi_row)
+sssi_counts <- as.data.frame(sssi_counts)
+colnames(sssi_counts) <- c("Within SSSIs", "...50m", "...500m")
+
+sssi_counts_pct <- rbind(ecs_sssi_row_pct, pow_sssi_row_pct)
+sssi_counts_pct <- rbind(sssi_counts_pct, dtas_sssi_row_pct)
+sssi_counts_pct <- rbind(sssi_counts_pct, transition_sssi_row_pct)
+sssi_counts_pct <- rbind(sssi_counts_pct, permaculture_sssi_row_pct)
+colnames(sssi_counts_pct) <- c("% Within SSSIs", "% within 50m", "% within 500m")
+
+sssi_counts_merged <- cbind(sssi_counts, sssi_counts_pct)
+
 
 # Generate dataframe based on wildland buffers
 
@@ -1126,7 +1124,7 @@ urbanrural_table <- as_data_frame(urbanrural[,c(1,7:16)])
 urbanrural_table %>%
   kable(format = "html", col.names = colnames(urbanrural_table)) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
-    kableExtra::scroll_box(width = "100%", height = "800px", caption = 'Group Counts by Urban Rural Scale')
+    kableExtra::scroll_box(width = "100%")
 
 ```
 
