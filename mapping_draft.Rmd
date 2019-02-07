@@ -18,7 +18,7 @@ output:
     theme: readable
     keep_md: true
     code_folding: hide
-    self_contained: false
+    self_contained: true
     toc: true
     toc_depth: 2
     number_sections: true
