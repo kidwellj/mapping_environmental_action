@@ -5,8 +5,9 @@ require(sp) # needed for proj4string, deprecated by sf()
 require(rgdal) # version version: 1.3-6
 require(rgeos) # used for buffering below
 require(devtools)
+require(ggplot2)
 
-setwd("~/Downloads/test")
+# setwd("~/Downloads/test")
 # load data
 
 transition_wgs <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
@@ -23,16 +24,47 @@ unzip("SSSI_SCOTLAND_ESRI.zip")
 
 unzip("National_Forest_Inventory_Woodland_Scotland_2017.zip")
 
-sssi_sf <- st_read("SSSI_SCOTLAND.shp")
-sssi_sp <- readOGR("./", "SSSI_SCOTLAND") 
+sssi_sf <- st_read("./data/SSSI_SCOTLAND.shp")
+sssi_sp <- readOGR("./data", "SSSI_SCOTLAND") 
 
-forest_inventory_sf <- st_read("National_Forest_Inventory_Woodland_Scotland_2017.shp")
-forest_inventory_sp <- readOGR("./", "National_Forest_Inventory_Woodland_Scotland_2017") 
+forest_inventory_sf <- st_read("./data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
+forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
+
+# Test validity of geometry
+
+rgeos::gIsValid(sssi_sp) 
+valid <- st_is_valid(sssi_sf)
+  valid[valid == FALSE]
+
+# Alternative approach from stackexchange using simplified geometry
+  
+  sssi_sp2 <- rgeos::gSimplify(sssi_sp, tol=3)
+  par(mfrow=c(1,2))
+  plot(sssi_sp[1,])
+  plot(sssi_sp2[1,])
+  
+  system.time(
+    sssi_b1000 <- rgeos::gBuffer(sssi_sp2, width = 20, quadsegs = 30)
+  )  
+  
+  sssi_sf2 <- sf::st_simplify(sssi_sf)
+  system.time(
+    sssi_b1000 <- sf::st_buffer(sssi_sf2, dist = 20)
+  ) 
+  
+# Render ggplot2 plot on simplified geometry
+
+ggplot(sssi_sf2) + geom_sf(aes(fill = PA_CODE))
+plot(sssi_sf2)
 
 # First test out plots using spatialfeatures and spdf with core R
 
 system.time(
-plot(sssi_sf)
+plot(sssi_sf2)
+  )
+
+system.time(
+  plot()
   )
 
 system.time(

@@ -1103,6 +1103,16 @@ write.csv(forest_inventory_counts_merged, "derivedData/forest_inventory_counts_m
 # TODO: Add ggplot overlaying all three wilderness area types with different colours for polygons + points of ecs with different colouration and colour intensity at 3 bins for dots within buffers at each level (0/50/500m)
 # Note: there seems to be a problem with ggplot rendering these shapefiles - as it takes well over 10 hours to plot currently even on the smaller sssi shapefile.
 
+# Simplify geometries for plotting
+
+sssi_simple <- sf::st_simplify(sssi_sf)
+
+# Plot SSSI polygons with ECS points (using sp, for now)
+
+plot(sssi_simple, col='#aaaaaa', border=0)
+plot(ecs_sf, col = 'red', add=TRUE)
+
+
 ```
 
 
