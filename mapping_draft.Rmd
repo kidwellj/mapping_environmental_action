@@ -18,7 +18,7 @@ output:
     theme: readable
     keep_md: true
     code_folding: hide
-    self_contained: false
+    self_contained: true
     toc: true
     toc_depth: 2
     number_sections: true
@@ -165,6 +165,7 @@ The programme launched officially in 2001 at Dunblane Cathedral in Stirling and 
 In the case of Eco-Congregation Scotland, congregations are invited to begin by "registering" their interest in the programme by completing a basic one-sided form. The next step requires the completion of an award application, which includes a facilitated curriculum called a "church check-up" and after an application is submitted, the site is visited and assessed by third-party volunteer assessors. Sites are invited to complete additional applications for further awards which are incremental (as is the application process). Transition communities, at least in the period reflected on their map, go through a similar process (though this does not involve the use of a supplied curriculum) by which they are marked first as "interested," become "active" and then gain "official" status.[^1554162]
 
 # Representation by Regional Authorities (Council Areas) {.tabset}
+
 ```{r import_admin_data, message=FALSE, warning=FALSE, include=FALSE}
 # read in polygon for Scottish admin boundaries
 # TODO: upload bundle of admin data to new zenodo repository and alter below to use new URLs
@@ -347,7 +348,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 1a", 
        subtitle="Concentration of ECS groups",
@@ -362,9 +363,7 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 9),
           legend.position = c(0.25, 0.85))
-# TODO: shift to use of grobs: https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html
-
-# ggsave("figure1.pdf")
+# TODO: consider a shift to use of grobs: https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html
 
 ```
 
@@ -415,7 +414,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 2", 
        subtitle="Concentration of ECS groups, data normalised by places of worship",
@@ -430,7 +429,6 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
-# ggsave("figure2.pdf")
 
 # Plot out second figure with normalised data:  
 ggplot() + 
@@ -440,7 +438,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 3", 
        subtitle="Concentration of ECS groups, data normalised by population",
@@ -455,7 +453,9 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
-# ggsave("figure3.pdf")
+
+# TODO: Force bins to be consistently at count of 5?
+
 ```
 
 Given the way population and places of worship are unevenly distributed across Scotland it is important to represent data in terms of relative distribution. For this study, we attempted to "normalise" our data in two different ways, (1) as shown by Figure 2 above, by taking population figures from the 2011 census (see data sheet in Appendix A) and (2) by adjusting relative to the number of places of worship in each council region.[^15914204] The latter of these two can yield particularly unexpected results. Thus, of the `r length(pow_pointX)` "places of worship" in Scotland, the highest concentration is actually the `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$pow_count)])` region, with `r max(admin_lev1$pow_count)`, second is `r max( admin_lev1$pow_count[admin_lev1$pow_count!=max(admin_lev1$pow_count)] )` (`r as.character(admin_lev1$NAME_2[which.max( admin_lev1$pow_count[admin_lev1$pow_count!=max(admin_lev1$pow_count)])] )`). Rank of Council Areas by population and number of places of worship is also included in Appendix A.
@@ -500,9 +500,7 @@ ggplot(admin_gathered,
   scale_color_manual(labels = c("DTAS", "ECS", "Permaculture", "Transition"))
 ```
 
-## Concentration of groups {.tabset}
-
-### Choropleth
+## Other environmental groups shown by concentration in administrative regions (NUTS)
 
 ```{r create_choropleth_others, fig.width=4, fig.show="hold", fig.cap="Figure 4"}
 
@@ -515,7 +513,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 5", 
        subtitle="Concentration of ECS groups",
@@ -531,7 +529,6 @@ ggplot() +
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
 
-
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
                    fill = cut_interval(admin_lev1_fortified$transition_count, 5)), 
@@ -539,7 +536,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 6", 
        subtitle="Concentration of Transition groups",
@@ -562,7 +559,7 @@ ggplot() +
                colour = 'black', 
                alpha = .7, 
                size = .005) + 
-  viridis::scale_fill_viridis(discrete = TRUE) + 
+  scale_fill_brewer(palette = "Oranges") + 
   labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 7", 
        subtitle="Concentration of DTAS groups",
@@ -577,13 +574,14 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
+
 ```
 
-### Cartogram
+## Cartogram Comparisons
 
 ```{r create_cartograms, fig.width=4, fig.show="hold", fig.cap="Figure 4"}
 
-# # todo: plot as animated chorogram: 
+# # TODO: plot as animated chorogram: 
 # # https://www.r-graph-gallery.com/331-basic-cartogram/
 # # see here for example using sf: https://github.com/dreamRs/topogRam
 
@@ -713,7 +711,8 @@ ggplot(urbanrural_gathered,
 
 ```{r create_urbanrural_ecs_chart_choropleth, fig.width=4, fig.cap="Figure 9"}
 
-# Clipping work
+# TODO: Clipping here to buildings shapefile
+# TODO: Fix colour overlay for urbanrural to be in foreground and at 8 bins - add "fill= NA," outside aes?
 #title("difference(x,y)")
 #plot(x, border = 'grey')
 #plot(st_difference(st_union(y),st_union(x)), col = 'lightblue', add = TRUE)
@@ -730,21 +729,22 @@ ecs_df <- as.data.frame(ecs)
 urbanrural_fortified <- join(urbanrural_fortified,urbanrural@data, by="id")
 
 # Make dots smaller - add outlines, & lines thinner
+# Need to add scale_fill_brewer(palette = "BrBG") + 
 ggplot() + 
   geom_polygon(aes(x = long, y = lat, group = group, 
                    fill = UR8FOLD), 
                data = urbanrural_fortified, 
-               colour = 'black', 
+               colour = "black", 
                alpha = .7, 
                size = .005) + 
-  geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data=ecs_df, 
+    geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data = ecs_df, 
              colour = "black", 
              fill = "white",
              size = .15,
              stroke = .002,
              alpha = .6, 
              show.legend = TRUE) +
-  labs(x = NULL, y = NULL, fill = "Groups",
+    labs(x = NULL, y = NULL, fill = "Groups",
        title = "Figure 9", 
        subtitle="Eco-Congregation Scotland concentrations in Urban Rural 8-fold classifications",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
@@ -758,6 +758,7 @@ ggplot() +
           panel.border = element_rect(fill = NA, colour = "#cccccc"),
           legend.text = element_text(size = 8),
           legend.position = c(0.25, 0.85))
+
 ```
 
 
@@ -880,6 +881,8 @@ ggplot(data=allgroups_gathered,
 
 ```
 
+## Discussing SIMD
+
 Another crucial point of assessment relates to the relation of Eco-Congregation communities to the Scottish Index of Multiple Deprivation. This instrument aggregates a large variety of factors which can lead to deprivation including crime rates, employment levels, access to services (implicating remoteness), and literacy. By assessing ECS, Transition, and dtas against the deprivation scale, we can assess whether eco-congregations fall within particular demographics and also whether the fully aggregated SIMD measurement provides a useful point of comparison for our purposes. The SIMD essentially divides Scotland into 6407 geographic zones and then ranks them based on their relative deprivation. This data set can be split into any number of groups, but for our purposes we have settled on Quintiles, splitting the SIMD data set at every 1302 entries. We then measured where each transition group, ECS, and dtas fell within these zones and calculated how they fell into these five quintiles, from more to least deprived.
 
 The first, and most compelling finding is that, in general Eco-Congregation Scotland and Transition Scotland are both roughly the same and match the level of population distribution in the lowest quintile of the general SIMD measurement. 8% of transition groups and eco-congregation groups which have received awards and 9% of the population are located within this quintile. However, taken in relation to the distribution of places of worship in the lowest quintile, we find that eco-congregations are located at half the rate that places of worship are (15%) and dtass match this much more closely at 14%. Turning towards the top quintile, this pattern also holds, here both transition groups (21%) and eco-congregations (21% and 29% of awarded congregations) depart from the population distribution in this upper quintile (which is 10%). Again, general places of worship (at 11%) and DTASs (at 5%) take the opposite direction. We can say decisively that in communities which have been identified as good candidates for intervention to reduce deprivation, ECS and Transition are less likely, and they are over-represented at the areas which fall into the least deprived quintile.
@@ -955,27 +958,38 @@ st_crs(permaculture_sf) <- 27700
 
 # Generate dataframe based on SSSI buffers
 
-titles <- c("Within SSSIs", "...50m", "...500m")
-
+# Calculate incidence of ecs within SSSI and within buffers at 50/500m
 ecs_sssi_row <- c(sum(apply(st_within(ecs_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-
-ecs_sssi_row <- rbind(titles, ecs_sssi_row)
+# Calculate row based on percentage of total
+ecs_sssi_row_pct <- ecs_sssi_row/length(ecs)
 
 pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-
-sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
+pow_sssi_row_pct <- pow_sssi_row/length(pow_pointX)
 
 dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-
-sssi_counts <- rbind(sssi_counts, dtas_sssi_row)
+dtas_sssi_row_pct <- dtas_sssi_row/length(dtas)
 
 transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-
-sssi_counts <- rbind(sssi_counts, transition_sssi_row)
+transition_sssi_row_pct <- transition_sssi_row/length(transition)
 
 permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+permaculture_sssi_row_pct <- permaculture_sssi_row/length(permaculture)
 
+sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
+sssi_counts <- rbind(sssi_counts, dtas_sssi_row)
+sssi_counts <- rbind(sssi_counts, transition_sssi_row)
 sssi_counts <- rbind(sssi_counts, permaculture_sssi_row)
+sssi_counts <- as.data.frame(sssi_counts)
+colnames(sssi_counts) <- c("Within SSSIs", "...50m", "...500m")
+
+sssi_counts_pct <- rbind(ecs_sssi_row_pct, pow_sssi_row_pct)
+sssi_counts_pct <- rbind(sssi_counts_pct, dtas_sssi_row_pct)
+sssi_counts_pct <- rbind(sssi_counts_pct, transition_sssi_row_pct)
+sssi_counts_pct <- rbind(sssi_counts_pct, permaculture_sssi_row_pct)
+colnames(sssi_counts_pct) <- c("% Within SSSIs", "% within 50m", "% within 500m")
+
+sssi_counts_merged <- cbind(sssi_counts, sssi_counts_pct)
+
 
 # Generate dataframe based on wildland buffers
 
@@ -1002,6 +1016,31 @@ permaculture_wildland_row <- c(sum(apply(st_within(permaculture_sf, wildland, sp
 
 wildland_counts <- rbind(wildland_counts, permaculture_wildland_row)
 
+# Generate dataframe based on forest_inventory buffers
+
+titles <- c("Within woodlands", "...50m", "...500m")
+
+ecs_forest_inventory_row <- c(sum(apply(st_within(ecs_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
+
+# TODO: add additional column with counts converted to percentages - use prop.table()?
+ecs_forest_inventory_row <- rbind(titles, ecs_forest_inventory_row)
+
+pow_forest_inventory_row <- c(sum(apply(st_within(pow_pointX_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
+
+forest_inventory_counts <- rbind(ecs_forest_inventory_row, pow_forest_inventory_row)
+
+dtas_forest_inventory_row <- c(sum(apply(st_within(dtas_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
+
+forest_inventory_counts <- rbind(forest_inventory_counts, dtas_forest_inventory_row)
+
+transition_forest_inventory_row <- c(sum(apply(st_within(transition_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
+
+forest_inventory_counts <- rbind(forest_inventory_counts, transition_forest_inventory_row)
+
+permaculture_forest_inventory_row <- c(sum(apply(st_within(permaculture_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
+
+forest_inventory_counts <- rbind(forest_inventory_counts, permaculture_wildland_row)
+
 ```
 
 # Proximity to "Wilderness"
@@ -1016,15 +1055,25 @@ So what did I discover? The results were inconclusive. First, it is important to
 
 # Output mmd tables using kable
 
-knitr::kable(sssi_counts, caption = 'Group Counts within SSSIs')
-knitr::kable(wildland_counts, caption = 'Group Counts within Wildland Areas')
+sssi_counts %>%
+  kable(format = "html", col.names = colnames(sssi_counts), "Group counts within SSSIs") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
+
+wildland_counts %>%
+  kable(format = "html", col.names = colnames(wildland_counts), caption = "Group counts within Wildland Areas") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
+
+forest_inventory_counts %>%
+  kable(format = "html", col.names = colnames(forest_inventory_counts), caption = "Group counts within woodlands") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
 ```
 
 
 ```{r wilderness_plots} 
 
-
+# TODO: Add ggplot overlaying all three wilderness area types with different colours for polygons + points of ecs with different colouration and colour intensity at 3 bins for dots within buffers at each level (0/50/500m)
+# Note: there seems to be a problem with ggplot rendering these shapefiles - as it takes well over 10 hours to plot currently even on the smaller sssi shapefile.
 
 ```
 
@@ -1046,8 +1095,8 @@ admin_lev1_df <- as_data_frame(admin_lev1[,c(3,5,7,11,13)])
 
 admin_lev1_df %>%
   kable(format = "html", col.names = colnames(admin_lev1_df)) %>%
-    kable_styling() %>%
-    kableExtra::scroll_box(width = "100%", height = "400px")
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+    kableExtra::scroll_box(width = "100%", height = "800px")
 ```
 
 # Appendix B
@@ -1058,8 +1107,8 @@ admin_lev1_prop_df <- as_data_frame(admin_lev1[,c(3:14,23:26)])
 
 admin_lev1_prop_df %>%
   kable(format = "html", col.names = colnames(admin_lev1_prop_df)) %>%
-    kable_styling() %>%
-    kableExtra::scroll_box(width = "100%", height = "400px")
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+    kableExtra::scroll_box(width = "100%", height = "800px")
 ```
 
 # Appendix C - Data by Urban / Rural Classification
@@ -1069,7 +1118,14 @@ admin_lev1_prop_df %>%
 write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
 
 # Output mmd tables using kable
-knitr::kable(as_data_frame(urbanrural[,c(1,7:16)]), caption = 'Group Counts by Urban Rural Scale')
+
+urbanrural_table <- as_data_frame(urbanrural[,c(1,7:16)])
+
+urbanrural_table %>%
+  kable(format = "html", col.names = colnames(urbanrural_table)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+    kableExtra::scroll_box(width = "100%")
+
 ```
 
 # Citations

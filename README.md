@@ -1,6 +1,6 @@
 # Mapping Environmental Action
 
-## A Welcome For the Uninitiated ##
+## Why Reproducible Research? ##
 
 If you're new to github and reproducible research, welcome! It's nice to have you here. Github is ordinarily a place where software developers working on open source software projects deposit their code as they write software collaboratively. However, in recent years a number of scholarly researchers, especially people working on research which involves a digital component (including me!) have begun to deposit their papers in these same software repositories. The idea here is that you can download all of the source-code and data used in this paper alongside the actual text, run it yourself and ["reproduce" the results](http://kbroman.org/steps2rr/). This can serve as a useful safeguard, a layer of research transparency, and a cool teaching tool for other persons interested in doing similar work.
 
@@ -22,7 +22,9 @@ This repository contains the code and writing towards a (working draft of a) sch
 
  I'd be extremely happy if someone found errors, or imagined a more efficient means of analysis and either reported them as an issue on this github repository or sent me an email.
 
-The actual article is in `mapping_draft.Rmd`. 
+The actual article is in `mapping_draft.Rmd` and can be compiled using knitr (assuming you have R installed as well as required packages) using the script provided `knit_it_html.sh`
+
+Note: actual execution may take over an hour, as calls to `st_buffer` and `st_within` under `wilderness_data_prep` are computationally intensive. To compile more briskly, I recommend you comment out this final section and knit the markdown/html files.
 
 Paths in this folder are used mostly for R processing. Towards this end folders have the following significance:
 

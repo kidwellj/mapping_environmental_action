@@ -1,13 +1,13 @@
 ---
 title:  "Mapping Environmental Action in Scotland"
 abstract:    
-# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 05, 2019
+# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 07, 2019
 style:  jeremy1
 author: "[Jeremy H. Kidwell](http://jeremykidwell.info)"
 affiliation: University of Birmingham
 institute: University of Birmingham
 e-mail: "[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)"
-date: "2019-02-05"
+date: "2019-02-07"
 bibliography: biblio.bib
 linkcolor: black
 geometry: margin=1in
@@ -61,7 +61,7 @@ For the sake of comparison, we also measured the geographical footprint of two o
 
 # Technical Background
 
-Analysis was conducted using QGIS 2.8 and R 3.5.2, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
+Analysis was conducted using QGIS 2.8 and R 3.5.1, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
 
 # Background and History of Eco-Congregation Scotland
 
@@ -73,7 +73,8 @@ The programme launched officially in 2001 at Dunblane Cathedral in Stirling and 
 
 In the case of Eco-Congregation Scotland, congregations are invited to begin by "registering" their interest in the programme by completing a basic one-sided form. The next step requires the completion of an award application, which includes a facilitated curriculum called a "church check-up" and after an application is submitted, the site is visited and assessed by third-party volunteer assessors. Sites are invited to complete additional applications for further awards which are incremental (as is the application process). Transition communities, at least in the period reflected on their map, go through a similar process (though this does not involve the use of a supplied curriculum) by which they are marked first as "interested," become "active" and then gain "official" status.[^1554162]
 
-# Representation by Regional Authorities (Council Areas)
+# Representation by Regional Authorities (Council Areas) {.tabset}
+
 
 
 
@@ -84,7 +85,15 @@ Perhaps the first important question to ask of these groups is, where are they? 
 
 (*TODO: need to implement*) Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake. Note, for the sake of a more accurate visual communication, we have also marked out areas of Scotland that are uninhabited with hash marks on the map of agricultural parishes. (*TODO: this will be done in the final draft, once I get my image masking fixed!*).[^15571030]
 
+## Eco-Congregation Scotland groups shown by concentration in administrative regions (NUTS3)
+
 ![Figure 1](figures/plot_admin_ecs_choropleth-1.png)
+
+## Eco-Congregation Scotland groups shown by concentration in administrative regions (LAU)
+
+![Figure 3](figures/plot_admin_ecs_admin2_choropleth-1.png)
+
+
 
 ![Figure 2](figures/plot_admin_ecs_normed_choropleth-1.png)![Figure 2](figures/plot_admin_ecs_normed_choropleth-2.png)
 
@@ -100,13 +109,11 @@ Whereas our initial measurements indicated a prominent lead for Edinburgh, by no
 
 ![](figures/create_admin_barplot-1.png)<!-- -->
 
-## Concentration of groups {.tabset}
-
-### Choropleth
+## Other environmental groups shown by concentration in administrative regions (NUTS)
 
 ![Figure 4](figures/create_choropleth_others-1.png)![Figure 4](figures/create_choropleth_others-2.png)![Figure 4](figures/create_choropleth_others-3.png)
 
-### Cartogram
+## Cartogram Comparisons
 
 
 
@@ -122,25 +129,73 @@ A wide variety of historians and sociologists of religion have noted the regiona
 
 So why provide this kind of data (i.e. at the level of individual churches) when more granular data (i.e. at the level of individuals persons) is available in the form of the census and related parallel publications such as the 2008 Scottish Environmental Attitudes survey? We believe that mapping places of worship provides a useful intermediate level of analysis and may complement our more atomised understanding of EA which has been assessed at the level of individual persons to date. Because representation within some administrative areas of Scotland, can lead to a small number of data points, we have kept analysis to a National level and have not provided more specific administrative-area level calculations.
 
-
-Table: ECS by denomination
-
-                  x
--------------  ----
-Baptist           4
-C of S          254
-C of S / URC      3
-Cong              1
-Ecu               5
-FCS               1
-Independent       2
-Meth              4
-Non.              1
-Quaker            1
-RC               15
-SEC              41
-Unitarian         1
-URC              11
+<table>
+<caption>ECS by denomination</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> x </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Baptist </td>
+   <td style="text-align:right;"> 4 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> C of S </td>
+   <td style="text-align:right;"> 254 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> C of S / URC </td>
+   <td style="text-align:right;"> 3 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cong </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ecu </td>
+   <td style="text-align:right;"> 5 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> FCS </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Independent </td>
+   <td style="text-align:right;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Meth </td>
+   <td style="text-align:right;"> 4 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Non. </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Quaker </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> RC </td>
+   <td style="text-align:right;"> 15 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> SEC </td>
+   <td style="text-align:right;"> 41 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Unitarian </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> URC </td>
+   <td style="text-align:right;"> 11 </td>
+  </tr>
+</tbody>
+</table>
 
 
 As one might expect, there is a strong representation of the Church of Scotland, almost 74% of eco-congregations, with this number remaining the same when we only count awarded sites. We can confirm, on the basis of this analysis that ECS has a disproportional representation by Church of Scotland churches. At the 2002 church census count, it only represented 40.20% of Scottish churches (1666 of 4144 total churches). Similarly, on the 2011 Scottish census, only 32.44% of persons claimed to be members of the Church of Scotland. We can adjust this representation to 60%, if one excludes the 2,445,204 persons (46% of the total on the census) who reported either "no religion" or adherence to a religious tradition not currently represented among the eco-congregation sites. There is a slight over-representation by the United Reformed church, though this seems considerably more dramatic when one takes into account the fact that this is a trebling or more of their overall share of Scottish churches. The URC makes up only sightly more than 1% of church buildings in Scotland and a tiny 0.04% of respondents to the 2011 census. The Scottish Episcopal church hovers right around a proportional representation within ECS. More concerning are the significant underrepresentation by Roman Catholic churches, Baptists, the Free Church of Scotland, and other independent churches. 
@@ -152,7 +207,7 @@ While Roman Catholic churches make up just over 10% of the church buildings in S
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "SG_UrbanRural_2016"
+## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "SG_UrbanRural_2016"
 ## with 8 features
 ## It has 6 fields
 ```
@@ -182,7 +237,7 @@ Of all the groups surveyed in this study, Eco-Congregation Scotland is the most 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "sc_dz_11"
+## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "sc_dz_11"
 ## with 6976 features
 ## It has 9 fields
 ```
@@ -202,6 +257,8 @@ Of all the groups surveyed in this study, Eco-Congregation Scotland is the most 
 
 
 
+## Discussing SIMD
+
 Another crucial point of assessment relates to the relation of Eco-Congregation communities to the Scottish Index of Multiple Deprivation. This instrument aggregates a large variety of factors which can lead to deprivation including crime rates, employment levels, access to services (implicating remoteness), and literacy. By assessing ECS, Transition, and dtas against the deprivation scale, we can assess whether eco-congregations fall within particular demographics and also whether the fully aggregated SIMD measurement provides a useful point of comparison for our purposes. The SIMD essentially divides Scotland into 6407 geographic zones and then ranks them based on their relative deprivation. This data set can be split into any number of groups, but for our purposes we have settled on Quintiles, splitting the SIMD data set at every 1302 entries. We then measured where each transition group, ECS, and dtas fell within these zones and calculated how they fell into these five quintiles, from more to least deprived.
 
 The first, and most compelling finding is that, in general Eco-Congregation Scotland and Transition Scotland are both roughly the same and match the level of population distribution in the lowest quintile of the general SIMD measurement. 8% of transition groups and eco-congregation groups which have received awards and 9% of the population are located within this quintile. However, taken in relation to the distribution of places of worship in the lowest quintile, we find that eco-congregations are located at half the rate that places of worship are (15%) and dtass match this much more closely at 14%. Turning towards the top quintile, this pattern also holds, here both transition groups (21%) and eco-congregations (21% and 29% of awarded congregations) depart from the population distribution in this upper quintile (which is 10%). Again, general places of worship (at 11%) and DTASs (at 5%) take the opposite direction. We can say decisively that in communities which have been identified as good candidates for intervention to reduce deprivation, ECS and Transition are less likely, and they are over-represented at the areas which fall into the least deprived quintile.
@@ -210,7 +267,7 @@ We can find divergence between transition communities and eco-congregation when 
 
 
 ```
-## Reading layer `SSSI_SCOTLAND' from data source `/Users/jeremy/gits/mapping_environmental_action/data/SSSI_SCOTLAND.shp' using driver `ESRI Shapefile'
+## Reading layer `SSSI_SCOTLAND' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/SSSI_SCOTLAND.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 15872 features and 7 fields
 ## geometry type:  POLYGON
 ## dimension:      XY
@@ -221,14 +278,14 @@ We can find divergence between transition communities and eco-congregation when 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "SSSI_SCOTLAND"
+## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "SSSI_SCOTLAND"
 ## with 15872 features
 ## It has 7 fields
 ## Integer64 fields read as strings:  PA_CODE
 ```
 
 ```
-## Reading layer `WILDLAND_SCOTLAND' from data source `/Users/jeremy/gits/mapping_environmental_action/data/WILDLAND_SCOTLAND.shp' using driver `ESRI Shapefile'
+## Reading layer `WILDLAND_SCOTLAND' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/WILDLAND_SCOTLAND.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 42 features and 3 fields
 ## geometry type:  MULTIPOLYGON
 ## dimension:      XY
@@ -239,13 +296,13 @@ We can find divergence between transition communities and eco-congregation when 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "WILDLAND_SCOTLAND"
+## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "WILDLAND_SCOTLAND"
 ## with 42 features
 ## It has 3 fields
 ```
 
 ```
-## Reading layer `National_Forest_Inventory_Woodland_Scotland_2017' from data source `/Users/jeremy/gits/mapping_environmental_action/data/National_Forest_Inventory_Woodland_Scotland_2017.shp' using driver `ESRI Shapefile'
+## Reading layer `National_Forest_Inventory_Woodland_Scotland_2017' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/National_Forest_Inventory_Woodland_Scotland_2017.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 199698 features and 7 fields
 ## geometry type:  POLYGON
 ## dimension:      XY
@@ -256,7 +313,7 @@ We can find divergence between transition communities and eco-congregation when 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "National_Forest_Inventory_Woodland_Scotland_2017"
+## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "National_Forest_Inventory_Woodland_Scotland_2017"
 ## with 199698 features
 ## It has 7 fields
 ## Integer64 fields read as strings:  OBJECTID
@@ -268,22 +325,132 @@ Chasing down a curiosity, I decided to try and calculate whether proximity to "w
 
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, 0 sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of 4048, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only one Eco-Congregation lies within either native or generally forested land.
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of 4048, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs_sf, forest_inventory)` Eco-Congregation lies within either native or generally forested land.
 
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<tbody>
+  <tr>
+   <td style="text-align:left;"> titles </td>
+   <td style="text-align:left;"> Within SSSIs </td>
+   <td style="text-align:left;"> ...50m </td>
+   <td style="text-align:left;"> ...500m </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ecs_sssi_row </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:left;"> 59 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> pow_sssi_row </td>
+   <td style="text-align:left;"> 7 </td>
+   <td style="text-align:left;"> 62 </td>
+   <td style="text-align:left;"> 610 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> dtas_sssi_row </td>
+   <td style="text-align:left;"> 7 </td>
+   <td style="text-align:left;"> 11 </td>
+   <td style="text-align:left;"> 49 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> transition_sssi_row </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:left;"> 17 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> permaculture_sssi_row </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 3 </td>
+  </tr>
+</tbody>
+</table>
 
---------------------------------- -------------- -------- ---------
-           **titles**              Within SSSIs   ...50m   ...500m 
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>Group counts within Wildland Areas</caption>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> titles </td>
+   <td style="text-align:left;"> Within Wildland Areas </td>
+   <td style="text-align:left;"> ...50m </td>
+   <td style="text-align:left;"> ...500m </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ecs_wildland_row </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> pow_wildland_row </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 6 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> dtas_wildland_row </td>
+   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:left;"> 3 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> transition_wildland_row </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> permaculture_wildland_row </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+  </tr>
+</tbody>
+</table>
 
-     **ecs_wilderness_row**             0           3        59    
-
-     **pow_wilderness_row**             7           62       610   
-
-     **dtas_wilderness_row**            7           11       49    
-
-  **transition_wilderness_row**         0           1        17    
-
- **permaculture_wilderness_row**        0           0         3    
---------------------------------- -------------- -------- ---------
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>Group counts within woodlands</caption>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> titles </td>
+   <td style="text-align:left;"> Within woodlands </td>
+   <td style="text-align:left;"> ...50m </td>
+   <td style="text-align:left;"> ...500m </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ecs_forest_inventory_row </td>
+   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:left;"> 51 </td>
+   <td style="text-align:left;"> 287 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> pow_forest_inventory_row </td>
+   <td style="text-align:left;"> 52 </td>
+   <td style="text-align:left;"> 752 </td>
+   <td style="text-align:left;"> 3304 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> dtas_forest_inventory_row </td>
+   <td style="text-align:left;"> 11 </td>
+   <td style="text-align:left;"> 38 </td>
+   <td style="text-align:left;"> 172 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> transition_forest_inventory_row </td>
+   <td style="text-align:left;"> 2 </td>
+   <td style="text-align:left;"> 12 </td>
+   <td style="text-align:left;"> 77 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> permaculture_wildland_row </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0 </td>
+  </tr>
+</tbody>
+</table>
 
 
 
@@ -291,218 +458,1047 @@ So what did I discover? The results were inconclusive. First, it is important to
 
 # Appendix A
 
-
-----------------------------------------------------------------
-           name              ecs_count   pow_count   dtas_count 
---------------------------- ----------- ----------- ------------
-           Fife                 18          243          11     
-
-      South Ayrshire             3          68           1      
-
-        Inverclyde               2          53           1      
-
-       Aberdeen City            15          96           1      
-
-         Highland               21          435          34     
-
-    West Dunbartonshire          6          52           3      
-
-           Moray                11          103          6      
-
-      Orkney Islands             4          50           10     
-
-       Aberdeenshire            19          244          15     
-
-     East Renfrewshire           8          37           2      
-
-     Clackmannanshire            3          30           1      
-
-       East Ayrshire             4          68           6      
-
-     North Lanarkshire           5          187          1      
-
-        Dundee City              3          94           1      
-
-      Argyll and Bute           18          172          24     
-
-           Angus                12          106          0      
-
-       Glasgow City             25          329          21     
-
-    East Dunbartonshire          7          43           1      
-
-     Shetland Islands            3          89           4      
-
-     Scottish Borders           11          153          9      
-
- Comhairle nan Eilean Siar       0          114          9      
-
-       Renfrewshire              6          84           5      
-
-      North Ayrshire             7          96           3      
-
-       East Lothian              8          71           2      
-
-          Falkirk                8          83           0      
-
-       West Lothian             11          70           7      
-
-     Perth and Kinross          20          162          10     
-
-   Dumfries and Galloway         7          189          15     
-
-         Stirling               13          73           10     
-
-     City of Edinburgh          48          233          7      
-
-        Midlothian               1          45           4      
-
-     South Lanarkshire          17          176          8      
-----------------------------------------------------------------
-
-Table: Table continues below
-
- 
---------------------
- permaculture_count 
---------------------
-         1          
-
-         0          
-
-         0          
-
-         0          
-
-         1          
-
-         0          
-
-         0          
-
-         0          
-
-         1          
-
-         0          
-
-         0          
-
-         0          
-
-         0          
-
-         0          
-
-         3          
-
-         0          
-
-         2          
-
-         0          
-
-         0          
-
-         2          
-
-         0          
-
-         0          
-
-         0          
-
-         0          
-
-         0          
-
-         0          
-
-         1          
-
-         2          
-
-         0          
-
-         0          
-
-         1          
-
-         0          
---------------------
+<div style="border: 1px solid #ddd; padding: 5px; overflow-y: scroll; height:800px; overflow-x: scroll; width:100%; "><table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> name </th>
+   <th style="text-align:right;"> ecs_count </th>
+   <th style="text-align:right;"> pow_count </th>
+   <th style="text-align:right;"> dtas_count </th>
+   <th style="text-align:right;"> permaculture_count </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> 8 </td>
+   <td style="text-align:left;"> Fife </td>
+   <td style="text-align:right;"> 18 </td>
+   <td style="text-align:right;"> 243 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 18 </td>
+   <td style="text-align:left;"> South Ayrshire </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 68 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 10 </td>
+   <td style="text-align:left;"> Inverclyde </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 53 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 21 </td>
+   <td style="text-align:left;"> Aberdeen City </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 96 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 9 </td>
+   <td style="text-align:left;"> Highland </td>
+   <td style="text-align:right;"> 21 </td>
+   <td style="text-align:right;"> 435 </td>
+   <td style="text-align:right;"> 34 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 26 </td>
+   <td style="text-align:left;"> West Dunbartonshire </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 52 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 12 </td>
+   <td style="text-align:left;"> Moray </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 103 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 14 </td>
+   <td style="text-align:left;"> Orkney Islands </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 50 </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 22 </td>
+   <td style="text-align:left;"> Aberdeenshire </td>
+   <td style="text-align:right;"> 19 </td>
+   <td style="text-align:right;"> 244 </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 5 </td>
+   <td style="text-align:left;"> East Renfrewshire </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 37 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:left;"> Clackmannanshire </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 30 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:left;"> East Ayrshire </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 68 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 30 </td>
+   <td style="text-align:left;"> North Lanarkshire </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 187 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 29 </td>
+   <td style="text-align:left;"> Dundee City </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 94 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 23 </td>
+   <td style="text-align:left;"> Argyll and Bute </td>
+   <td style="text-align:right;"> 18 </td>
+   <td style="text-align:right;"> 172 </td>
+   <td style="text-align:right;"> 24 </td>
+   <td style="text-align:right;"> 3 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 28 </td>
+   <td style="text-align:left;"> Angus </td>
+   <td style="text-align:right;"> 12 </td>
+   <td style="text-align:right;"> 106 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 32 </td>
+   <td style="text-align:left;"> Glasgow City </td>
+   <td style="text-align:right;"> 25 </td>
+   <td style="text-align:right;"> 329 </td>
+   <td style="text-align:right;"> 21 </td>
+   <td style="text-align:right;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 31 </td>
+   <td style="text-align:left;"> East Dunbartonshire </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 43 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 17 </td>
+   <td style="text-align:left;"> Shetland Islands </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 89 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 16 </td>
+   <td style="text-align:left;"> Scottish Borders </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 153 </td>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:right;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 6 </td>
+   <td style="text-align:left;"> Comhairle nan Eilean Siar </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 114 </td>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 25 </td>
+   <td style="text-align:left;"> Renfrewshire </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 84 </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 13 </td>
+   <td style="text-align:left;"> North Ayrshire </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 96 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 4 </td>
+   <td style="text-align:left;"> East Lothian </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 71 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 7 </td>
+   <td style="text-align:left;"> Falkirk </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 83 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 27 </td>
+   <td style="text-align:left;"> West Lothian </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 70 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 15 </td>
+   <td style="text-align:left;"> Perth and Kinross </td>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:right;"> 162 </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 2 </td>
+   <td style="text-align:left;"> Dumfries and Galloway </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 189 </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 2 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 20 </td>
+   <td style="text-align:left;"> Stirling </td>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> 73 </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 24 </td>
+   <td style="text-align:left;"> City of Edinburgh </td>
+   <td style="text-align:right;"> 48 </td>
+   <td style="text-align:right;"> 233 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 11 </td>
+   <td style="text-align:left;"> Midlothian </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 45 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 19 </td>
+   <td style="text-align:left;"> South Lanarkshire </td>
+   <td style="text-align:right;"> 17 </td>
+   <td style="text-align:right;"> 176 </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+</tbody>
+</table></div>
 
 # Appendix B
 
-(JK note to self: same as above, but augmented with multipliers by which categories are different from one another)
+<div style="border: 1px solid #ddd; padding: 5px; overflow-y: scroll; height:800px; overflow-x: scroll; width:100%; "><table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> name </th>
+   <th style="text-align:left;"> label </th>
+   <th style="text-align:right;"> ecs_count </th>
+   <th style="text-align:right;"> ecs_percent </th>
+   <th style="text-align:right;"> pow_count </th>
+   <th style="text-align:right;"> pow_percent </th>
+   <th style="text-align:right;"> transition_count </th>
+   <th style="text-align:right;"> transition_percent </th>
+   <th style="text-align:right;"> dtas_count </th>
+   <th style="text-align:right;"> dtas_percent </th>
+   <th style="text-align:right;"> permaculture_count </th>
+   <th style="text-align:right;"> permaculture_percent </th>
+   <th style="text-align:right;"> ecs_pop_factor </th>
+   <th style="text-align:right;"> ecs_pow_factor </th>
+   <th style="text-align:right;"> ecs_transition_factor </th>
+   <th style="text-align:right;"> ecs_dtas_factor </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> 8 </td>
+   <td style="text-align:left;"> Fife </td>
+   <td style="text-align:left;"> S12000015 </td>
+   <td style="text-align:right;"> 18 </td>
+   <td style="text-align:right;"> 0.0523256 </td>
+   <td style="text-align:right;"> 243 </td>
+   <td style="text-align:right;"> 0.0600296 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 0.1170213 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 0.0474138 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0714286 </td>
+   <td style="text-align:right;"> -0.4825490 </td>
+   <td style="text-align:right;"> -0.2566753 </td>
+   <td style="text-align:right;"> -1.1057082 </td>
+   <td style="text-align:right;"> 0.2071882 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 18 </td>
+   <td style="text-align:left;"> South Ayrshire </td>
+   <td style="text-align:left;"> S12000028 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0087209 </td>
+   <td style="text-align:right;"> 68 </td>
+   <td style="text-align:right;"> 0.0167984 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0043103 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -1.1811835 </td>
+   <td style="text-align:right;"> -0.9616963 </td>
+   <td style="text-align:right;"> Inf </td>
+   <td style="text-align:right;"> 2.0465116 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 10 </td>
+   <td style="text-align:left;"> Inverclyde </td>
+   <td style="text-align:left;"> S12000018 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0058140 </td>
+   <td style="text-align:right;"> 53 </td>
+   <td style="text-align:right;"> 0.0130929 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0106383 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0043103 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -1.2443462 </td>
+   <td style="text-align:right;"> -1.1118912 </td>
+   <td style="text-align:right;"> -0.9069767 </td>
+   <td style="text-align:right;"> 0.6976744 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 21 </td>
+   <td style="text-align:left;"> Aberdeen City </td>
+   <td style="text-align:left;"> S12000033 </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 0.0436047 </td>
+   <td style="text-align:right;"> 96 </td>
+   <td style="text-align:right;"> 0.0237154 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0106383 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0043103 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0728138 </td>
+   <td style="text-align:right;"> 1.6773256 </td>
+   <td style="text-align:right;"> 6.1976744 </td>
+   <td style="text-align:right;"> 18.2325581 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 9 </td>
+   <td style="text-align:left;"> Highland </td>
+   <td style="text-align:left;"> S12000017 </td>
+   <td style="text-align:right;"> 21 </td>
+   <td style="text-align:right;"> 0.0610465 </td>
+   <td style="text-align:right;"> 435 </td>
+   <td style="text-align:right;"> 0.1074605 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0.0638298 </td>
+   <td style="text-align:right;"> 34 </td>
+   <td style="text-align:right;"> 0.1465517 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0714286 </td>
+   <td style="text-align:right;"> 0.7851902 </td>
+   <td style="text-align:right;"> -0.8638332 </td>
+   <td style="text-align:right;"> -0.0872093 </td>
+   <td style="text-align:right;"> -1.1668947 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 26 </td>
+   <td style="text-align:left;"> West Dunbartonshire </td>
+   <td style="text-align:left;"> S12000039 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0.0174419 </td>
+   <td style="text-align:right;"> 52 </td>
+   <td style="text-align:right;"> 0.0128458 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0129310 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0361922 </td>
+   <td style="text-align:right;"> 0.7155635 </td>
+   <td style="text-align:right;"> Inf </td>
+   <td style="text-align:right;"> 0.6976744 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 12 </td>
+   <td style="text-align:left;"> Moray </td>
+   <td style="text-align:left;"> S12000020 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 0.0319767 </td>
+   <td style="text-align:right;"> 103 </td>
+   <td style="text-align:right;"> 0.0254447 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0212766 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0.0258621 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 1.6299855 </td>
+   <td style="text-align:right;"> 0.5134342 </td>
+   <td style="text-align:right;"> 1.0058140 </td>
+   <td style="text-align:right;"> 0.4728682 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 14 </td>
+   <td style="text-align:left;"> Orkney Islands </td>
+   <td style="text-align:left;"> S12000023 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0.0116279 </td>
+   <td style="text-align:right;"> 50 </td>
+   <td style="text-align:right;"> 0.0123518 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0212766 </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 0.0431034 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 3.7683689 </td>
+   <td style="text-align:right;"> -0.1172093 </td>
+   <td style="text-align:right;"> -0.9069767 </td>
+   <td style="text-align:right;"> -1.4604651 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 22 </td>
+   <td style="text-align:left;"> Aberdeenshire </td>
+   <td style="text-align:left;"> S12000034 </td>
+   <td style="text-align:right;"> 19 </td>
+   <td style="text-align:right;"> 0.0552326 </td>
+   <td style="text-align:right;"> 244 </td>
+   <td style="text-align:right;"> 0.0602767 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0319149 </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 0.0646552 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0714286 </td>
+   <td style="text-align:right;"> 0.3123310 </td>
+   <td style="text-align:right;"> -0.1673656 </td>
+   <td style="text-align:right;"> 1.4612403 </td>
+   <td style="text-align:right;"> -0.2914729 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 5 </td>
+   <td style="text-align:left;"> East Renfrewshire </td>
+   <td style="text-align:left;"> S12000011 </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 0.0232558 </td>
+   <td style="text-align:right;"> 37 </td>
+   <td style="text-align:right;"> 0.0091403 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0106383 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0086207 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.7192993 </td>
+   <td style="text-align:right;"> 3.0886235 </td>
+   <td style="text-align:right;"> 2.3720930 </td>
+   <td style="text-align:right;"> 3.3953488 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:left;"> Clackmannanshire </td>
+   <td style="text-align:left;"> S12000005 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0087209 </td>
+   <td style="text-align:right;"> 30 </td>
+   <td style="text-align:right;"> 0.0074111 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0043103 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -0.2045473 </td>
+   <td style="text-align:right;"> 0.3534884 </td>
+   <td style="text-align:right;"> Inf </td>
+   <td style="text-align:right;"> 2.0465116 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:left;"> East Ayrshire </td>
+   <td style="text-align:left;"> S12000008 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0.0116279 </td>
+   <td style="text-align:right;"> 68 </td>
+   <td style="text-align:right;"> 0.0167984 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0106383 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0.0258621 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -0.9968892 </td>
+   <td style="text-align:right;"> -0.6155951 </td>
+   <td style="text-align:right;"> 0.1860465 </td>
+   <td style="text-align:right;"> -1.1007752 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 30 </td>
+   <td style="text-align:left;"> North Lanarkshire </td>
+   <td style="text-align:left;"> S12000044 </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 0.0145349 </td>
+   <td style="text-align:right;"> 187 </td>
+   <td style="text-align:right;"> 0.0461957 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0212766 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0043103 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -1.5441995 </td>
+   <td style="text-align:right;"> -1.3707250 </td>
+   <td style="text-align:right;"> -0.6337209 </td>
+   <td style="text-align:right;"> 4.7441860 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 29 </td>
+   <td style="text-align:left;"> Dundee City </td>
+   <td style="text-align:left;"> S12000042 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0087209 </td>
+   <td style="text-align:right;"> 94 </td>
+   <td style="text-align:right;"> 0.0232213 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0106383 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0043103 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -1.3728327 </td>
+   <td style="text-align:right;"> -1.2488867 </td>
+   <td style="text-align:right;"> -0.3604651 </td>
+   <td style="text-align:right;"> 2.0465116 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 23 </td>
+   <td style="text-align:left;"> Argyll and Bute </td>
+   <td style="text-align:left;"> S12000035 </td>
+   <td style="text-align:right;"> 18 </td>
+   <td style="text-align:right;"> 0.0523256 </td>
+   <td style="text-align:right;"> 172 </td>
+   <td style="text-align:right;"> 0.0424901 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0.0425532 </td>
+   <td style="text-align:right;"> 24 </td>
+   <td style="text-align:right;"> 0.1034483 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.2142857 </td>
+   <td style="text-align:right;"> 4.2855305 </td>
+   <td style="text-align:right;"> 0.4629529 </td>
+   <td style="text-align:right;"> 0.4593023 </td>
+   <td style="text-align:right;"> -0.9883721 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 28 </td>
+   <td style="text-align:left;"> Angus </td>
+   <td style="text-align:left;"> S12000041 </td>
+   <td style="text-align:right;"> 12 </td>
+   <td style="text-align:right;"> 0.0348837 </td>
+   <td style="text-align:right;"> 106 </td>
+   <td style="text-align:right;"> 0.0261858 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 1.1854897 </td>
+   <td style="text-align:right;"> 0.6643265 </td>
+   <td style="text-align:right;"> Inf </td>
+   <td style="text-align:right;"> Inf </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 32 </td>
+   <td style="text-align:left;"> Glasgow City </td>
+   <td style="text-align:left;"> S12000046 </td>
+   <td style="text-align:right;"> 25 </td>
+   <td style="text-align:right;"> 0.0726744 </td>
+   <td style="text-align:right;"> 329 </td>
+   <td style="text-align:right;"> 0.0812747 </td>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> 0.1382979 </td>
+   <td style="text-align:right;"> 21 </td>
+   <td style="text-align:right;"> 0.0905172 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.1428571 </td>
+   <td style="text-align:right;"> -0.7025922 </td>
+   <td style="text-align:right;"> -0.2116350 </td>
+   <td style="text-align:right;"> -0.9490161 </td>
+   <td style="text-align:right;"> -0.3942414 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 31 </td>
+   <td style="text-align:left;"> East Dunbartonshire </td>
+   <td style="text-align:left;"> S12000045 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0.0203488 </td>
+   <td style="text-align:right;"> 43 </td>
+   <td style="text-align:right;"> 0.0106225 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0212766 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0043103 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0519737 </td>
+   <td style="text-align:right;"> 1.8312601 </td>
+   <td style="text-align:right;"> -0.0872093 </td>
+   <td style="text-align:right;"> 7.4418605 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 17 </td>
+   <td style="text-align:left;"> Shetland Islands </td>
+   <td style="text-align:left;"> S12000027 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0087209 </td>
+   <td style="text-align:right;"> 89 </td>
+   <td style="text-align:right;"> 0.0219862 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0106383 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0.0172414 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 1.9867778 </td>
+   <td style="text-align:right;"> -1.2066893 </td>
+   <td style="text-align:right;"> -0.3604651 </td>
+   <td style="text-align:right;"> -0.9883721 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 16 </td>
+   <td style="text-align:left;"> Scottish Borders </td>
+   <td style="text-align:left;"> S12000026 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 0.0319767 </td>
+   <td style="text-align:right;"> 153 </td>
+   <td style="text-align:right;"> 0.0377964 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0.0425532 </td>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:right;"> 0.0387931 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.1428571 </td>
+   <td style="text-align:right;"> 0.9740888 </td>
+   <td style="text-align:right;"> -0.3079495 </td>
+   <td style="text-align:right;"> -0.4970930 </td>
+   <td style="text-align:right;"> -0.3514212 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 6 </td>
+   <td style="text-align:left;"> Comhairle nan Eilean Siar </td>
+   <td style="text-align:left;"> S12000013 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 114 </td>
+   <td style="text-align:right;"> 0.0281621 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0106383 </td>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:right;"> 0.0387931 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -2.0000000 </td>
+   <td style="text-align:right;"> -2.0000000 </td>
+   <td style="text-align:right;"> -2.0000000 </td>
+   <td style="text-align:right;"> -2.0000000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 25 </td>
+   <td style="text-align:left;"> Renfrewshire </td>
+   <td style="text-align:left;"> S12000038 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0.0174419 </td>
+   <td style="text-align:right;"> 84 </td>
+   <td style="text-align:right;"> 0.0207510 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0212766 </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 0.0215517 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -0.9438827 </td>
+   <td style="text-align:right;"> -0.3189369 </td>
+   <td style="text-align:right;"> -0.3604651 </td>
+   <td style="text-align:right;"> -0.3813953 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 13 </td>
+   <td style="text-align:left;"> North Ayrshire </td>
+   <td style="text-align:left;"> S12000021 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0.0203488 </td>
+   <td style="text-align:right;"> 96 </td>
+   <td style="text-align:right;"> 0.0237154 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0129310 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -0.4399795 </td>
+   <td style="text-align:right;"> -0.2839147 </td>
+   <td style="text-align:right;"> Inf </td>
+   <td style="text-align:right;"> 1.1472868 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 4 </td>
+   <td style="text-align:left;"> East Lothian </td>
+   <td style="text-align:left;"> S12000010 </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 0.0232558 </td>
+   <td style="text-align:right;"> 71 </td>
+   <td style="text-align:right;"> 0.0175395 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0319149 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0086207 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.4699681 </td>
+   <td style="text-align:right;"> 0.6518179 </td>
+   <td style="text-align:right;"> -0.5426357 </td>
+   <td style="text-align:right;"> 3.3953488 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 7 </td>
+   <td style="text-align:left;"> Falkirk </td>
+   <td style="text-align:left;"> S12000014 </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 0.0232558 </td>
+   <td style="text-align:right;"> 83 </td>
+   <td style="text-align:right;"> 0.0205040 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -0.4210666 </td>
+   <td style="text-align:right;"> 0.2684225 </td>
+   <td style="text-align:right;"> Inf </td>
+   <td style="text-align:right;"> Inf </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 27 </td>
+   <td style="text-align:left;"> West Lothian </td>
+   <td style="text-align:left;"> S12000040 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 0.0319767 </td>
+   <td style="text-align:right;"> 70 </td>
+   <td style="text-align:right;"> 0.0172925 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0106383 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0.0301724 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -0.0661069 </td>
+   <td style="text-align:right;"> 1.6983389 </td>
+   <td style="text-align:right;"> 4.0116279 </td>
+   <td style="text-align:right;"> 0.1196013 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 15 </td>
+   <td style="text-align:left;"> Perth and Kinross </td>
+   <td style="text-align:left;"> S12000024 </td>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:right;"> 0.0581395 </td>
+   <td style="text-align:right;"> 162 </td>
+   <td style="text-align:right;"> 0.0400198 </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 0.0531915 </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 0.0431034 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0714286 </td>
+   <td style="text-align:right;"> 2.1986781 </td>
+   <td style="text-align:right;"> 0.9055412 </td>
+   <td style="text-align:right;"> 0.1860465 </td>
+   <td style="text-align:right;"> 0.6976744 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 2 </td>
+   <td style="text-align:left;"> Dumfries and Galloway </td>
+   <td style="text-align:left;"> S12000006 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0.0203488 </td>
+   <td style="text-align:right;"> 189 </td>
+   <td style="text-align:right;"> 0.0466897 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0319149 </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 0.0646552 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.1428571 </td>
+   <td style="text-align:right;"> -0.5758334 </td>
+   <td style="text-align:right;"> -1.1283376 </td>
+   <td style="text-align:right;"> -0.7248062 </td>
+   <td style="text-align:right;"> -1.3705426 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 20 </td>
+   <td style="text-align:left;"> Stirling </td>
+   <td style="text-align:left;"> S12000030 </td>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> 0.0377907 </td>
+   <td style="text-align:right;"> 73 </td>
+   <td style="text-align:right;"> 0.0180336 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0.0425532 </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 0.0431034 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 2.4348726 </td>
+   <td style="text-align:right;"> 2.1911437 </td>
+   <td style="text-align:right;"> -0.2238372 </td>
+   <td style="text-align:right;"> -0.2465116 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 24 </td>
+   <td style="text-align:left;"> City of Edinburgh </td>
+   <td style="text-align:left;"> S12000036 </td>
+   <td style="text-align:right;"> 48 </td>
+   <td style="text-align:right;"> 0.1395349 </td>
+   <td style="text-align:right;"> 233 </td>
+   <td style="text-align:right;"> 0.0575593 </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 0.1595745 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0.0301724 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 1.1005167 </td>
+   <td style="text-align:right;"> 2.8483881 </td>
+   <td style="text-align:right;"> -0.2511628 </td>
+   <td style="text-align:right;"> 7.2491694 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 11 </td>
+   <td style="text-align:left;"> Midlothian </td>
+   <td style="text-align:left;"> S12000019 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0029070 </td>
+   <td style="text-align:right;"> 45 </td>
+   <td style="text-align:right;"> 0.0111166 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0212766 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0.0172414 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0714286 </td>
+   <td style="text-align:right;"> -1.6299034 </td>
+   <td style="text-align:right;"> -1.4770026 </td>
+   <td style="text-align:right;"> -1.7267442 </td>
+   <td style="text-align:right;"> -1.6627907 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 19 </td>
+   <td style="text-align:left;"> South Lanarkshire </td>
+   <td style="text-align:left;"> S12000029 </td>
+   <td style="text-align:right;"> 17 </td>
+   <td style="text-align:right;"> 0.0494186 </td>
+   <td style="text-align:right;"> 176 </td>
+   <td style="text-align:right;"> 0.0434783 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0319149 </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 0.0344828 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> -0.3322727 </td>
+   <td style="text-align:right;"> 0.2732558 </td>
+   <td style="text-align:right;"> 1.0968992 </td>
+   <td style="text-align:right;"> 0.8662791 </td>
+  </tr>
+</tbody>
+</table></div>
 
 # Appendix C - Data by Urban / Rural Classification
 
-
---------------------------------------------------------------------------------
- UR8FOLD   ecs_count   ecs_percent   pow_count   pow_percent   transition_count 
---------- ----------- ------------- ----------- ------------- ------------------
-    1         111         0.32          907         0.22              35        
-
-    2         98          0.28         1015         0.25              16        
-
-    3         30          0.087         265         0.065             7         
-
-    4          9          0.026         100         0.025             2         
-
-    5          6          0.017         87          0.021             2         
-
-    6         54          0.16          696         0.17              14        
-
-    7         16          0.047         372         0.092             7         
-
-    8         20          0.058         606         0.15              11        
---------------------------------------------------------------------------------
-
-Table: Table continues below
-
- 
----------------------------------------------------------------------
- transition_percent   dtas_count   dtas_percent   permaculture_count 
--------------------- ------------ -------------- --------------------
-        0.37              35           0.15               2          
-
-        0.17              25           0.11               1          
-
-       0.074              20          0.087               1          
-
-       0.021              7            0.03               0          
-
-       0.021              1           0.0043              1          
-
-        0.15              46           0.2                2          
-
-       0.074              27           0.12               3          
-
-        0.12              69           0.3                4          
----------------------------------------------------------------------
-
-Table: Table continues below
-
- 
-----------------------
- permaculture_percent 
-----------------------
-         0.14         
-
-        0.071         
-
-        0.071         
-
-          0           
-
-        0.071         
-
-         0.14         
-
-         0.21         
-
-         0.29         
-----------------------
+<div style="border: 1px solid #ddd; padding: 5px; overflow-y: scroll; height:800px; overflow-x: scroll; width:100%; "><table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> UR8FOLD </th>
+   <th style="text-align:right;"> ecs_count </th>
+   <th style="text-align:right;"> ecs_percent </th>
+   <th style="text-align:right;"> pow_count </th>
+   <th style="text-align:right;"> pow_percent </th>
+   <th style="text-align:right;"> transition_count </th>
+   <th style="text-align:right;"> transition_percent </th>
+   <th style="text-align:right;"> dtas_count </th>
+   <th style="text-align:right;"> dtas_percent </th>
+   <th style="text-align:right;"> permaculture_count </th>
+   <th style="text-align:right;"> permaculture_percent </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 111 </td>
+   <td style="text-align:right;"> 0.3226744 </td>
+   <td style="text-align:right;"> 907 </td>
+   <td style="text-align:right;"> 0.2240613 </td>
+   <td style="text-align:right;"> 35 </td>
+   <td style="text-align:right;"> 0.3723404 </td>
+   <td style="text-align:right;"> 35 </td>
+   <td style="text-align:right;"> 0.1521739 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.1428571 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 1 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 98 </td>
+   <td style="text-align:right;"> 0.2848837 </td>
+   <td style="text-align:right;"> 1015 </td>
+   <td style="text-align:right;"> 0.2507411 </td>
+   <td style="text-align:right;"> 16 </td>
+   <td style="text-align:right;"> 0.1702128 </td>
+   <td style="text-align:right;"> 25 </td>
+   <td style="text-align:right;"> 0.1086957 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0714286 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 2 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 30 </td>
+   <td style="text-align:right;"> 0.0872093 </td>
+   <td style="text-align:right;"> 265 </td>
+   <td style="text-align:right;"> 0.0654644 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0.0744681 </td>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:right;"> 0.0869565 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0714286 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:right;"> 0.0261628 </td>
+   <td style="text-align:right;"> 100 </td>
+   <td style="text-align:right;"> 0.0247036 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0212766 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0.0304348 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 4 </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0.0174419 </td>
+   <td style="text-align:right;"> 87 </td>
+   <td style="text-align:right;"> 0.0214921 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.0212766 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0043478 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.0714286 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 5 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 54 </td>
+   <td style="text-align:right;"> 0.1569767 </td>
+   <td style="text-align:right;"> 696 </td>
+   <td style="text-align:right;"> 0.1719368 </td>
+   <td style="text-align:right;"> 14 </td>
+   <td style="text-align:right;"> 0.1489362 </td>
+   <td style="text-align:right;"> 46 </td>
+   <td style="text-align:right;"> 0.2000000 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.1428571 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 6 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 16 </td>
+   <td style="text-align:right;"> 0.0465116 </td>
+   <td style="text-align:right;"> 372 </td>
+   <td style="text-align:right;"> 0.0918972 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 0.0744681 </td>
+   <td style="text-align:right;"> 27 </td>
+   <td style="text-align:right;"> 0.1173913 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.2142857 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> 7 </td>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:right;"> 0.0581395 </td>
+   <td style="text-align:right;"> 606 </td>
+   <td style="text-align:right;"> 0.1497036 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 0.1170213 </td>
+   <td style="text-align:right;"> 69 </td>
+   <td style="text-align:right;"> 0.3000000 </td>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 0.2857143 </td>
+  </tr>
+</tbody>
+</table></div>
 
 # Citations
 
@@ -519,5 +1515,5 @@ Table: Table continues below
 [^1554162]:From the Transition map key, "Green pins are 'official' groups
 Blue pins are active communities who are connected to the Scottish Transition network Yellow pins show interest in this area"
 [^15571030]:This was calculated by calculating a 10m wide footprint for every postcode in Scotland, areas which are not within 10m of a postcode (as of May 2014) are counted as uninhabited.
-[^159142242]: Fiona Tweedia, *Ecumenical Audit: Questionnaire Findings* (2014). 
+[^159142242]: Fiona Tweedie, *Ecumenical Audit: Questionnaire Findings* (2014). 
 [^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.adition and religion further below.
