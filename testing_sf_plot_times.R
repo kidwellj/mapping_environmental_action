@@ -3,12 +3,11 @@ require(sf) # new simplefeature data class, supercedes sp in many ways
 # using GEOS 3.6.1, GDAL 2.1.3, PROJ 4.9.3
 require(sp) # needed for proj4string, deprecated by sf()
 require(rgdal) # version version: 1.3-6
+require(rgeos) # used for buffering below
 require(devtools)
 
-# Set up local workspace and load data
-if (dir.exists("data") == FALSE) {
-  dir.create("data") 
-}
+setwd("~/Downloads/test")
+# load data
 
 transition_wgs <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
 coordinates(transition_wgs) <- c("X", "Y")
@@ -16,37 +15,50 @@ proj4string(transition_wgs) <- CRS(wgs84)
 transition_sp <- spTransform(transition_wgs, bng)
 transition_sf <- st_as_sf(transition, coords = c("X", "Y"), crs=27700)
 
+# Download data as ESRI Shapefile from page at: https://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=SSSI
 
-if (file.exists("data/SSSI_SCOTLAND.shp") == FALSE) {
-# TODO: get reliable URL for data download
-# http://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=SSSI
-# download.file("", destfile = "data/SSSI_SCOTLAND_ESRI.zip")
-unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
-}
+unzip("SSSI_SCOTLAND_ESRI.zip")
 
-if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
-download.file("https://opendata.arcgis.com/datasets/3cb1abc185a247a48b9d53e4c4a8be87_0.zip", destfile = "data/National_Forest_Inventory_Woodland_Scotland_2017.zip")
+# # Download data as ESRI Shapefile from page at: http://data-forestry.opendata.arcgis.com/datasets/3cb1abc185a247a48b9d53e4c4a8be87_0
 
-unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data")
-}
+unzip("National_Forest_Inventory_Woodland_Scotland_2017.zip")
 
-forest_inventory_sf <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
-forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
+sssi_sf <- st_read("SSSI_SCOTLAND.shp")
+sssi_sp <- readOGR("./", "SSSI_SCOTLAND") 
 
-st_crs(sssi) <- 27700
-st_crs(ecs_sf) <- 27700
+forest_inventory_sf <- st_read("National_Forest_Inventory_Woodland_Scotland_2017.shp")
+forest_inventory_sp <- readOGR("./", "National_Forest_Inventory_Woodland_Scotland_2017") 
+
+# First test out plots using spatialfeatures and spdf with core R
 
 system.time(
-ggplot() +
-  geom_sf(data = forest_inventory_sf)
+plot(sssi_sf)
   )
 
 system.time(
-ggplot() +
-  geom_polygon(data = forest_inventory_sp)
+plot(sssi_sp)
   )
-  
-count_data <- sum(apply(st_within(points_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any))
 
+# First test out plots using spatialfeatures and spdf with ggplot2
+
+system.time(
+  ggplot() +
+    geom_sf(data = sssi_sf)
+)
+
+system.time(
+  ggplot() +
+    geom_polygon(data = sssi_sp)
+)
+# Now try to run a count within a buffer:
+
+st_crs(sssi_sf) <- 27700
+st_crs(transition_sf) <- 27700
+
+# CRS uses meters for units, so buffer here should be a modest 50m:
+
+count_data_sf <- sum(apply(st_within(points_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any))
+
+# count_data_sf <- sum(apply(gWithin(points_sf, gBuffer(sssi,width=50)
   
 sessioninfo::session_info()

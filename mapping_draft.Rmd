@@ -960,21 +960,16 @@ st_crs(permaculture_sf) <- 27700
 
 # Calculate incidence of ecs within SSSI and within buffers at 50/500m
 ecs_sssi_row <- c(sum(apply(st_within(ecs_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-# Calculate row based on percentage of total
-ecs_sssi_row_pct <- ecs_sssi_row/length(ecs)
 
 pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-pow_sssi_row_pct <- pow_sssi_row/length(pow_pointX)
 
 dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-dtas_sssi_row_pct <- dtas_sssi_row/length(dtas)
 
 transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-transition_sssi_row_pct <- transition_sssi_row/length(transition)
 
 permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
-permaculture_sssi_row_pct <- permaculture_sssi_row/length(permaculture)
 
+# Generate dataframe from rows based on counts
 sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
 sssi_counts <- rbind(sssi_counts, dtas_sssi_row)
 sssi_counts <- rbind(sssi_counts, transition_sssi_row)
@@ -982,12 +977,20 @@ sssi_counts <- rbind(sssi_counts, permaculture_sssi_row)
 sssi_counts <- as.data.frame(sssi_counts)
 colnames(sssi_counts) <- c("Within SSSIs", "...50m", "...500m")
 
+# Generate dataframe from rows based on percentages of totals
+ecs_sssi_row_pct <- ecs_sssi_row/length(ecs)
+pow_sssi_row_pct <- pow_sssi_row/length(pow_pointX)
+dtas_sssi_row_pct <- dtas_sssi_row/length(dtas)
+transition_sssi_row_pct <- transition_sssi_row/length(transition)
+permaculture_sssi_row_pct <- permaculture_sssi_row/length(permaculture)
+
 sssi_counts_pct <- rbind(ecs_sssi_row_pct, pow_sssi_row_pct)
 sssi_counts_pct <- rbind(sssi_counts_pct, dtas_sssi_row_pct)
 sssi_counts_pct <- rbind(sssi_counts_pct, transition_sssi_row_pct)
 sssi_counts_pct <- rbind(sssi_counts_pct, permaculture_sssi_row_pct)
 colnames(sssi_counts_pct) <- c("% Within SSSIs", "% within 50m", "% within 500m")
 
+# Merge into larger dataframe
 sssi_counts_merged <- cbind(sssi_counts, sssi_counts_pct)
 
 
@@ -996,50 +999,70 @@ sssi_counts_merged <- cbind(sssi_counts, sssi_counts_pct)
 titles <- c("Within Wildland Areas", "...50m", "...500m")
 
 ecs_wildland_row <- c(sum(apply(st_within(ecs_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
-
-# TODO: add additional column with counts converted to percentages - use prop.table()?
 ecs_wildland_row <- rbind(titles, ecs_wildland_row)
 
 pow_wildland_row <- c(sum(apply(st_within(pow_pointX_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
-
 wildland_counts <- rbind(ecs_wildland_row, pow_wildland_row)
 
 dtas_wildland_row <- c(sum(apply(st_within(dtas_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
-
 wildland_counts <- rbind(wildland_counts, dtas_wildland_row)
 
 transition_wildland_row <- c(sum(apply(st_within(transition_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
-
 wildland_counts <- rbind(wildland_counts, transition_wildland_row)
 
 permaculture_wildland_row <- c(sum(apply(st_within(permaculture_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
-
 wildland_counts <- rbind(wildland_counts, permaculture_wildland_row)
+
+# Generate dataframe from rows based on percentages of totals
+ecs_wildland_row_pct <- ecs_wildland_row/length(ecs)
+pow_wildland_row_pct <- pow_wildland_row/length(pow_pointX)
+dtas_wildland_row_pct <- dtas_wildland_row/length(dtas)
+transition_wildland_row_pct <- transition_wildland_row/length(transition)
+permaculture_wildland_row_pct <- permaculture_wildland_row/length(permaculture)
+
+wildland_counts_pct <- rbind(ecs_wildland_row_pct, pow_wildland_row_pct)
+wildland_counts_pct <- rbind(wildland_counts_pct, dtas_wildland_row_pct)
+wildland_counts_pct <- rbind(wildland_counts_pct, transition_wildland_row_pct)
+wildland_counts_pct <- rbind(wildland_counts_pct, permaculture_wildland_row_pct)
+colnames(wildland_counts_pct) <- c("% Within wildlands", "% within 50m", "% within 500m")
+
+# Merge into larger dataframe
+wildland_counts_merged <- cbind(wildland_counts, wildland_counts_pct)
 
 # Generate dataframe based on forest_inventory buffers
 
 titles <- c("Within woodlands", "...50m", "...500m")
 
 ecs_forest_inventory_row <- c(sum(apply(st_within(ecs_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-
-# TODO: add additional column with counts converted to percentages - use prop.table()?
 ecs_forest_inventory_row <- rbind(titles, ecs_forest_inventory_row)
 
 pow_forest_inventory_row <- c(sum(apply(st_within(pow_pointX_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-
 forest_inventory_counts <- rbind(ecs_forest_inventory_row, pow_forest_inventory_row)
 
 dtas_forest_inventory_row <- c(sum(apply(st_within(dtas_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-
 forest_inventory_counts <- rbind(forest_inventory_counts, dtas_forest_inventory_row)
 
 transition_forest_inventory_row <- c(sum(apply(st_within(transition_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-
 forest_inventory_counts <- rbind(forest_inventory_counts, transition_forest_inventory_row)
 
 permaculture_forest_inventory_row <- c(sum(apply(st_within(permaculture_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
+forest_inventory_counts <- rbind(forest_inventory_counts, permaculture_forest_inventory_row)
 
-forest_inventory_counts <- rbind(forest_inventory_counts, permaculture_wildland_row)
+# Generate dataframe from rows based on percentages of totals
+ecs_forest_inventory_row_pct <- ecs_forest_inventory_row/length(as.data.frame(ecs))
+pow_forest_inventory_row_pct <- pow_forest_inventory_row/length(pow_pointX)
+dtas_forest_inventory_row_pct <- dtas_forest_inventory_row/length(dtas)
+transition_forest_inventory_row_pct <- transition_forest_inventory_row/length(transition)
+permaculture_forest_inventory_row_pct <- permaculture_forest_inventory_row/length(permaculture)
+
+forest_inventory_counts_pct <- rbind(ecs_forest_inventory_row_pct, pow_forest_inventory_row_pct)
+forest_inventory_counts_pct <- rbind(forest_inventory_counts_pct, dtas_forest_inventory_row_pct)
+forest_inventory_counts_pct <- rbind(forest_inventory_counts_pct, transition_forest_inventory_row_pct)
+forest_inventory_counts_pct <- rbind(forest_inventory_counts_pct, permaculture_forest_inventory_row_pct)
+colnames(forest_inventory_counts_pct) <- c("% Within Woodlands", "% within 50m", "% within 500m")
+
+# Merge into larger dataframe
+forest_inventory_counts_merged <- cbind(forest_inventory_counts, forest_inventory_counts_pct)
 
 ```
 
@@ -1055,17 +1078,22 @@ So what did I discover? The results were inconclusive. First, it is important to
 
 # Output mmd tables using kable
 
-sssi_counts %>%
-  kable(format = "html", col.names = colnames(sssi_counts), "Group counts within SSSIs") %>%
+sssi_counts_merged %>%
+  kable(format = "html", col.names = colnames(sssi_counts_merged), caption = "Group counts within SSSIs") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
-wildland_counts %>%
-  kable(format = "html", col.names = colnames(wildland_counts), caption = "Group counts within Wildland Areas") %>%
+wildland_counts_merged %>%
+  kable(format = "html", col.names = colnames(wildland_counts_merged), caption = "Group counts within Wildland Areas") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
-forest_inventory_counts %>%
-  kable(format = "html", col.names = colnames(forest_inventory_counts), caption = "Group counts within woodlands") %>%
+forest_inventory_counts_merged %>%
+  kable(format = "html", col.names = colnames(forest_inventory_counts_merged), caption = "Group counts within woodlands") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
+
+# Output CSV files for tables above
+write.csv(sssi_counts_merged, "derivedData/sssi_counts_merged.csv", row.names=TRUE)
+write.csv(wildland_counts_merged, "derivedData/wildland_counts_merged.csv", row.names=TRUE)
+write.csv(forest_inventory_counts_merged, "derivedData/forest_inventory_counts_merged.csv", row.names=TRUE)
 
 ```
 
