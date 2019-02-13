@@ -756,18 +756,18 @@ centralbelt_region = st_bbox(c(xmin = 224479.2, xmax = 642963.5,
 # Still need to mod above line
 # Stitch together maps using grid()
 
-library(grid)
-nz_height_map
-print(nz_map, vp = viewport(0.8, 0.27, width = 0.5, height = 0.5))
+# library(grid)
+# nz_height_map
+# print(nz_map, vp = viewport(0.8, 0.27, width = 0.5, height = 0.5))
 
 # Generate dynamic plot for exploring
 # TODO: change basemap
 
-tmap_mode("view")
-tm_shape(urbanrural_sf_simplified) + tm_polygons(col = "UR8FOLD", palette = "BrBG") +
-  tm_shape(ecs_sf) +
-  tm_dots("red", size = .05, alpha = .4, popup.vars = TRUE) +
-  tm_view(alpha = 1, basemaps = "Esri.WorldTopoMap")
+# tmap_mode("view")
+# tm_shape(urbanrural_sf_simplified) + tm_polygons(col = "UR8FOLD", palette = "BrBG") +
+#   tm_shape(ecs_sf) +
+#   tm_dots("red", size = .05, alpha = .4, popup.vars = TRUE) +
+#   tm_view(alpha = 1, basemaps = "Esri.WorldTopoMap")
   
 
 ```
