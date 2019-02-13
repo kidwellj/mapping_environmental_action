@@ -43,7 +43,7 @@ knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FA
 
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
 ## Default repo
-# setwd("/Users/jeremy/gits/mapping_environmental_action")
+setwd("/Users/jeremy/gits/mapping_environmental_action")
 # setwd("/Users/kidwellj/OneDrive\ -\ bham.ac.uk/writing/201708_mapping_environmental_action")
 
 # Set repository to be new standard, e.g. cloud server. 
@@ -61,6 +61,7 @@ require(GISTools) # deprecated by sf()
 require(rgeos) # deprecated by sf()
 require(maptools)
 require(ggplot2)
+require(tmap) # using as an alternative to base r graphics and ggplot for geospatial plots
 require(ggmap)
 require(broom) # required for tidying SPDF to data.frame for ggplot2
 require(tidyr)  # using for grouped bar plot
@@ -655,8 +656,10 @@ download.file("http://sedsh127.sedsh.gov.uk/Atom_data/ScotGov/ZippedShapefiles/S
               destfile = "data/SG_UrbanRural_2016.zip")
 unzip("data/SG_UrbanRural_2016.zip", exdir = "data")
 }
+# Todo: remove sp datasets when sf revisions are complete. Currently running in parallel
 urbanrural <- readOGR("./data", "SG_UrbanRural_2016") 
-
+urbanrural_sf <- st_read("data/SG_UrbanRural_2016.shp")
+urbanrural_sf_simplified <- st_simplify(urbanrural_sf)
 # TODO: worth considering uploading data to zenodo for long-term reproducibility as ScotGov shuffles this stuff around periodically breaking URLs
 
 # This code will generate a table of frequencies for each spatialpointsdataframe in urbanrural
@@ -708,56 +711,64 @@ ggplot(urbanrural_gathered,
     subtitle="Comparison of Groups by UrbanRural category", 
     fill = "Groups")
 ```
+## Eco-Congregation Scotland\nconcentrations in Urban Rural 8-fold classifications
 
-```{r create_urbanrural_ecs_chart_choropleth, fig.width=4, fig.cap="Figure 9"}
+```{r create_urbanrural_ecs_chart_choropleth, message=FALSE, warning=FALSE}
 
-# TODO: Clipping here to buildings shapefile
-# TODO: Fix colour overlay for urbanrural to be in foreground and at 8 bins - add "fill= NA," outside aes?
-#title("difference(x,y)")
-#plot(x, border = 'grey')
-#plot(st_difference(st_union(y),st_union(x)), col = 'lightblue', add = TRUE)
-#https://r-spatial.github.io/sf/articles/sf3.html
+# Using tmap as an alternative to ggplot and base R graphics
 
-# Prepare urbanrural for tidyr and reinsert dropped columns
+# TODO: Clip shapes to buildings shapefile (use OSM or OS?), using st_difference
+# TODO: Double check data licenses for tm_credits
+# TODO: Add inset with zoom-in for central belt to bottom of map; cf. https://github.com/mtennekes/tmap/tree/master/demo/USChoropleth and https://geocompr.robinlovelace.net/adv-map.html section 8.2.7
 
-names(admin_lev1)[names(admin_lev1) == "newcode"] <- "id"
-urbanrural@data$id <- as.integer(rownames(urbanrural@data))
-urbanrural@data$id <- urbanrural@data$id - 1
-urbanrural_fortified <- tidy(urbanrural)
-# Convert ecs to df for representation as points on the map
-ecs_df <- as.data.frame(ecs)
-urbanrural_fortified <- join(urbanrural_fortified,urbanrural@data, by="id")
+# Generate static plot for printing
 
-# Make dots smaller - add outlines, & lines thinner
-# Need to add scale_fill_brewer(palette = "BrBG") + 
-ggplot() + 
-  geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = UR8FOLD), 
-               data = urbanrural_fortified, 
-               colour = "black", 
-               alpha = .7, 
-               size = .005) + 
-    geom_point(aes(X, Y, fill = NULL, group = NULL), size = 1, data = ecs_df, 
-             colour = "black", 
-             fill = "white",
-             size = .15,
-             stroke = .002,
-             alpha = .6, 
-             show.legend = TRUE) +
-    labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 9", 
-       subtitle="Eco-Congregation Scotland concentrations in Urban Rural 8-fold classifications",
-       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
-                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
-                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
-                       sep = "\n")) + 
-  theme_void() + 
-  theme(text = element_text(family = "Arial Narrow", size = 8),
-          plot.title = element_text(size = 12, face = "bold"),
-          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
-          panel.border = element_rect(fill = NA, colour = "#cccccc"),
-          legend.text = element_text(size = 8),
-          legend.position = c(0.25, 0.85))
+tm_shape(urbanrural_sf_simplified) + 
+  tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001) +
+  tm_shape(ecs_sf) +
+  tm_dots("red", size = .05, alpha = .4) +
+  tm_scale_bar(position = c("left", "bottom")) +
+  tm_style("gray", title = "Figure 9") +
+  tm_credits("Data: UK Data Service (OGL)
+              & Jeremy H. Kidwell,
+              Graphic is CC-by-SA 4.0",
+    position = c("right", "bottom")) +
+  tm_layout(title = "UrbanRural 8 Fold Scale", 
+            frame = FALSE, 
+            title.size = .7, 
+            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            )
+
+# Generate new sf shape using bounding box and subset of urbanrural for central belt inset below
+# Note: coordinates use BNG as CRS (EPSG: 27700)
+
+centralbelt_region = st_bbox(c(xmin = 224479.2, xmax = 642963.5,
+                      ymin = 347475.0, ymax = 711014.5),
+                    crs = st_crs(urbanrural_sf)) %>% 
+  st_as_sfc()
+
+# Generate code for inset map of central belt
+
+# centralbelt_map = tm_shape(centralbelt_region) + tm_polygons() +
+#   tm_shape(st_within(ecs_sf, centralbelt_region)) +
+#   tm_dots("red", size = .05, alpha = .4) +
+#   tm_shape(nz_region) + tm_borders(lwd = 3) 
+# Still need to mod above line
+# Stitch together maps using grid()
+
+library(grid)
+nz_height_map
+print(nz_map, vp = viewport(0.8, 0.27, width = 0.5, height = 0.5))
+
+# Generate dynamic plot for exploring
+# TODO: change basemap
+
+tmap_mode("view")
+tm_shape(urbanrural_sf_simplified) + tm_polygons(col = "UR8FOLD", palette = "BrBG") +
+  tm_shape(ecs_sf) +
+  tm_dots("red", size = .05, alpha = .4, popup.vars = TRUE) +
+  tm_view(alpha = 1, basemaps = "Esri.WorldTopoMap")
+  
 
 ```
 
@@ -891,7 +902,7 @@ We can find divergence between transition communities and eco-congregation when 
 
 ```{r wilderness_data_prep} 
 
-# Download data for SSSI:
+# 1. Download data for SSSI:
 
 if (file.exists("data/SSSI_SCOTLAND.shp") == FALSE) {
 # TODO: get reliable URL for data download
@@ -902,7 +913,12 @@ unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
 
 sssi <- st_read("data/SSSI_SCOTLAND.shp") %>% st_transform(27700)
 sssi_sp <- readOGR("./data", "SSSI_SCOTLAND") 
-# Download wild land areas:
+# Generate simplified polygon for plots below
+sssi_simplified <- st_simplify(sssi)
+# sssi_simplified_sp <- rgeos::gSimplify(sssi_sp, tol=3)
+
+
+# 2. Download wild land areas:
 
 if (file.exists("data/WILDLAND_SCOTLAND.shp") == FALSE) {
 # TODO: get reliable URL for data download
@@ -913,8 +929,12 @@ unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
 
 wildland <- st_read("data/WILDLAND_SCOTLAND.shp") %>% st_transform(27700)
 wildland_sp <- readOGR("./data", "WILDLAND_SCOTLAND") 
+# Generate simplified polygon for plots below
+wildland_simplified <- st_simplify(wildland)
 
-# Download data for National Forest Inventory:
+
+# 3. Download data for National Forest Inventory:
+
 # Note: UK-wide data is here: https://opendata.arcgis.com/datasets/bcd6742a2add4b68962aec073ab44138_0.zip?outSR=%7B%22wkid%22%3A27700%2C%22latestWkid%22%3A27700%7D
 
 if (file.exists("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") == FALSE) {
@@ -923,8 +943,10 @@ download.file("https://opendata.arcgis.com/datasets/3cb1abc185a247a48b9d53e4c4a8
 unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data")
 }
 
-forest_inventory <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") %>% st_transform(27700)
-forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
+forestinv <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") %>% st_transform(27700)
+forestinv_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
+# Generate simplified polygon for plots below
+forestinv_simplified <- st_simplify(forestinv)
 
 # Download data for scenic areas
 # https://opendata.arcgis.com/datasets/d7f6b987c7224a72a185ce012258d500_23.zip
@@ -936,7 +958,7 @@ forest_inventory_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Sco
 # scenicareas <- st_read("data/ScenicAreas.shp")
 # scenicareas_sp <- readOGR("./data", "ScenicAreas") 
 
-# Set symmetrical CRS for analysis below (inserted here in order to correct errors, may be deprecated)
+# Set symmetrical CRS for analysis below (inserted here in order to correct errors, may be deprecated later)
 st_crs(sssi) <- 27700
 st_crs(ecs_sf) <- 27700
 st_crs(pow_pointX_sf) <- 27700
@@ -948,26 +970,80 @@ st_crs(permaculture_sf) <- 27700
 # Define buffer and measure number of ECS groups within 0.5 miles of all SSSI
 # CRS uses meters for units, so a buffer for 0.5 miles would use 805 meters)
 
-# Calculate number of groups within polygons
-# TODO: run on additional shapefiles
-# TODO: more efficient code using do.call() function or sapply() as here https://stackoverflow.com/questions/3642535/creating-an-r-dataframe-row-by-row
+# Define buffers as lines and polygons for reuse below (as some of these operations take > 10 minutes)
+# TODO: Working with simplified polygons here to optimise execution, need to confirm calculations are the same as polygons without simplification (likely!)
 
-# Sample code for use below
-# sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any))
-# sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any))
+sssi_buf50 <- st_buffer(sssi_simplified, dist = 50)
+sssi_buf500 <- st_buffer(sssi_simplified, dist = 500)
+# Lines offer even more optimised representation suitable for plotting
+# TODO: resolve error:
+# Error in st_cast.sfc(., to = "LINESTRING") : 
+#  use smaller steps for st_cast; first cast to MULTILINESTRING or POLYGON?
+# sssi_buf50_lines <- st_union(sssi_simplified) %>% st_buffer(50) %>% 
+#   st_cast(to = "MULTILINESTRING") %>% 
+#   st_cast(to = "LINESTRING")
+# sssi_buf500_lines <- st_union(sssi_simplified) %>% st_buffer(500) %>% 
+#   st_cast(to = "MULTILINESTRING") %>% 
+#   st_cast(to = "LINESTRING")
+
+wildland_buf50 <- st_buffer(wildland_simplified, dist = 50)
+wildland_buf500 <- st_buffer(wildland_simplified, dist = 500)
+# Lines offer even more optimised representation suitable for plotting
+# wildland_buf50_lines = st_union(wildland_simplified) %>% st_buffer(50) %>% 
+#   st_cast(to = "LINESTRING")
+# wildland_buf500_lines = st_union(wildland_simplified) %>% st_buffer(500) %>% 
+#   st_cast(to = "LINESTRING")
+
+forestinv_buf50 <- st_buffer(forestinv_simplified, dist = 50)
+forestinv_buf500 <- st_buffer(forestinv_simplified, dist = 500)
+# Lines offer even more optimised representation suitable for plotting
+# forestinv_buf50_lines = st_union(forestinv_simplified) %>% st_buffer(50) %>% 
+#   st_cast(to = "LINESTRING")
+# forestinv_buf500_lines = st_union(forestinv_simplified) %>% st_buffer(500) %>% 
+#   st_cast(to = "LINESTRING")
+
+# Calculate number of groups within polygons
+
+# calculate coincidence of ecs points within each polygons and buffers for each
+# todo, possibly use st_difference(sssi_buf50, sssi)
+
+# TODO: sort out why these layers aren't inheriting crs
+st_crs(wildland) <- 27700
+st_crs(wildland_buf50) <- 27700
+st_crs(wildland_buf500) <- 27700
+st_crs(forestinv) <- 27700
+st_crs(forestinv_buf50) <- 27700
+st_crs(forestinv_buf500) <- 27700
+
+ecs_sf_sssi <- st_within(ecs_sf, sssi)
+ecs_sf_sssi50m <- st_within(ecs_sf, sssi_buf50)
+ecs_sf_sssi500m <- st_within(ecs_sf, sssi_buf500)
+ecs_sf_sssibeyond500m <- !(st_within(ecs_sf, sssi_buf500))
+
+ecs_sf_wildland <- st_within(ecs_sf, wildland)
+ecs_sf_wildland50m <- st_within(ecs_sf, wildland_buf50)
+ecs_sf_wildland500m <- st_within(ecs_sf, wildland_buf500)
+ecs_sf_wildlandbeyond500m <- !(st_within(ecs_sf, wildland_buf500))
+
+ecs_sf_forestinv <- st_within(ecs_sf, forestinv)
+ecs_sf_forestinv50m <- st_within(ecs_sf, forestinv_buf50)
+ecs_sf_forestinv500m <- st_within(ecs_sf, forestinv_buf500)
+ecs_sf_forestinvbeyond500m <- !(st_within(ecs_sf, forestinv_buf500))
+
+# TODO: implement more efficient code using do.call() function or sapply() as here https://stackoverflow.com/questions/3642535/creating-an-r-dataframe-row-by-row
 
 # Generate dataframe based on SSSI buffers
 
 # Calculate incidence of ecs within SSSI and within buffers at 50/500m
-ecs_sssi_row <- c(sum(apply(st_within(ecs_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+ecs_sssi_row <- c(sum(apply(st_within(ecs_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
-pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
-dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
-transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
-permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(sssi, dist = 500), sparse=FALSE), 1, any)))
+permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
 # Generate dataframe from rows based on counts
 sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
@@ -996,25 +1072,25 @@ sssi_counts_merged <- cbind(sssi_counts, sssi_counts_pct)
 
 # Generate dataframe based on wildland buffers
 
-titles <- c("Within Wildland Areas", "...50m", "...500m")
+ecs_wildland_row <- c(sum(apply(st_within(ecs_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, wildland_buf500, sparse=FALSE), 1, any)))
 
-ecs_wildland_row <- c(sum(apply(st_within(ecs_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
-ecs_wildland_row <- rbind(titles, ecs_wildland_row)
-
-pow_wildland_row <- c(sum(apply(st_within(pow_pointX_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+pow_wildland_row <- c(sum(apply(st_within(pow_pointX_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(ecs_wildland_row, pow_wildland_row)
 
-dtas_wildland_row <- c(sum(apply(st_within(dtas_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+dtas_wildland_row <- c(sum(apply(st_within(dtas_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, dtas_wildland_row)
 
-transition_wildland_row <- c(sum(apply(st_within(transition_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+transition_wildland_row <- c(sum(apply(st_within(transition_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, transition_wildland_row)
 
-permaculture_wildland_row <- c(sum(apply(st_within(permaculture_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(wildland, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(wildland, dist = 500), sparse=FALSE), 1, any)))
+permaculture_wildland_row <- c(sum(apply(st_within(permaculture_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, permaculture_wildland_row)
 
+colnames(wildland_counts) <- c("Within Wildland Areas", "...50m", "...500m")
+
 # Generate dataframe from rows based on percentages of totals
-ecs_wildland_row_pct <- ecs_wildland_row/length(ecs)
+
+ecs_wildland_row_pct <- ecs_wildland_row/length(ecs_sf)
 pow_wildland_row_pct <- pow_wildland_row/length(pow_pointX)
 dtas_wildland_row_pct <- dtas_wildland_row/length(dtas)
 transition_wildland_row_pct <- transition_wildland_row/length(transition)
@@ -1029,40 +1105,39 @@ colnames(wildland_counts_pct) <- c("% Within wildlands", "% within 50m", "% with
 # Merge into larger dataframe
 wildland_counts_merged <- cbind(wildland_counts, wildland_counts_pct)
 
-# Generate dataframe based on forest_inventory buffers
+# Generate dataframe based on forestinv buffers
 
-titles <- c("Within woodlands", "...50m", "...500m")
+ecs_forestinv_row <- c(sum(apply(st_within(ecs_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, forestinv_buf500, sparse=FALSE), 1, any)))
 
-ecs_forest_inventory_row <- c(sum(apply(st_within(ecs_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-ecs_forest_inventory_row <- rbind(titles, ecs_forest_inventory_row)
+pow_forestinv_row <- c(sum(apply(st_within(pow_pointX_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+forestinv_counts <- rbind(ecs_forestinv_row, pow_forestinv_row)
 
-pow_forest_inventory_row <- c(sum(apply(st_within(pow_pointX_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-forest_inventory_counts <- rbind(ecs_forest_inventory_row, pow_forest_inventory_row)
+dtas_forestinv_row <- c(sum(apply(st_within(dtas_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+forestinv_counts <- rbind(forestinv_counts, dtas_forestinv_row)
 
-dtas_forest_inventory_row <- c(sum(apply(st_within(dtas_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-forest_inventory_counts <- rbind(forest_inventory_counts, dtas_forest_inventory_row)
+transition_forestinv_row <- c(sum(apply(st_within(transition_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+forestinv_counts <- rbind(forestinv_counts, transition_forestinv_row)
 
-transition_forest_inventory_row <- c(sum(apply(st_within(transition_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-forest_inventory_counts <- rbind(forest_inventory_counts, transition_forest_inventory_row)
+permaculture_forestinv_row <- c(sum(apply(st_within(permaculture_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+forestinv_counts <- rbind(forestinv_counts, permaculture_forestinv_row)
 
-permaculture_forest_inventory_row <- c(sum(apply(st_within(permaculture_sf, forest_inventory, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(forest_inventory, dist = 50), sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, st_buffer(forest_inventory, dist = 500), sparse=FALSE), 1, any)))
-forest_inventory_counts <- rbind(forest_inventory_counts, permaculture_forest_inventory_row)
+colnames(forestinv_counts) <- c("Within Woodlands", "...50m", "...500m")
 
 # Generate dataframe from rows based on percentages of totals
-ecs_forest_inventory_row_pct <- ecs_forest_inventory_row/length(as.data.frame(ecs))
-pow_forest_inventory_row_pct <- pow_forest_inventory_row/length(pow_pointX)
-dtas_forest_inventory_row_pct <- dtas_forest_inventory_row/length(dtas)
-transition_forest_inventory_row_pct <- transition_forest_inventory_row/length(transition)
-permaculture_forest_inventory_row_pct <- permaculture_forest_inventory_row/length(permaculture)
+ecs_forestinv_row_pct <- ecs_forestinv_row/length(ecs_sf)
+pow_forestinv_row_pct <- pow_forestinv_row/length(pow_pointX)
+dtas_forestinv_row_pct <- dtas_forestinv_row/length(dtas)
+transition_forestinv_row_pct <- transition_forestinv_row/length(transition)
+permaculture_forestinv_row_pct <- permaculture_forestinv_row/length(permaculture)
 
-forest_inventory_counts_pct <- rbind(ecs_forest_inventory_row_pct, pow_forest_inventory_row_pct)
-forest_inventory_counts_pct <- rbind(forest_inventory_counts_pct, dtas_forest_inventory_row_pct)
-forest_inventory_counts_pct <- rbind(forest_inventory_counts_pct, transition_forest_inventory_row_pct)
-forest_inventory_counts_pct <- rbind(forest_inventory_counts_pct, permaculture_forest_inventory_row_pct)
-colnames(forest_inventory_counts_pct) <- c("% Within Woodlands", "% within 50m", "% within 500m")
+forestinv_counts_pct <- rbind(ecs_forestinv_row_pct, pow_forestinv_row_pct)
+forestinv_counts_pct <- rbind(forestinv_counts_pct, dtas_forestinv_row_pct)
+forestinv_counts_pct <- rbind(forestinv_counts_pct, transition_forestinv_row_pct)
+forestinv_counts_pct <- rbind(forestinv_counts_pct, permaculture_forestinv_row_pct)
+colnames(forestinv_counts_pct) <- c("% Within Woodlands", "% within 50m", "% within 500m")
 
 # Merge into larger dataframe
-forest_inventory_counts_merged <- cbind(forest_inventory_counts, forest_inventory_counts_pct)
+forestinv_counts_merged <- cbind(forestinv_counts, forestinv_counts_pct)
 
 ```
 
@@ -1072,9 +1147,9 @@ Chasing down a curiosity, I decided to try and calculate whether proximity to "w
 
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs_sf, forest_inventory)` Eco-Congregation lies within either native or generally forested land.
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, sssi_buf50)` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, sssi_buf50)` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs_sf, forestinv)` Eco-Congregation lies within either native or generally forested land.
 
-```{r wilderness_table} 
+```{r wilderness_tables} 
 
 # Output mmd tables using kable
 
@@ -1086,32 +1161,64 @@ wildland_counts_merged %>%
   kable(format = "html", col.names = colnames(wildland_counts_merged), caption = "Group counts within Wildland Areas") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
-forest_inventory_counts_merged %>%
-  kable(format = "html", col.names = colnames(forest_inventory_counts_merged), caption = "Group counts within woodlands") %>%
+forestinv_counts_merged %>%
+  kable(format = "html", col.names = colnames(forestinv_counts_merged), caption = "Group counts within woodlands") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
 # Output CSV files for tables above
 write.csv(sssi_counts_merged, "derivedData/sssi_counts_merged.csv", row.names=TRUE)
 write.csv(wildland_counts_merged, "derivedData/wildland_counts_merged.csv", row.names=TRUE)
-write.csv(forest_inventory_counts_merged, "derivedData/forest_inventory_counts_merged.csv", row.names=TRUE)
+write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", row.names=TRUE)
 
 ```
 
 
-```{r wilderness_plots} 
+```{r sssi_ecs_buffer_plot, message=FALSE, warning=FALSE}
 
-# TODO: Add ggplot overlaying all three wilderness area types with different colours for polygons + points of ecs with different colouration and colour intensity at 3 bins for dots within buffers at each level (0/50/500m)
-# Note: there seems to be a problem with ggplot rendering these shapefiles - as it takes well over 10 hours to plot currently even on the smaller sssi shapefile.
+# Plot SSSI polygons (showing buffers) with ECS points (coloured by location)
 
-# Simplify geometries for plotting
+tm_shape(sssi_simplified) + 
+  tm_fill(col = "green", alpha = 0.3, lwd=0.001) + 
+#  tm_shape(sssi_buf50) + tm_borders(lwd=0.001) +
+#  tm_shape(sssi_buf500) + tm_borders(lwd=0.001)
+  tm_shape(admin_lev1_sf) + tm_borders(lwd=0.1) +
+  tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4)
+#  tm_shape(ecs_sf_sssi50m) + tm_dots("yellow", size = .5, alpha = .4) + 
+#  tm_shape(ecs_sf_sssi500m) + tm_dots("orange", size = .5, alpha = .4) +
+#  tm_shape(ecs_sf_sssibeyond500m) + tm_dots("red", size = .5, alpha = .4)
+  tm_scale_bar(position = c("left", "bottom")) +
+  tm_style("gray", title = "Figure 12") +
+  tm_credits("Data: UK Data Service (OGL)
+              & Jeremy H. Kidwell,
+              Graphic is CC-by-SA 4.0",
+    position = c("right", "bottom")) +
+  tm_layout(title = "Sites of Special Scientific Interest and ECS Groups", 
+            frame = FALSE, 
+            title.size = .7
+            )
 
-sssi_simple <- sf::st_simplify(sssi_sf)
 
-# Plot SSSI polygons with ECS points (using sp, for now)
+```
 
-plot(sssi_simple, col='#aaaaaa', border=0)
-plot(ecs_sf, col = 'red', add=TRUE)
+```{r all_wilderness_ecs_plot, message=FALSE, warning=FALSE}
 
+# Plot map with all wilderness shapes on it
+
+tm_shape(sssi_simplified) + tm_fill(col = "blue", alpha = 0.3, lwd=0.001) + 
+  tm_shape(wildland_simplified) + tm_fill(col = "green", alpha = 0.3, lwd=0.001) + 
+  tm_shape(forestinv_simplified) + tm_fill(col = "orange", alpha = 0.3, lwd=0.001) + 
+  tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
+  tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4)
+  tm_scale_bar(position = c("left", "bottom")) +
+  tm_style("gray", title = "Figure 12") +
+  tm_credits("Data: UK Data Service (OGL)
+              & Jeremy H. Kidwell,
+              Graphic is CC-by-SA 4.0",
+    position = c("right", "bottom")) +
+  tm_layout(title = "Wilderness Areas", 
+            frame = FALSE, 
+            title.size = .7
+            )
 
 ```
 

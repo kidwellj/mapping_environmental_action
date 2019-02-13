@@ -57,6 +57,13 @@ valid <- st_is_valid(sssi_sf)
 ggplot(sssi_sf2) + geom_sf(aes(fill = PA_CODE))
 plot(sssi_sf2)
 
+# Plot
+
+pdf(file = "sssi_polygons.pdf", width=5, height=6, res=300, units="in")
+plot(st_geometry(sssi_simple), col='#aaaaaa', border=0)
+dev.off()
+
+
 # First test out plots using spatialfeatures and spdf with core R
 
 system.time(
