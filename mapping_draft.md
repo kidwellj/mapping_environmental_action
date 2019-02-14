@@ -1,13 +1,13 @@
 ---
 title:  "Mapping Environmental Action in Scotland"
 abstract:    
-# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 07, 2019
+# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 14, 2019
 style:  jeremy1
 author: "[Jeremy H. Kidwell](http://jeremykidwell.info)"
 affiliation: University of Birmingham
 institute: University of Birmingham
 e-mail: "[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)"
-date: "2019-02-07"
+date: "2019-02-14"
 bibliography: biblio.bib
 linkcolor: black
 geometry: margin=1in
@@ -18,7 +18,7 @@ output:
     theme: readable
     keep_md: true
     code_folding: hide
-    self_contained: false
+    self_contained: true
     toc: true
     toc_depth: 2
     number_sections: true
@@ -212,6 +212,16 @@ While Roman Catholic churches make up just over 10% of the church buildings in S
 ## It has 6 fields
 ```
 
+```
+## Reading layer `SG_UrbanRural_2016' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/SG_UrbanRural_2016.shp' using driver `ESRI Shapefile'
+## Simple feature collection with 8 features and 6 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 5513 ymin: 530252.8 xmax: 470323 ymax: 1220302
+## epsg (SRID):    NA
+## proj4string:    +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs
+```
+
 Rather than bifurcate congregations into an urban/rural dichotomy, for this study we used the Scottish Government's six-point remoteness scale to categorise eco-congregations along a spectrum of highly populated to remote areas. This 8-fold scale (calculated biennially) offers a more nuanced measurement that combines measurements of remoteness and population along the following lines:
 
 1. Large Urban Areas - Settlements of over 125,000 people.
@@ -228,8 +238,9 @@ The key question which this analysis seeks to answer is whether ECS, or the othe
 Of all the groups surveyed in this study, Eco-Congregation Scotland is the most heavily concentrated in large urban areas (33.53%), exceeding by almost 50% the rate for all places of worship (22.96% in large urban areas). Transition is a much more modest 20% and development trusts a bit lower at 15%. It is interesting to note that the rate of ECS concentration in these large urban areas matches the level of overall population distribution (34.5%). On the other end of the scale, Eco-Congregation Scotland is the least concentrated in remote rural areas (with 3.93% on level 7 and 5.44% on level 8 on the urban-rural scale), though again, they correlate roughly to the general population distribution (3.2% and 2.9% respectively). Places of worship outpace both the population of Scotland and the footprint of Eco-Congregation Scotland, with 14.98% in very remote rural areas, but this is exceeded by transition at 16.47% and both by Scottish community development trusts at 32.14%. So while Eco-Congregation Scotland correlates roughly with Scottish population distribution across the urban-rural scale, it has a considerably more urban profile than either of the other two groups surveyed.
 
 ![](figures/create_ur_barplot-1.png)<!-- -->
+## Eco-Congregation Scotland\nconcentrations in Urban Rural 8-fold classifications
 
-![Figure 9](figures/create_urbanrural_ecs_chart_choropleth-1.png)
+![](figures/create_urbanrural_ecs_chart_choropleth-1.png)<!-- -->
 
 
 # Wealth, Employment, and Literacy
@@ -325,135 +336,198 @@ Chasing down a curiosity, I decided to try and calculate whether proximity to "w
 
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of 4048, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, st_buffer(sssi, dist = 50))` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, st_buffer(sssi, dist = 50))` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs_sf, forest_inventory)` Eco-Congregation lies within either native or generally forested land.
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of 4048, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, sssi_buf50)` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, sssi_buf50)` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs_sf, forestinv)` Eco-Congregation lies within either native or generally forested land.
 
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>Group counts within SSSIs</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> Within SSSIs </th>
+   <th style="text-align:right;"> ...50m </th>
+   <th style="text-align:right;"> ...500m </th>
+   <th style="text-align:right;"> % Within SSSIs </th>
+   <th style="text-align:right;"> % within 50m </th>
+   <th style="text-align:right;"> % within 500m </th>
+  </tr>
+ </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> titles </td>
-   <td style="text-align:left;"> Within SSSIs </td>
-   <td style="text-align:left;"> ...50m </td>
-   <td style="text-align:left;"> ...500m </td>
-  </tr>
-  <tr>
    <td style="text-align:left;"> ecs_sssi_row </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 3 </td>
-   <td style="text-align:left;"> 59 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 59 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0087209 </td>
+   <td style="text-align:right;"> 0.1715116 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> pow_sssi_row </td>
-   <td style="text-align:left;"> 7 </td>
-   <td style="text-align:left;"> 62 </td>
-   <td style="text-align:left;"> 610 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 62 </td>
+   <td style="text-align:right;"> 610 </td>
+   <td style="text-align:right;"> 0.0017292 </td>
+   <td style="text-align:right;"> 0.0153162 </td>
+   <td style="text-align:right;"> 0.1506917 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> dtas_sssi_row </td>
-   <td style="text-align:left;"> 7 </td>
-   <td style="text-align:left;"> 11 </td>
-   <td style="text-align:left;"> 49 </td>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 49 </td>
+   <td style="text-align:right;"> 0.0300429 </td>
+   <td style="text-align:right;"> 0.0472103 </td>
+   <td style="text-align:right;"> 0.2103004 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> transition_sssi_row </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 1 </td>
-   <td style="text-align:left;"> 17 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 17 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0105263 </td>
+   <td style="text-align:right;"> 0.1789474 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> permaculture_sssi_row </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.2142857 </td>
   </tr>
 </tbody>
 </table>
 
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <caption>Group counts within Wildland Areas</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> Within Wildland Areas </th>
+   <th style="text-align:right;"> ...50m </th>
+   <th style="text-align:right;"> ...500m </th>
+   <th style="text-align:right;"> % Within wildlands </th>
+   <th style="text-align:right;"> % within 50m </th>
+   <th style="text-align:right;"> % within 500m </th>
+  </tr>
+ </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> titles </td>
-   <td style="text-align:left;"> Within Wildland Areas </td>
-   <td style="text-align:left;"> ...50m </td>
-   <td style="text-align:left;"> ...500m </td>
-  </tr>
-  <tr>
    <td style="text-align:left;"> ecs_wildland_row </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> pow_wildland_row </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 6 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0014822 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> dtas_wildland_row </td>
-   <td style="text-align:left;"> 3 </td>
-   <td style="text-align:left;"> 3 </td>
-   <td style="text-align:left;"> 3 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.0128755 </td>
+   <td style="text-align:right;"> 0.0128755 </td>
+   <td style="text-align:right;"> 0.0128755 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> transition_wildland_row </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> permaculture_wildland_row </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
   </tr>
 </tbody>
 </table>
 
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <caption>Group counts within woodlands</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> Within Woodlands </th>
+   <th style="text-align:right;"> ...50m </th>
+   <th style="text-align:right;"> ...500m </th>
+   <th style="text-align:right;"> % Within Woodlands </th>
+   <th style="text-align:right;"> % within 50m </th>
+   <th style="text-align:right;"> % within 500m </th>
+  </tr>
+ </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> titles </td>
-   <td style="text-align:left;"> Within woodlands </td>
-   <td style="text-align:left;"> ...50m </td>
-   <td style="text-align:left;"> ...500m </td>
+   <td style="text-align:left;"> ecs_forestinv_row </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 51 </td>
+   <td style="text-align:right;"> 287 </td>
+   <td style="text-align:right;"> 0.0625000 </td>
+   <td style="text-align:right;"> 3.1875000 </td>
+   <td style="text-align:right;"> 17.9375000 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> ecs_forest_inventory_row </td>
-   <td style="text-align:left;"> 1 </td>
-   <td style="text-align:left;"> 51 </td>
-   <td style="text-align:left;"> 287 </td>
+   <td style="text-align:left;"> pow_forestinv_row </td>
+   <td style="text-align:right;"> 52 </td>
+   <td style="text-align:right;"> 752 </td>
+   <td style="text-align:right;"> 3304 </td>
+   <td style="text-align:right;"> 0.0128458 </td>
+   <td style="text-align:right;"> 0.1857708 </td>
+   <td style="text-align:right;"> 0.8162055 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> pow_forest_inventory_row </td>
-   <td style="text-align:left;"> 52 </td>
-   <td style="text-align:left;"> 752 </td>
-   <td style="text-align:left;"> 3304 </td>
+   <td style="text-align:left;"> dtas_forestinv_row </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 38 </td>
+   <td style="text-align:right;"> 172 </td>
+   <td style="text-align:right;"> 0.0472103 </td>
+   <td style="text-align:right;"> 0.1630901 </td>
+   <td style="text-align:right;"> 0.7381974 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> dtas_forest_inventory_row </td>
-   <td style="text-align:left;"> 11 </td>
-   <td style="text-align:left;"> 38 </td>
-   <td style="text-align:left;"> 172 </td>
+   <td style="text-align:left;"> transition_forestinv_row </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 12 </td>
+   <td style="text-align:right;"> 77 </td>
+   <td style="text-align:right;"> 0.0210526 </td>
+   <td style="text-align:right;"> 0.1263158 </td>
+   <td style="text-align:right;"> 0.8105263 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> transition_forest_inventory_row </td>
-   <td style="text-align:left;"> 2 </td>
-   <td style="text-align:left;"> 12 </td>
-   <td style="text-align:left;"> 77 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> permaculture_wildland_row </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
-   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> permaculture_forestinv_row </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> 0.1428571 </td>
+   <td style="text-align:right;"> 0.4285714 </td>
+   <td style="text-align:right;"> 0.9285714 </td>
   </tr>
 </tbody>
 </table>
 
 
+![](figures/sssi_ecs_buffer_plot-1.png)<!-- -->
 
+![](figures/all_wilderness_ecs_plot-1.png)<!-- -->
 
 
 # Appendix A
@@ -461,7 +535,6 @@ So what did I discover? The results were inconclusive. First, it is important to
 <div style="border: 1px solid #ddd; padding: 5px; overflow-y: scroll; height:800px; overflow-x: scroll; width:100%; "><table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
  <thead>
   <tr>
-   <th style="text-align:left;">   </th>
    <th style="text-align:left;"> name </th>
    <th style="text-align:right;"> ecs_count </th>
    <th style="text-align:right;"> pow_count </th>
@@ -471,7 +544,6 @@ So what did I discover? The results were inconclusive. First, it is important to
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> 8 </td>
    <td style="text-align:left;"> Fife </td>
    <td style="text-align:right;"> 18 </td>
    <td style="text-align:right;"> 243 </td>
@@ -479,7 +551,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 18 </td>
    <td style="text-align:left;"> South Ayrshire </td>
    <td style="text-align:right;"> 3 </td>
    <td style="text-align:right;"> 68 </td>
@@ -487,7 +558,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 10 </td>
    <td style="text-align:left;"> Inverclyde </td>
    <td style="text-align:right;"> 2 </td>
    <td style="text-align:right;"> 53 </td>
@@ -495,7 +565,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 21 </td>
    <td style="text-align:left;"> Aberdeen City </td>
    <td style="text-align:right;"> 15 </td>
    <td style="text-align:right;"> 96 </td>
@@ -503,7 +572,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 9 </td>
    <td style="text-align:left;"> Highland </td>
    <td style="text-align:right;"> 21 </td>
    <td style="text-align:right;"> 435 </td>
@@ -511,7 +579,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 26 </td>
    <td style="text-align:left;"> West Dunbartonshire </td>
    <td style="text-align:right;"> 6 </td>
    <td style="text-align:right;"> 52 </td>
@@ -519,7 +586,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 12 </td>
    <td style="text-align:left;"> Moray </td>
    <td style="text-align:right;"> 11 </td>
    <td style="text-align:right;"> 103 </td>
@@ -527,7 +593,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 14 </td>
    <td style="text-align:left;"> Orkney Islands </td>
    <td style="text-align:right;"> 4 </td>
    <td style="text-align:right;"> 50 </td>
@@ -535,7 +600,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 22 </td>
    <td style="text-align:left;"> Aberdeenshire </td>
    <td style="text-align:right;"> 19 </td>
    <td style="text-align:right;"> 244 </td>
@@ -543,7 +607,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 5 </td>
    <td style="text-align:left;"> East Renfrewshire </td>
    <td style="text-align:right;"> 8 </td>
    <td style="text-align:right;"> 37 </td>
@@ -551,7 +614,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 1 </td>
    <td style="text-align:left;"> Clackmannanshire </td>
    <td style="text-align:right;"> 3 </td>
    <td style="text-align:right;"> 30 </td>
@@ -559,7 +621,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 3 </td>
    <td style="text-align:left;"> East Ayrshire </td>
    <td style="text-align:right;"> 4 </td>
    <td style="text-align:right;"> 68 </td>
@@ -567,7 +628,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 30 </td>
    <td style="text-align:left;"> North Lanarkshire </td>
    <td style="text-align:right;"> 5 </td>
    <td style="text-align:right;"> 187 </td>
@@ -575,7 +635,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 29 </td>
    <td style="text-align:left;"> Dundee City </td>
    <td style="text-align:right;"> 3 </td>
    <td style="text-align:right;"> 94 </td>
@@ -583,7 +642,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 23 </td>
    <td style="text-align:left;"> Argyll and Bute </td>
    <td style="text-align:right;"> 18 </td>
    <td style="text-align:right;"> 172 </td>
@@ -591,7 +649,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 3 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 28 </td>
    <td style="text-align:left;"> Angus </td>
    <td style="text-align:right;"> 12 </td>
    <td style="text-align:right;"> 106 </td>
@@ -599,7 +656,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 32 </td>
    <td style="text-align:left;"> Glasgow City </td>
    <td style="text-align:right;"> 25 </td>
    <td style="text-align:right;"> 329 </td>
@@ -607,7 +663,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 2 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 31 </td>
    <td style="text-align:left;"> East Dunbartonshire </td>
    <td style="text-align:right;"> 7 </td>
    <td style="text-align:right;"> 43 </td>
@@ -615,7 +670,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 17 </td>
    <td style="text-align:left;"> Shetland Islands </td>
    <td style="text-align:right;"> 3 </td>
    <td style="text-align:right;"> 89 </td>
@@ -623,7 +677,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 16 </td>
    <td style="text-align:left;"> Scottish Borders </td>
    <td style="text-align:right;"> 11 </td>
    <td style="text-align:right;"> 153 </td>
@@ -631,7 +684,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 2 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 6 </td>
    <td style="text-align:left;"> Comhairle nan Eilean Siar </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 114 </td>
@@ -639,7 +691,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 25 </td>
    <td style="text-align:left;"> Renfrewshire </td>
    <td style="text-align:right;"> 6 </td>
    <td style="text-align:right;"> 84 </td>
@@ -647,7 +698,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 13 </td>
    <td style="text-align:left;"> North Ayrshire </td>
    <td style="text-align:right;"> 7 </td>
    <td style="text-align:right;"> 96 </td>
@@ -655,7 +705,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 4 </td>
    <td style="text-align:left;"> East Lothian </td>
    <td style="text-align:right;"> 8 </td>
    <td style="text-align:right;"> 71 </td>
@@ -663,7 +712,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 7 </td>
    <td style="text-align:left;"> Falkirk </td>
    <td style="text-align:right;"> 8 </td>
    <td style="text-align:right;"> 83 </td>
@@ -671,7 +719,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 27 </td>
    <td style="text-align:left;"> West Lothian </td>
    <td style="text-align:right;"> 11 </td>
    <td style="text-align:right;"> 70 </td>
@@ -679,7 +726,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 15 </td>
    <td style="text-align:left;"> Perth and Kinross </td>
    <td style="text-align:right;"> 20 </td>
    <td style="text-align:right;"> 162 </td>
@@ -687,7 +733,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 2 </td>
    <td style="text-align:left;"> Dumfries and Galloway </td>
    <td style="text-align:right;"> 7 </td>
    <td style="text-align:right;"> 189 </td>
@@ -695,7 +740,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 2 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 20 </td>
    <td style="text-align:left;"> Stirling </td>
    <td style="text-align:right;"> 13 </td>
    <td style="text-align:right;"> 73 </td>
@@ -703,7 +747,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 24 </td>
    <td style="text-align:left;"> City of Edinburgh </td>
    <td style="text-align:right;"> 48 </td>
    <td style="text-align:right;"> 233 </td>
@@ -711,7 +754,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 11 </td>
    <td style="text-align:left;"> Midlothian </td>
    <td style="text-align:right;"> 1 </td>
    <td style="text-align:right;"> 45 </td>
@@ -719,7 +761,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 1 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 19 </td>
    <td style="text-align:left;"> South Lanarkshire </td>
    <td style="text-align:right;"> 17 </td>
    <td style="text-align:right;"> 176 </td>
@@ -734,7 +775,6 @@ So what did I discover? The results were inconclusive. First, it is important to
 <div style="border: 1px solid #ddd; padding: 5px; overflow-y: scroll; height:800px; overflow-x: scroll; width:100%; "><table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
  <thead>
   <tr>
-   <th style="text-align:left;">   </th>
    <th style="text-align:left;"> name </th>
    <th style="text-align:left;"> label </th>
    <th style="text-align:right;"> ecs_count </th>
@@ -755,7 +795,6 @@ So what did I discover? The results were inconclusive. First, it is important to
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> 8 </td>
    <td style="text-align:left;"> Fife </td>
    <td style="text-align:left;"> S12000015 </td>
    <td style="text-align:right;"> 18 </td>
@@ -774,7 +813,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.2071882 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 18 </td>
    <td style="text-align:left;"> South Ayrshire </td>
    <td style="text-align:left;"> S12000028 </td>
    <td style="text-align:right;"> 3 </td>
@@ -793,7 +831,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 2.0465116 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 10 </td>
    <td style="text-align:left;"> Inverclyde </td>
    <td style="text-align:left;"> S12000018 </td>
    <td style="text-align:right;"> 2 </td>
@@ -812,7 +849,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.6976744 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 21 </td>
    <td style="text-align:left;"> Aberdeen City </td>
    <td style="text-align:left;"> S12000033 </td>
    <td style="text-align:right;"> 15 </td>
@@ -831,7 +867,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 18.2325581 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 9 </td>
    <td style="text-align:left;"> Highland </td>
    <td style="text-align:left;"> S12000017 </td>
    <td style="text-align:right;"> 21 </td>
@@ -850,7 +885,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -1.1668947 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 26 </td>
    <td style="text-align:left;"> West Dunbartonshire </td>
    <td style="text-align:left;"> S12000039 </td>
    <td style="text-align:right;"> 6 </td>
@@ -869,7 +903,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.6976744 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 12 </td>
    <td style="text-align:left;"> Moray </td>
    <td style="text-align:left;"> S12000020 </td>
    <td style="text-align:right;"> 11 </td>
@@ -888,7 +921,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.4728682 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 14 </td>
    <td style="text-align:left;"> Orkney Islands </td>
    <td style="text-align:left;"> S12000023 </td>
    <td style="text-align:right;"> 4 </td>
@@ -907,7 +939,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -1.4604651 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 22 </td>
    <td style="text-align:left;"> Aberdeenshire </td>
    <td style="text-align:left;"> S12000034 </td>
    <td style="text-align:right;"> 19 </td>
@@ -926,7 +957,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -0.2914729 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 5 </td>
    <td style="text-align:left;"> East Renfrewshire </td>
    <td style="text-align:left;"> S12000011 </td>
    <td style="text-align:right;"> 8 </td>
@@ -945,7 +975,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 3.3953488 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 1 </td>
    <td style="text-align:left;"> Clackmannanshire </td>
    <td style="text-align:left;"> S12000005 </td>
    <td style="text-align:right;"> 3 </td>
@@ -964,7 +993,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 2.0465116 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 3 </td>
    <td style="text-align:left;"> East Ayrshire </td>
    <td style="text-align:left;"> S12000008 </td>
    <td style="text-align:right;"> 4 </td>
@@ -983,7 +1011,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -1.1007752 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 30 </td>
    <td style="text-align:left;"> North Lanarkshire </td>
    <td style="text-align:left;"> S12000044 </td>
    <td style="text-align:right;"> 5 </td>
@@ -1002,7 +1029,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 4.7441860 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 29 </td>
    <td style="text-align:left;"> Dundee City </td>
    <td style="text-align:left;"> S12000042 </td>
    <td style="text-align:right;"> 3 </td>
@@ -1021,7 +1047,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 2.0465116 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 23 </td>
    <td style="text-align:left;"> Argyll and Bute </td>
    <td style="text-align:left;"> S12000035 </td>
    <td style="text-align:right;"> 18 </td>
@@ -1040,7 +1065,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -0.9883721 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 28 </td>
    <td style="text-align:left;"> Angus </td>
    <td style="text-align:left;"> S12000041 </td>
    <td style="text-align:right;"> 12 </td>
@@ -1059,7 +1083,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> Inf </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 32 </td>
    <td style="text-align:left;"> Glasgow City </td>
    <td style="text-align:left;"> S12000046 </td>
    <td style="text-align:right;"> 25 </td>
@@ -1078,7 +1101,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -0.3942414 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 31 </td>
    <td style="text-align:left;"> East Dunbartonshire </td>
    <td style="text-align:left;"> S12000045 </td>
    <td style="text-align:right;"> 7 </td>
@@ -1097,7 +1119,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 7.4418605 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 17 </td>
    <td style="text-align:left;"> Shetland Islands </td>
    <td style="text-align:left;"> S12000027 </td>
    <td style="text-align:right;"> 3 </td>
@@ -1116,7 +1137,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -0.9883721 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 16 </td>
    <td style="text-align:left;"> Scottish Borders </td>
    <td style="text-align:left;"> S12000026 </td>
    <td style="text-align:right;"> 11 </td>
@@ -1135,7 +1155,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -0.3514212 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 6 </td>
    <td style="text-align:left;"> Comhairle nan Eilean Siar </td>
    <td style="text-align:left;"> S12000013 </td>
    <td style="text-align:right;"> 0 </td>
@@ -1154,7 +1173,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -2.0000000 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 25 </td>
    <td style="text-align:left;"> Renfrewshire </td>
    <td style="text-align:left;"> S12000038 </td>
    <td style="text-align:right;"> 6 </td>
@@ -1173,7 +1191,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -0.3813953 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 13 </td>
    <td style="text-align:left;"> North Ayrshire </td>
    <td style="text-align:left;"> S12000021 </td>
    <td style="text-align:right;"> 7 </td>
@@ -1192,7 +1209,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 1.1472868 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 4 </td>
    <td style="text-align:left;"> East Lothian </td>
    <td style="text-align:left;"> S12000010 </td>
    <td style="text-align:right;"> 8 </td>
@@ -1211,7 +1227,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 3.3953488 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 7 </td>
    <td style="text-align:left;"> Falkirk </td>
    <td style="text-align:left;"> S12000014 </td>
    <td style="text-align:right;"> 8 </td>
@@ -1230,7 +1245,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> Inf </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 27 </td>
    <td style="text-align:left;"> West Lothian </td>
    <td style="text-align:left;"> S12000040 </td>
    <td style="text-align:right;"> 11 </td>
@@ -1249,7 +1263,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.1196013 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 15 </td>
    <td style="text-align:left;"> Perth and Kinross </td>
    <td style="text-align:left;"> S12000024 </td>
    <td style="text-align:right;"> 20 </td>
@@ -1268,7 +1281,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.6976744 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 2 </td>
    <td style="text-align:left;"> Dumfries and Galloway </td>
    <td style="text-align:left;"> S12000006 </td>
    <td style="text-align:right;"> 7 </td>
@@ -1287,7 +1299,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -1.3705426 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 20 </td>
    <td style="text-align:left;"> Stirling </td>
    <td style="text-align:left;"> S12000030 </td>
    <td style="text-align:right;"> 13 </td>
@@ -1306,7 +1317,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -0.2465116 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 24 </td>
    <td style="text-align:left;"> City of Edinburgh </td>
    <td style="text-align:left;"> S12000036 </td>
    <td style="text-align:right;"> 48 </td>
@@ -1325,7 +1335,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 7.2491694 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 11 </td>
    <td style="text-align:left;"> Midlothian </td>
    <td style="text-align:left;"> S12000019 </td>
    <td style="text-align:right;"> 1 </td>
@@ -1344,7 +1353,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> -1.6627907 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 19 </td>
    <td style="text-align:left;"> South Lanarkshire </td>
    <td style="text-align:left;"> S12000029 </td>
    <td style="text-align:right;"> 17 </td>
@@ -1367,10 +1375,9 @@ So what did I discover? The results were inconclusive. First, it is important to
 
 # Appendix C - Data by Urban / Rural Classification
 
-<div style="border: 1px solid #ddd; padding: 5px; overflow-y: scroll; height:800px; overflow-x: scroll; width:100%; "><table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
+<div style="border: 1px solid #ddd; padding: 5px; overflow-x: scroll; width:100%; "><table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
  <thead>
   <tr>
-   <th style="text-align:left;">   </th>
    <th style="text-align:right;"> UR8FOLD </th>
    <th style="text-align:right;"> ecs_count </th>
    <th style="text-align:right;"> ecs_percent </th>
@@ -1386,7 +1393,6 @@ So what did I discover? The results were inconclusive. First, it is important to
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> 0 </td>
    <td style="text-align:right;"> 1 </td>
    <td style="text-align:right;"> 111 </td>
    <td style="text-align:right;"> 0.3226744 </td>
@@ -1400,7 +1406,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.1428571 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 1 </td>
    <td style="text-align:right;"> 2 </td>
    <td style="text-align:right;"> 98 </td>
    <td style="text-align:right;"> 0.2848837 </td>
@@ -1414,7 +1419,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.0714286 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 2 </td>
    <td style="text-align:right;"> 3 </td>
    <td style="text-align:right;"> 30 </td>
    <td style="text-align:right;"> 0.0872093 </td>
@@ -1428,7 +1432,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.0714286 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 3 </td>
    <td style="text-align:right;"> 4 </td>
    <td style="text-align:right;"> 9 </td>
    <td style="text-align:right;"> 0.0261628 </td>
@@ -1442,7 +1445,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.0000000 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 4 </td>
    <td style="text-align:right;"> 5 </td>
    <td style="text-align:right;"> 6 </td>
    <td style="text-align:right;"> 0.0174419 </td>
@@ -1456,7 +1458,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.0714286 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 5 </td>
    <td style="text-align:right;"> 6 </td>
    <td style="text-align:right;"> 54 </td>
    <td style="text-align:right;"> 0.1569767 </td>
@@ -1470,7 +1471,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.1428571 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 6 </td>
    <td style="text-align:right;"> 7 </td>
    <td style="text-align:right;"> 16 </td>
    <td style="text-align:right;"> 0.0465116 </td>
@@ -1484,7 +1484,6 @@ So what did I discover? The results were inconclusive. First, it is important to
    <td style="text-align:right;"> 0.2142857 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> 7 </td>
    <td style="text-align:right;"> 8 </td>
    <td style="text-align:right;"> 20 </td>
    <td style="text-align:right;"> 0.0581395 </td>

@@ -43,7 +43,7 @@ knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FA
 
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
 ## Default repo
-setwd("/Users/jeremy/gits/mapping_environmental_action")
+# setwd("/Users/jeremy/gits/mapping_environmental_action")
 # setwd("/Users/kidwellj/OneDrive\ -\ bham.ac.uk/writing/201708_mapping_environmental_action")
 
 # Set repository to be new standard, e.g. cloud server. 
@@ -1182,7 +1182,7 @@ tm_shape(sssi_simplified) +
 #  tm_shape(sssi_buf50) + tm_borders(lwd=0.001) +
 #  tm_shape(sssi_buf500) + tm_borders(lwd=0.001)
   tm_shape(admin_lev1_sf) + tm_borders(lwd=0.1) +
-  tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4)
+  tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4) +
 #  tm_shape(ecs_sf_sssi50m) + tm_dots("yellow", size = .5, alpha = .4) + 
 #  tm_shape(ecs_sf_sssi500m) + tm_dots("orange", size = .5, alpha = .4) +
 #  tm_shape(ecs_sf_sssibeyond500m) + tm_dots("red", size = .5, alpha = .4)
@@ -1208,7 +1208,7 @@ tm_shape(sssi_simplified) + tm_fill(col = "blue", alpha = 0.3, lwd=0.001) +
   tm_shape(wildland_simplified) + tm_fill(col = "green", alpha = 0.3, lwd=0.001) + 
   tm_shape(forestinv_simplified) + tm_fill(col = "orange", alpha = 0.3, lwd=0.001) + 
   tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
-  tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4)
+  tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4) +
   tm_scale_bar(position = c("left", "bottom")) +
   tm_style("gray", title = "Figure 12") +
   tm_credits("Data: UK Data Service (OGL)
