@@ -1,13 +1,13 @@
 ---
 title:  "Mapping Environmental Action in Scotland"
 abstract:    
-# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 14, 2019
+# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 15, 2019
 style:  jeremy1
 author: "[Jeremy H. Kidwell](http://jeremykidwell.info)"
 affiliation: University of Birmingham
 institute: University of Birmingham
 e-mail: "[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)"
-date: "2019-02-14"
+date: "2019-02-15"
 bibliography: biblio.bib
 linkcolor: black
 geometry: margin=1in
@@ -61,7 +61,7 @@ For the sake of comparison, we also measured the geographical footprint of two o
 
 # Technical Background
 
-Analysis was conducted using QGIS 2.8 and R 3.5.1, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
+Analysis was conducted using QGIS 2.8 and R 3.5.2, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
 
 # Background and History of Eco-Congregation Scotland
 
@@ -207,13 +207,13 @@ While Roman Catholic churches make up just over 10% of the church buildings in S
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "SG_UrbanRural_2016"
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "SG_UrbanRural_2016"
 ## with 8 features
 ## It has 6 fields
 ```
 
 ```
-## Reading layer `SG_UrbanRural_2016' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/SG_UrbanRural_2016.shp' using driver `ESRI Shapefile'
+## Reading layer `SG_UrbanRural_2016' from data source `/Users/jeremy/gits/mapping_environmental_action/data/SG_UrbanRural_2016.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 8 features and 6 fields
 ## geometry type:  MULTIPOLYGON
 ## dimension:      XY
@@ -248,7 +248,7 @@ Of all the groups surveyed in this study, Eco-Congregation Scotland is the most 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "sc_dz_11"
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "sc_dz_11"
 ## with 6976 features
 ## It has 9 fields
 ```
@@ -278,7 +278,7 @@ We can find divergence between transition communities and eco-congregation when 
 
 
 ```
-## Reading layer `SSSI_SCOTLAND' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/SSSI_SCOTLAND.shp' using driver `ESRI Shapefile'
+## Reading layer `SSSI_SCOTLAND' from data source `/Users/jeremy/gits/mapping_environmental_action/data/SSSI_SCOTLAND.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 15872 features and 7 fields
 ## geometry type:  POLYGON
 ## dimension:      XY
@@ -289,14 +289,14 @@ We can find divergence between transition communities and eco-congregation when 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "SSSI_SCOTLAND"
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "SSSI_SCOTLAND"
 ## with 15872 features
 ## It has 7 fields
 ## Integer64 fields read as strings:  PA_CODE
 ```
 
 ```
-## Reading layer `WILDLAND_SCOTLAND' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/WILDLAND_SCOTLAND.shp' using driver `ESRI Shapefile'
+## Reading layer `WILDLAND_SCOTLAND' from data source `/Users/jeremy/gits/mapping_environmental_action/data/WILDLAND_SCOTLAND.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 42 features and 3 fields
 ## geometry type:  MULTIPOLYGON
 ## dimension:      XY
@@ -307,13 +307,13 @@ We can find divergence between transition communities and eco-congregation when 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "WILDLAND_SCOTLAND"
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "WILDLAND_SCOTLAND"
 ## with 42 features
 ## It has 3 fields
 ```
 
 ```
-## Reading layer `National_Forest_Inventory_Woodland_Scotland_2017' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/National_Forest_Inventory_Woodland_Scotland_2017.shp' using driver `ESRI Shapefile'
+## Reading layer `National_Forest_Inventory_Woodland_Scotland_2017' from data source `/Users/jeremy/gits/mapping_environmental_action/data/National_Forest_Inventory_Woodland_Scotland_2017.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 199698 features and 7 fields
 ## geometry type:  POLYGON
 ## dimension:      XY
@@ -324,7 +324,7 @@ We can find divergence between transition communities and eco-congregation when 
 
 ```
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "National_Forest_Inventory_Woodland_Scotland_2017"
+## Source: "/Users/jeremy/gits/mapping_environmental_action/data", layer: "National_Forest_Inventory_Woodland_Scotland_2017"
 ## with 199698 features
 ## It has 7 fields
 ## Integer64 fields read as strings:  OBJECTID
