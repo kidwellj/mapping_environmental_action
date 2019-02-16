@@ -321,44 +321,37 @@ Though there are too few eco-congregations and transition groups for a numerical
 
 ```{r plot_admin_ecs_choropleth, fig.width=4, fig.cap="Figure 1"}
 # Note: for more information on EU administrative levels, see here: https://ec.europa.eu/eurostat/web/nuts/national-structures-eu
-# TODO: Need to clip choropleth polygons to buildings shapefile
+# TODO: clip choropleth polygons to buildings shapefile (possble superceded by pverlay on lev2)
 
 # Draw initial choropleth map of ECS concentration (using tmap and sf below by default)
 
-tm_shape(admin_lev1) + 
-  tm_fill(col = "ecs_count", palette = "Oranges") +
+tm_shape(admin_lev2) + 
+  tm_fill(col = "ecs_count", palette = "Oranges", title = "Concentration of ECS groups") +
+  tm_borders(alpha=.5) +
+  tm_shape(admin_lev1) +
+  tm_borders(lwd=2) +
+  # TODO: Change title field "name" to match admin1
+  # also consider scaling text size using area #  quick plot example: 
+# qtm(World, fill = "income_grp", text = "iso_a3", text.size = "AREA") # use "World$" to see the two attributes: income_grp and iso_a3, text.size= area: text is sized increasingly with coutry area size.
+  tm_text("name", size=.8, shadow=TRUE,
+          bg.color="white", bg.alpha=.25) +
 #  tm_shape(ecs_sf) +
 #  tm_dots("red", size = .05, alpha = .4) +
-#  tm_scale_bar(position = c("left", "bottom")) +
-  tm_style("gray", title = "Figure 1a") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Concentration of ECS groups", 
+#  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.7, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp=NA
             frame = FALSE, 
-            title.size = .7, 
+            title = "Figure 1a", 
+            title.size = .7,
+            legend.title.size = .7,
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
 
-```
-
-## Eco-Congregation Scotland groups shown by concentration in administrative regions (LAU)
-
-```{r plot_admin_ecs_admin2_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 2"}
-
-tm_shape(admin_lev2) + 
-  tm_fill(col = "ecs_count", palette = "Oranges") +
-  tm_style("gray", title = "Figure 2") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Concentration of ECS groups", 
-            frame = FALSE, 
-            title.size = .7, 
-            inner.margins = c(0.1, 0.1, 0.05, 0.05)
-            )
 ```
 
 
@@ -573,6 +566,7 @@ urbanrural$dtas_percent<- prop.table(urbanrural$dtas_count)
 # calculate count of permaculture for fields in urbanrural
 urbanrural$permaculture_count <- poly.counts(permaculture,urbanrural)
 urbanrural$permaculture_percent<- prop.table(urbanrural$permaculture_count)
+
 ```
 
 Rather than bifurcate congregations into an urban/rural dichotomy, for this study we used the Scottish Government's six-point remoteness scale to categorise eco-congregations along a spectrum of highly populated to remote areas. This 8-fold scale (calculated biennially) offers a more nuanced measurement that combines measurements of remoteness and population along the following lines:
@@ -619,7 +613,7 @@ ggplot(urbanrural_gathered,
 # Generate static plot for printing
 
 tm_shape(urbanrural_sf_simplified) + 
-  tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001) +
+  tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001, n=8) +
   tm_shape(ecs_sf) +
   tm_dots("red", size = .05, alpha = .4) +
   tm_scale_bar(position = c("left", "bottom")) +
@@ -909,6 +903,13 @@ st_crs(wildland_buf500) <- 27700
 st_crs(forestinv) <- 27700
 st_crs(forestinv_buf50) <- 27700
 st_crs(forestinv_buf500) <- 27700
+
+# TODO: consider subsetting instead here, e.g.:
+
+# plot(lnd, col = "lightgrey") # plot the london_sport object
+# sel <- lnd$Partic_Per > 25
+# plot(lnd[ sel, ], col = "turquoise", add = TRUE) # add selected zones to map
+# from https://gotellilab.github.io/Bio381/StudentPresentations/SpatialDataTutorial.html
 
 ecs_sf_sssi <- st_within(ecs_sf, sssi)
 ecs_sf_sssi50m <- st_within(ecs_sf, sssi_buf50)
