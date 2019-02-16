@@ -37,7 +37,7 @@ output:
 
 ```{r setup, include=FALSE}
 require(knitr)
-library(kableExtra)
+require(kableExtra)
 knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE, dpi=300, fig.width=7)
 # TODO: consider implementing knitcitations - https://github.com/cboettig/knitcitations
 # TODO: fix simultaneous output towards PDF, see here: https://stackoverflow.com/questions/23621012/display-and-save-the-plot-simultaneously-in-r-rstudio
@@ -54,7 +54,7 @@ local({r <- getOption("repos")
        r["CRAN"] <- "https://cloud.r-project.org" 
        options(repos=r)
 })
-# TODO: need to alter this to use new sf data class as sp is deprecated
+# TODO: remove sp etc. once sf is fully implemented
 require(RCurl) # used for fetching reproducible datasets
 require(sf) # new simplefeature data class, supercedes sp in many ways
 require(sp) # needed for proj4string, deprecated by sf()
@@ -64,7 +64,7 @@ require(rgeos) # deprecated by sf()
 require(maptools)
 require(ggplot2)
 require(tmap) # using as an alternative to base r graphics and ggplot for geospatial plots
-require(ggmap)
+# require(ggmap)
 require(broom) # required for tidying SPDF to data.frame for ggplot2
 require(tidyr)  # using for grouped bar plot
 require(plyr)
@@ -159,7 +159,7 @@ ecs$registration <- as.Date(ecs$registration, "%Y-%m-%d")
 # ecs$award2 <- as.Date(ecs$award2)
 # ecs$award3 <- as.Date(ecs$award3)
 # ecs$award4 <- as.Date(ecs$award4)
-# TODO: add "R" to command in paragraph below once this is resolved
+# TODO: add "R" to command in paragraph below once this is resolved, do search for all non 'r instances
 ecs_complete_cases <- ecs[complete.cases(ecs$year_begun),]
 ```
 
@@ -315,7 +315,7 @@ admin_lev2$ecs_count_pownorm <- admin_lev2$ecs_count * admin_lev2$pow_percent
 
 Perhaps the first important question to ask of these groups is, where are they? I calculated the spread of eco-congregations and transition groups across each of the 32 council areas in Scotland. Every council area in Scotland has at least one eco-congregation or transition group). The most are located in `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$ecs_count)])`, with `r max(admin_lev1$ecs_count)`, whereas the mean among all the 32 council areas is `r mean(admin_lev1$ecs_count)`, with a median of `r median(admin_lev1$ecs_count)`, standard deviation of `r sd(admin_lev1$ecs_count)`, and interquartile range of `r IQR(admin_lev1$ecs_count)`. The following choropleth maps show the relative concentration of eco-congregations (indicated by yellow to red). 
 
-(*TODO: need to implement*) Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake. Note, for the sake of a more accurate visual communication, we have also marked out areas of Scotland that are uninhabited with hash marks on the map of agricultural parishes. (*TODO: this will be done in the final draft, once I get my image masking fixed!*).[^15571030]
+Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake. Note, for the sake of a more accurate visual communication, we have also marked out areas of Scotland that are uninhabited with hash marks on the map of agricultural parishes. (*TODO: this will be done in the final draft, once I get my image masking fixed!*).[^15571030]
 
 ## Eco-Congregation Scotland groups shown by concentration in administrative regions (NUTS3)
 
@@ -323,15 +323,7 @@ Perhaps the first important question to ask of these groups is, where are they? 
 # Note: for more information on EU administrative levels, see here: https://ec.europa.eu/eurostat/web/nuts/national-structures-eu
 # TODO: Need to clip choropleth polygons to buildings shapefile
 
-# Draw initial choropleth map of ECS concentration (using sp, rather than sf data)
-# Note: some ideas taken from here: https://unconj.ca/blog/choropleth-maps-with-r-and-ggplot2.html
-# See also here: https://timogrossenbacher.ch/2016/12/beautiful-thematic-maps-with-ggplot2-only/
-# TODO: fix issues with cut_interval / cut_number below. Current error: "'breaks' are not unique calls"
-# See here: https://stackoverflow.com/questions/16184947/cut-error-breaks-are-not-unique
-# Reference here: https://ggplot2.tidyverse.org/reference/cut_interval.html
-# Reference re: size and scale for plots: http://sape.inf.usi.ch/quick-reference/ggplot2/size
-
-# Switching to tmap from ggplot
+# Draw initial choropleth map of ECS concentration (using tmap and sf below by default)
 
 tm_shape(admin_lev1) + 
   tm_fill(col = "ecs_count", palette = "Oranges") +
@@ -353,14 +345,11 @@ tm_shape(admin_lev1) +
 
 ## Eco-Congregation Scotland groups shown by concentration in administrative regions (LAU)
 
-```{r plot_admin_ecs_admin2_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 3"}
+```{r plot_admin_ecs_admin2_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 2"}
 
 tm_shape(admin_lev2) + 
   tm_fill(col = "ecs_count", palette = "Oranges") +
-#  tm_shape(ecs_sf) +
-#  tm_dots("red", size = .05, alpha = .4) +
-#  tm_scale_bar(position = c("left", "bottom")) +
-  tm_style("gray", title = "Figure 3") +
+  tm_style("gray", title = "Figure 2") +
   tm_credits("Data: UK Data Service (OGL)
               & Jeremy H. Kidwell,
               Graphic is CC-by-SA 4.0",
@@ -374,13 +363,13 @@ tm_shape(admin_lev2) +
 
 
 
-```{r plot_admin_ecs_normed_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 2"}
+```{r plot_admin_ecs_normed_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 3"}
 
 # Plot out first figure with normalised data: 
 
 tm_shape(admin_lev1) + 
-  tm_fill(col = "ecs_count_pownorm_scaled", palette = "Oranges") +
-  tm_style("gray", title = "Figure 4") +
+  tm_fill(col = "ecs_count_pownorm_scaled", palette = "Oranges", n = 5) +
+  tm_style("gray", title = "Figure 3a") +
   tm_credits("Data: UK Data Service (OGL)
               & Jeremy H. Kidwell,
               Graphic is CC-by-SA 4.0",
@@ -394,8 +383,8 @@ tm_shape(admin_lev1) +
 # Plot out second figure with normalised data:  
 
 tm_shape(admin_lev1) + 
-  tm_fill(col = "ecs_count_popnorm_scaled", palette = "Oranges") +
-  tm_style("gray", title = "Figure 5") +
+  tm_fill(col = "ecs_count_popnorm_scaled", palette = "Oranges", n = 5) +
+  tm_style("gray", title = "Figure 3b") +
   tm_credits("Data: UK Data Service (OGL)
               & Jeremy H. Kidwell,
               Graphic is CC-by-SA 4.0",
@@ -405,9 +394,6 @@ tm_shape(admin_lev1) +
             title.size = .7, 
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
-
-# TODO: Force bins to be consistently at count of 5?
-
 ```
 
 Given the way population and places of worship are unevenly distributed across Scotland it is important to represent data in terms of relative distribution. For this study, we attempted to "normalise" our data in two different ways, (1) as shown by Figure 2 above, by taking population figures from the 2011 census (see data sheet in Appendix A) and (2) by adjusting relative to the number of places of worship in each council region.[^15914204] The latter of these two can yield particularly unexpected results. Thus, of the `r length(pow_pointX)` "places of worship" in Scotland, the highest concentration is actually the `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$pow_count)])` region, with `r max(admin_lev1$pow_count)`, second is `r max( admin_lev1$pow_count[admin_lev1$pow_count!=max(admin_lev1$pow_count)] )` (`r as.character(admin_lev1$NAME_2[which.max( admin_lev1$pow_count[admin_lev1$pow_count!=max(admin_lev1$pow_count)])] )`). Rank of Council Areas by population and number of places of worship is also included in Appendix A.
@@ -426,7 +412,7 @@ Turning to the total of `r length(pow_pointX)` "places of worship" in Scotland, 
 
 Whereas our initial measurements indicated a prominent lead for Edinburgh, by normalising our data in this way we can highlight the stronger-than-expected presence of several others that might otherwise escape notice because they lie in a region with significantly lower population or numerically less places of worship. Taking the PointX data on "places of worship" in Scotland, we find a less dramatic picture, but also a slightly different one. The positive outliers include East Renfrewshire (3.4x) Edinburgh (2.9x), Stirling (2.2), West Lothian (1.9x) and Aberdeen (1.5x). Again, negative outliers are far less dramatic, with only Midlothian possessing a ratio of more than 100% negative difference from the number of "places of worship" at 1.5x *fewer*.
 
-```{r create_admin_barplot}
+```{r create_admin_barplot, fig.width=4, fig.cap="Figure 4"}
 # comvert admin back to dataframe for analysis
 admin.df <- data.frame(admin_lev1)
 
@@ -435,8 +421,6 @@ admin.df <- data.frame(admin_lev1)
 
 admin_gathered <- gather(data.frame(admin_lev1), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
 
-# TODO: make custom legend labels, remove X axis label
-# Ambitious TODO: can we link Admin area titles to locations on adjacent map with lines
 ggplot(admin_gathered, 
        aes(fill=group_type, y=number, x=name)) + 
   geom_bar(position="dodge", stat="identity") + 
@@ -454,123 +438,83 @@ ggplot(admin_gathered,
 
 ## Other environmental groups shown by concentration in administrative regions (NUTS)
 
-```{r create_choropleth_others, fig.width=4, fig.show="hold", fig.cap="Figure 4"}
+```{r create_choropleth_others, fig.width=4, fig.show="hold", fig.cap="Figure 5"}
 
-# TODO: add bubbleplot with dots on map, as here: https://www.r-graph-gallery.com/330-bubble-map-with-ggplot2/ or here: https://www.r-graph-gallery.com/177-map-with-proportional-symbols/
+# TODO: consider switching to two-dimensional kernel densities instead of dots as shown here: https://github.com/mtennekes/tmap/tree/master/demo/LondonCrimes
 
-ggplot() + 
-  geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_interval(admin_lev1_fortified$ecs_count, 5)), 
-               data = admin_lev1_fortified, 
-               colour = 'black', 
-               alpha = .7, 
-               size = .005) + 
-  scale_fill_brewer(palette = "Oranges") + 
-  labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 5", 
-       subtitle="Concentration of ECS groups",
-       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
-                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
-                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
-                       sep = "\n")) + 
-  theme_void() + 
-  theme(text = element_text(family = "Arial Narrow", size = 8),
-          plot.title = element_text(size = 12, face = "bold"),
-          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
-          panel.border = element_rect(fill = NA, colour = "#cccccc"),
-          legend.text = element_text(size = 8),
-          legend.position = c(0.25, 0.85))
+tm_shape(admin_lev1) + 
+  tm_fill(col = "ecs_count", palette = "Oranges", n = 5) +
+  tm_shape(ecs_sf) +
+  tm_dots("red", size = .02, alpha = .4) +
+  tm_style("gray", title = "Figure 5a") +
+  tm_credits("Data: UK Data Service (OGL)
+              & Jeremy H. Kidwell,
+              Graphic is CC-by-SA 4.0",
+    position = c("right", "bottom")) +
+  tm_layout(title = "Concentration of ECS groups", 
+            frame = FALSE, 
+            title.size = .7, 
+            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            )
 
-ggplot() + 
-  geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_interval(admin_lev1_fortified$transition_count, 5)), 
-               data = admin_lev1_fortified, 
-               colour = 'black', 
-               alpha = .7, 
-               size = .005) + 
-  scale_fill_brewer(palette = "Oranges") + 
-  labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 6", 
-       subtitle="Concentration of Transition groups",
-       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
-                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
-                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
-                       sep = "\n")) + 
-  theme_void() + 
-  theme(text = element_text(family = "Arial Narrow", size = 8),
-          plot.title = element_text(size = 12, face = "bold"),
-          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
-          panel.border = element_rect(fill = NA, colour = "#cccccc"),
-          legend.text = element_text(size = 8),
-          legend.position = c(0.25, 0.85))
+tm_shape(admin_lev1) + 
+  tm_fill(col = "transition_count", palette = "Oranges", n = 5) +
+  tm_shape(transition_sf) +
+  tm_dots("red", size = .02, alpha = .4) +
+  tm_style("gray", title = "Figure 5b") +
+  tm_credits("Data: UK Data Service (OGL)
+              & Jeremy H. Kidwell,
+              Graphic is CC-by-SA 4.0",
+    position = c("right", "bottom")) +
+  tm_layout(title = "Concentration of Transition groups", 
+            frame = FALSE, 
+            title.size = .7, 
+            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            )
 
-ggplot() + 
-  geom_polygon(aes(x = long, y = lat, group = group, 
-                   fill = cut_interval(admin_lev1_fortified$dtas_count, 5)), 
-               data = admin_lev1_fortified, 
-               colour = 'black', 
-               alpha = .7, 
-               size = .005) + 
-  scale_fill_brewer(palette = "Oranges") + 
-  labs(x = NULL, y = NULL, fill = "Groups",
-       title = "Figure 7", 
-       subtitle="Concentration of DTAS groups",
-       caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
-                       "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
-                       "You may redistribute this graphic under the terms of the CC-by-SA 4.0 license.",
-                       sep = "\n")) + 
-  theme_void() + 
-  theme(text = element_text(family = "Arial Narrow", size = 8),
-          plot.title = element_text(size = 12, face = "bold"),
-          plot.margin = unit(c(0, 0.25, 0.0, 0.25), "in"),
-          panel.border = element_rect(fill = NA, colour = "#cccccc"),
-          legend.text = element_text(size = 8),
-          legend.position = c(0.25, 0.85))
+tm_shape(admin_lev1) + 
+  tm_fill(col = "dtas_count", palette = "Oranges", n = 5) +
+  tm_shape(dtas_sf) +
+  tm_dots("red", size = .02, alpha = .4) +
+  tm_style("gray", title = "Figure 5c") +
+  tm_credits("Data: UK Data Service (OGL)
+              & Jeremy H. Kidwell,
+              Graphic is CC-by-SA 4.0",
+    position = c("right", "bottom")) +
+  tm_layout(title = "Concentration of DTAS groups", 
+            frame = FALSE, 
+            title.size = .7, 
+            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            )
+
+tm_shape(admin_lev1) + 
+  tm_fill(col = "permaculture_count", palette = "Oranges", n = 5) +
+  tm_shape(permaculture_sf) +
+  tm_dots("red", size = .02, alpha = .4) +
+  tm_style("gray", title = "Figure 5d") +
+  tm_credits("Data: UK Data Service (OGL)
+              & Jeremy H. Kidwell,
+              Graphic is CC-by-SA 4.0",
+    position = c("right", "bottom")) +
+  tm_layout(title = "Concentration of Permaculture groups", 
+            frame = FALSE, 
+            title.size = .7, 
+            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            )
 
 ```
 
 ## Cartogram Comparisons
 
-```{r create_cartograms, fig.width=4, fig.show="hold", fig.cap="Figure 4"}
+```{r create_cartograms, fig.width=4, fig.show="hold", fig.cap="Figure 6"}
 
 # # TODO: plot as animated chorogram: 
 # # https://www.r-graph-gallery.com/331-basic-cartogram/
 # # see here for example using sf: https://github.com/dreamRs/topogRam
-
+# # example using tmap here: https://github.com/mtennekes/tmap/raw/8177c5d4e36b480f109474b1ab3f5f073cefe7d5/examples/tm_fill.R
 # library(cartogram)
  
-# # construct a cartogram using the population in 2005
-# afr_cartogram <- cartogram(afr, "POP2005", itermax=5)
-
-# # It is a new geospatial object: we can use all the usual techniques on it! Let's start with a basic ggplot2 chloropleth map:
-# library(tidyverse)
-# library(broom)
-# spdf_fortified <- tidy(afr_cartogram)
-# spdf_fortified = spdf_fortified %>% left_join(. , afr_cartogram@data, by=c("id"="ISO3")) 
-# ggplot() +
-#   geom_polygon(data = spdf_fortified, aes(fill = POP2005, x = long, y = lat, group = group) , size=0, alpha=0.9) +
-#   coord_map() +
-#   theme_void()
-  
-#   # As seen before, we can do better with a bit of customization
-# library(viridis)
-# ggplot() +
-#   geom_polygon(data = spdf_fortified, aes(fill = POP2005/1000000, x = long, y = lat, group = group) , size=0, alpha=0.9) +
-#   theme_void() +
-#   scale_fill_viridis(name="Population (M)", breaks=c(1,50,100, 140), guide = guide_legend( keyheight = unit(3, units = "mm"), keywidth=unit(12, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1)) +
-#   labs( title = "Africa 2005 Population" ) +
-#   ylim(-35,35) +
-#   theme(
-#     text = element_text(color = "#22211d"), 
-#     plot.background = element_rect(fill = "#f5f5f4", color = NA), 
-#     panel.background = element_rect(fill = "#f5f5f4", color = NA), 
-#     legend.background = element_rect(fill = "#f5f5f4", color = NA),
-#     plot.title = element_text(size= 22, hjust=0.5, color = "#4e4d47", margin = margin(b = -0.1, t = 0.4, l = 2, unit = "cm")),
-#     legend.position = c(0.2, 0.26)
-#   ) +
-#   coord_map()
-  
-# # Add animated version:
+# # Make animated:
 
 # https://github.com/thomasp85/gganimate
  
@@ -646,7 +590,7 @@ The key question which this analysis seeks to answer is whether ECS, or the othe
 
 Of all the groups surveyed in this study, Eco-Congregation Scotland is the most heavily concentrated in large urban areas (33.53%), exceeding by almost 50% the rate for all places of worship (22.96% in large urban areas). Transition is a much more modest 20% and development trusts a bit lower at 15%. It is interesting to note that the rate of ECS concentration in these large urban areas matches the level of overall population distribution (34.5%). On the other end of the scale, Eco-Congregation Scotland is the least concentrated in remote rural areas (with 3.93% on level 7 and 5.44% on level 8 on the urban-rural scale), though again, they correlate roughly to the general population distribution (3.2% and 2.9% respectively). Places of worship outpace both the population of Scotland and the footprint of Eco-Congregation Scotland, with 14.98% in very remote rural areas, but this is exceeded by transition at 16.47% and both by Scottish community development trusts at 32.14%. So while Eco-Congregation Scotland correlates roughly with Scottish population distribution across the urban-rural scale, it has a considerably more urban profile than either of the other two groups surveyed.
 
-```{r create_ur_barplot}
+```{r create_ur_barplot, fig.width=4, fig.cap="Figure 7"}
 # Need to flatten urbanrural based on all the count columns and generate using ggplot
 
 urbanrural_gathered <- gather(data.frame(urbanrural), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
@@ -658,13 +602,13 @@ ggplot(urbanrural_gathered,
   geom_bar(position="dodge", stat="identity") + 
   coord_flip() + 
   labs(
-    title = "Figure 8", 
+    title = "Figure 7", 
     subtitle="Comparison of Groups by UrbanRural category", 
     fill = "Groups")
 ```
 ## Eco-Congregation Scotland\nconcentrations in Urban Rural 8-fold classifications
 
-```{r create_urbanrural_ecs_chart_choropleth, message=FALSE, warning=FALSE}
+```{r create_urbanrural_ecs_chart_choropleth, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 8"}
 
 # Using tmap as an alternative to ggplot and base R graphics
 
@@ -679,7 +623,7 @@ tm_shape(urbanrural_sf_simplified) +
   tm_shape(ecs_sf) +
   tm_dots("red", size = .05, alpha = .4) +
   tm_scale_bar(position = c("left", "bottom")) +
-  tm_style("gray", title = "Figure 9") +
+  tm_style("gray", title = "Figure 8") +
   tm_credits("Data: UK Data Service (OGL)
               & Jeremy H. Kidwell,
               Graphic is CC-by-SA 4.0",
@@ -793,7 +737,7 @@ allgroups_gathered <- gather(allgroups_simd, key = "simd_category", value = "ran
 
 ### Barplot
 
-```{r create_simd_barplot}
+```{r create_simd_barplot, fig.width=4, fig.cap="Figure 9"}
 # Run plots
 
 # Faceted stacked bar plot
@@ -817,7 +761,7 @@ ggplot(data=allgroups_gathered,
   labs(x = NULL, 
        y = "SIMD Rank (in bins by quantile)", 
        fill = "Groups",
-       title = "Figure 10", 
+       title = "Figure 9", 
        subtitle="Distribution of Groups across IMD Domains by Rank",
        caption = paste("Jeremy H. Kidwell :: jeremykidwell.info",
                        "Data: UK Data Service (OGL) & Jeremy H. Kidwell",
@@ -831,7 +775,7 @@ ggplot(data=allgroups_gathered,
 ### Boxplot
 
 
-```{r create_simd_boxplot}
+```{r create_simd_boxplot, fig.width=4, fig.cap="Figure 10"}
 
 # simd boxplot
 
@@ -1124,7 +1068,7 @@ write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", ro
 ```
 
 
-```{r sssi_ecs_buffer_plot, message=FALSE, warning=FALSE}
+```{r sssi_ecs_buffer_plot, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 11"}
 
 # Plot SSSI polygons (showing buffers) with ECS points (coloured by location)
 
@@ -1138,7 +1082,7 @@ tm_shape(sssi_simplified) +
 #  tm_shape(ecs_sf_sssi500m) + tm_dots("orange", size = .5, alpha = .4) +
 #  tm_shape(ecs_sf_sssibeyond500m) + tm_dots("red", size = .5, alpha = .4)
   tm_scale_bar(position = c("left", "bottom")) +
-  tm_style("gray", title = "Figure 12") +
+  tm_style("gray", title = "Figure 11") +
   tm_credits("Data: UK Data Service (OGL)
               & Jeremy H. Kidwell,
               Graphic is CC-by-SA 4.0",
@@ -1151,7 +1095,7 @@ tm_shape(sssi_simplified) +
 
 ```
 
-```{r all_wilderness_ecs_plot, message=FALSE, warning=FALSE}
+```{r all_wilderness_ecs_plot, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 12"}
 
 # Plot map with all wilderness shapes on it
 
