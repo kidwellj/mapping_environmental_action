@@ -329,18 +329,17 @@ tm_shape(admin_lev2) +
   tm_fill(col = "ecs_count", palette = "Oranges", title = "Concentration of ECS groups") +
   tm_borders(alpha=.5) +
   tm_shape(admin_lev1) +
-  tm_borders(lwd=2) +
+  tm_borders(lwd=0.8) +
   # TODO: Change title field "name" to match admin1
   # also consider scaling text size using area #  quick plot example: 
 # qtm(World, fill = "income_grp", text = "iso_a3", text.size = "AREA") # use "World$" to see the two attributes: income_grp and iso_a3, text.size= area: text is sized increasingly with coutry area size.
-  tm_text("name", size=.8, shadow=TRUE,
-          bg.color="white", bg.alpha=.25) +
+  # tm_text("name", size=.2, shadow=TRUE, bg.color="white", bg.alpha=.25) +
 #  tm_shape(ecs_sf) +
 #  tm_dots("red", size = .05, alpha = .4) +
 #  tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
   tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
-              size = 0.7, 
+              size = 0.4, 
               position = c("left", "bottom"),
               just = c("left", "bottom"),
               align = "left") +
