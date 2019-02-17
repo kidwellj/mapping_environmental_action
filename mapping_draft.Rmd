@@ -344,7 +344,7 @@ tm_shape(admin_lev2) +
               position = c("left", "bottom"),
               just = c("left", "bottom"),
               align = "left") +
-  tm_layout(asp=NA
+  tm_layout(asp = NA,
             frame = FALSE, 
             title = "Figure 1a", 
             title.size = .7,
