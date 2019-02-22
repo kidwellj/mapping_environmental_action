@@ -240,6 +240,9 @@ permaculture_sf <- st_as_sf(permaculture, coords = c("X", "Y"), crs=27700)
 # calculate count of ECS for fields in admin and provide percentages
 # JK Note: need to convert from poly.counts, which uses sp() to st_covers() which uses sf() - cf. https://stackoverflow.com/questions/45314094/equivalent-of-poly-counts-to-count-lat-long-pairs-falling-inside-of-polygons-w#45337050
 
+ecs <- spTransform(ecs, proj4string(admin_lev1))
+transition <- spTransform(transition, proj4string(admin_lev1))
+
 admin_lev1$ecs_count <- poly.counts(ecs,admin_lev1)
 admin_lev1$ecs_percent<- prop.table(admin_lev1$ecs_count)
 # calculate count of places of worship in PointX db for fields in admin and provide percentages
@@ -659,7 +662,8 @@ ggplot(urbanrural_gathered,
 # Generate static plot for printing
 
 tm_shape(urbanrural_sf_simplified) + 
-  tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001, n=9, title = "UrbanRural 8 Fold Scale") +
+  tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001, n=9, 
+              title = "UrbanRural 8 Fold Scale") +
   tm_shape(ecs_sf) +
   tm_dots("red", size = .05, alpha = .2) +
   tm_scale_bar(position = c("left", "bottom")) +
@@ -1199,7 +1203,7 @@ admin_lev1_df %>%
 
 ```{r admin_table_withproportions}
 
-admin_lev1_prop_df <- as_data_frame(admin_lev1[,c(3:14,23:26)])
+admin_lev1_prop_df <- as_data_frame(admin_lev1[,c(3,5:14,22:25)])
 
 admin_lev1_prop_df %>%
   kable(format = "html", col.names = colnames(admin_lev1_prop_df)) %>%
