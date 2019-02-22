@@ -363,31 +363,46 @@ tm_shape(admin_lev2) +
 
 # Plot out first figure with normalised data: 
 
-tm_shape(admin_lev1) + 
-  tm_fill(col = "ecs_count_pownorm_scaled", palette = "Oranges", n = 5) +
-  tm_style("gray", title = "Figure 3a") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Concentration of ECS groups, data normalised by places of worship", 
+tm_shape(admin_lev2) + 
+  tm_fill(col = "ecs_count_pownorm_scaled", palette = "Oranges", n = 5, title = "Concentration of ECS groups, data normalised by places of worship") +
+  tm_borders(alpha=.5, lwd=0.1) +
+  tm_shape(admin_lev1) +
+  tm_borders(lwd=0.6) +
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
+            title = "Figure 3a",
             frame = FALSE, 
             title.size = .7, 
+            legend.title.size = .7,
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
 
 # Plot out second figure with normalised data:  
 
-tm_shape(admin_lev1) + 
-  tm_fill(col = "ecs_count_popnorm_scaled", palette = "Oranges", n = 5) +
-  tm_style("gray", title = "Figure 3b") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Concentration of ECS groups, data normalised by places of worship", 
+tm_shape(admin_lev2) + 
+  tm_fill(col = "ecs_count_popnorm_scaled", palette = "Oranges", n = 5, 
+          title = "Concentration of ECS groups, data normalised by places of worship") +
+  tm_borders(alpha=.5, lwd=0.1) +
+  tm_shape(admin_lev1) +
+  tm_borders(lwd=0.6) +
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
             frame = FALSE, 
+            title = "Figure 3b",
             title.size = .7, 
+            legend.title.size = .7,
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
 ```
@@ -438,66 +453,94 @@ ggplot(admin_gathered,
 
 # TODO: consider switching to two-dimensional kernel densities instead of dots as shown here: https://github.com/mtennekes/tmap/tree/master/demo/LondonCrimes
 
-tm_shape(admin_lev1) + 
-  tm_fill(col = "ecs_count", palette = "Oranges", n = 5) +
+tm_shape(admin_lev2) + 
+  tm_fill(col = "ecs_count", palette = "Oranges", n = 5, title = "Concentration of ECS groups") +
+  tm_borders(alpha=.5, lwd=0.1) +
+  tm_shape(admin_lev1) +
+  tm_borders(lwd=0.6) +
   tm_shape(ecs_sf) +
-  tm_dots("red", size = .02, alpha = .4) +
-  tm_style("gray", title = "Figure 5a") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Concentration of ECS groups", 
+  tm_dots("red", size = .02, alpha = .2) +
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
             frame = FALSE, 
-            title.size = .7, 
+            title = "Figure 5a", 
+            title.size = .7,
+            legend.title.size = .7,
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
 
-tm_shape(admin_lev1) + 
-  tm_fill(col = "transition_count", palette = "Oranges", n = 5) +
+tm_shape(admin_lev2) + 
+  tm_fill(col = "transition_count", palette = "Oranges", n = 5, title = "Concentration of Transition groups") +
+  tm_borders(alpha=.5, lwd=0.1) +
+  tm_shape(admin_lev1) +
+  tm_borders(lwd=0.6) +
   tm_shape(transition_sf) +
-  tm_dots("red", size = .02, alpha = .4) +
-  tm_style("gray", title = "Figure 5b") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Concentration of Transition groups", 
+  tm_dots("red", size = .02, alpha = .2) +
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
             frame = FALSE, 
-            title.size = .7, 
+            title = "Figure 5b", 
+            title.size = .7,
+            legend.title.size = .7,
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
 
-tm_shape(admin_lev1) + 
-  tm_fill(col = "dtas_count", palette = "Oranges", n = 5) +
+tm_shape(admin_lev2) + 
+  tm_fill(col = "dtas_count", palette = "Oranges", n = 5, title = "Concentration of DTAS groups") +
+  tm_borders(alpha=.5, lwd=0.1) +
+  tm_shape(admin_lev1) +
+  tm_borders(lwd=0.6) +
   tm_shape(dtas_sf) +
-  tm_dots("red", size = .02, alpha = .4) +
-  tm_style("gray", title = "Figure 5c") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Concentration of DTAS groups", 
+  tm_dots("red", size = .02, alpha = .2) +
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
             frame = FALSE, 
-            title.size = .7, 
+            title = "Figure 5c", 
+            title.size = .7,
+            legend.title.size = .7,
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
 
-tm_shape(admin_lev1) + 
-  tm_fill(col = "permaculture_count", palette = "Oranges", n = 5) +
+tm_shape(admin_lev2) + 
+  tm_fill(col = "permaculture_count", palette = "Oranges", n = 5, 
+          title = "Concentration of Permaculture groups") +
+  tm_borders(alpha=.5, lwd=0.1) +
+  tm_shape(admin_lev1) +
+  tm_borders(lwd=0.6) +
   tm_shape(permaculture_sf) +
-  tm_dots("red", size = .02, alpha = .4) +
-  tm_style("gray", title = "Figure 5d") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Concentration of Permaculture groups", 
+  tm_dots("red", size = .02, alpha = .2) +
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
             frame = FALSE, 
-            title.size = .7, 
+            title = "Figure 5d", 
+            title.size = .7,
+            legend.title.size = .7,
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
-
 ```
 
 ## Cartogram Comparisons
@@ -616,18 +659,21 @@ ggplot(urbanrural_gathered,
 # Generate static plot for printing
 
 tm_shape(urbanrural_sf_simplified) + 
-  tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001, n=8) +
+  tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001, n=9, title = "UrbanRural 8 Fold Scale") +
   tm_shape(ecs_sf) +
-  tm_dots("red", size = .05, alpha = .4) +
+  tm_dots("red", size = .05, alpha = .2) +
   tm_scale_bar(position = c("left", "bottom")) +
-  tm_style("gray", title = "Figure 8") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "UrbanRural 8 Fold Scale", 
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
+            title = "Figure 8", 
             frame = FALSE, 
             title.size = .7, 
+            legend.title.size = .7,
             inner.margins = c(0.1, 0.1, 0.05, 0.05)
             )
 
