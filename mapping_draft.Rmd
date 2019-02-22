@@ -311,6 +311,10 @@ admin_lev2$pow_percent <- prop.table(admin_lev2$pow_count)
 admin_lev2$ecs_count_popnorm <- admin_lev2$ecs_count * admin_lev2$pop_percent
 # Normalise ecs_count using places of worship counts (using ArcGIS method)
 admin_lev2$ecs_count_pownorm <- admin_lev2$ecs_count * admin_lev2$pow_percent
+
+# Preserve scale
+admin_lev2$ecs_count_popnorm_scaled <- admin_lev2$ecs_count_popnorm*(sum(admin_lev2$ecs_count)/sum(admin_lev2$ecs_count_popnorm))
+admin_lev2$ecs_count_pownorm_scaled <- admin_lev2$ecs_count_pownorm*(sum(admin_lev2$ecs_count)/sum(admin_lev2$ecs_count_pownorm))
 ```
 
 Perhaps the first important question to ask of these groups is, where are they? I calculated the spread of eco-congregations and transition groups across each of the 32 council areas in Scotland. Every council area in Scotland has at least one eco-congregation or transition group). The most are located in `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$ecs_count)])`, with `r max(admin_lev1$ecs_count)`, whereas the mean among all the 32 council areas is `r mean(admin_lev1$ecs_count)`, with a median of `r median(admin_lev1$ecs_count)`, standard deviation of `r sd(admin_lev1$ecs_count)`, and interquartile range of `r IQR(admin_lev1$ecs_count)`. The following choropleth maps show the relative concentration of eco-congregations (indicated by yellow to red). 
