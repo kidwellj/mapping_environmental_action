@@ -1123,7 +1123,8 @@ write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", ro
 # Plot SSSI polygons (showing buffers) with ECS points (coloured by location)
 
 tm_shape(sssi_simplified) + 
-  tm_fill(col = "green", alpha = 0.3, lwd=0.001) + 
+  tm_fill(col = "green", alpha = 0.3, lwd=0.001, 
+          title = "Sites of Special Scientific Interest and ECS Groups") + 
 #  tm_shape(sssi_buf50) + tm_borders(lwd=0.001) +
 #  tm_shape(sssi_buf500) + tm_borders(lwd=0.001)
   tm_shape(admin_lev1_sf) + tm_borders(lwd=0.1) +
@@ -1131,17 +1132,19 @@ tm_shape(sssi_simplified) +
 #  tm_shape(ecs_sf_sssi50m) + tm_dots("yellow", size = .5, alpha = .4) + 
 #  tm_shape(ecs_sf_sssi500m) + tm_dots("orange", size = .5, alpha = .4) +
 #  tm_shape(ecs_sf_sssibeyond500m) + tm_dots("red", size = .5, alpha = .4)
-  tm_scale_bar(position = c("left", "bottom")) +
-  tm_style("gray", title = "Figure 11") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Sites of Special Scientific Interest and ECS Groups", 
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
             frame = FALSE, 
-            title.size = .7
+            title = "Figure 11",
+            title.size = .7,
+            legend.title.size = .7
             )
-
 
 ```
 
@@ -1149,20 +1152,23 @@ tm_shape(sssi_simplified) +
 
 # Plot map with all wilderness shapes on it
 
-tm_shape(sssi_simplified) + tm_fill(col = "blue", alpha = 0.3, lwd=0.001) + 
+tm_shape(sssi_simplified) + tm_fill(col = "blue", alpha = 0.3, lwd=0.001, title = "Wilderness Areas") + 
   tm_shape(wildland_simplified) + tm_fill(col = "green", alpha = 0.3, lwd=0.001) + 
   tm_shape(forestinv_simplified) + tm_fill(col = "orange", alpha = 0.3, lwd=0.001) + 
   tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
   tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4) +
-  tm_scale_bar(position = c("left", "bottom")) +
-  tm_style("gray", title = "Figure 12") +
-  tm_credits("Data: UK Data Service (OGL)
-              & Jeremy H. Kidwell,
-              Graphic is CC-by-SA 4.0",
-    position = c("right", "bottom")) +
-  tm_layout(title = "Wilderness Areas", 
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_style("gray") +
+  tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
+              size = 0.4, 
+              position = c("left", "bottom"),
+              just = c("left", "bottom"),
+              align = "left") +
+  tm_layout(asp = NA,
             frame = FALSE, 
-            title.size = .7
+            title = "Figure 12",
+            title.size = .7,
+            legend.title.size = .7
             )
 
 ```
