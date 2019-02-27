@@ -64,7 +64,7 @@ require(rgeos) # deprecated by sf()
 require(maptools)
 require(ggplot2)
 require(tmap) # using as an alternative to base r graphics and ggplot for geospatial plots
-# require(ggmap)
+require(grid) # using for inset maps on tmap
 require(broom) # required for tidying SPDF to data.frame for ggplot2
 require(tidyr)  # using for grouped bar plot
 require(plyr)
@@ -93,16 +93,9 @@ if (dir.exists("derivedData") == FALSE) {
 # it is falling out of use in many cases, so will be defaulting to WGS84 in future 
 # data-sets and papers.
 
-# TODO: make canonical CRS definitions and use consistently; remove proj4string(admin_lev1) and other similar instances below. 
-wgs84 <- "+proj=longlat +datum=WGS84"
-bng_old <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
-bng <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"
-osgb36 <- "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs +ellps=airy +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894"
-
-# Note, shifting to EPSG codes given the usage of this approach with sf()
-bng_epsg <- CRS("+init=epsg:27700")
-osgb36 <- CRS("+init=epsg:7405")
-wgs84_epsg <- CRS("+init=epsg:4326")
+# Working with EPSG codes for spatialfeature CRS given the usage of this approach with sf()
+bng <- CRS("+init=epsg:27700")
+wgs84 <- CRS("+init=epsg:4326")
 
 # Configure fonts for plots below
 
@@ -123,10 +116,11 @@ Until recently, environmentalism has been treated by governments and environment
 # ...turn it into a SpatialPointsDataFrame---------------------
 # TODO: upload ECS-GIS-Locations_3.0.csv to zenodo repository, i.e.
 ecs <- read.csv("data/ECS-GIS-Locations_3.0.csv", comment.char="#")
-ecs_sf <- st_as_sf(ecs, coords = c("X", "Y"), crs=27700)
 # unnecessary with advent of sf (above)
 coordinates(ecs) <- c("X", "Y")
-proj4string(ecs) = CRS(bng)
+# Modified to use EPSG code directly 27 Feb 2019
+proj4string(ecs) = CRS("+init=epsg:27700")
+ecs_sf <- st_as_sf(ecs, coords = c("X", "Y"), crs=27700)
 ```
 
 There are `r length(ecs)` eco-congregations in Scotland. By some measurements, particularly in terms of individual sites and possibly also with regards to volunteers, this makes Eco-Congregation Scotland one of the largest environmental third-sector groups in Scotland.[^159141043] 
@@ -179,8 +173,8 @@ download.file("https://borders.ukdataservice.ac.uk/ukborders/easy_download/prebu
               destfile = "data/Scotland_ca_2010.zip")
 unzip("data/Scotland_ca_2010.zip", exdir = "data")
 }
-admin_lev1 <- readOGR("./data", "scotland_ca_2010") 
-admin_lev1_sf <- st_read("data/scotland_ca_2010.shp")
+admin_lev1 <- readOGR("./data", "scotland_ca_2010")
+admin_lev1_sf <- st_read("data/scotland_ca_2010.shp") %>% st_transform(27700)
 
 # read in polygon for intermediate admin boundary layers
 if (file.exists("data/scotland_parlcon_2011.shp") == FALSE) {
@@ -189,14 +183,33 @@ download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/
 unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
 }
 admin_lev2 <- readOGR("./data", "scotland_parlcon_2011")
-admin_lev2_sf <- st_read("data/scotland_parlcon_2011.shp")
+admin_lev2_sf <- st_read("data/scotland_parlcon_2011.shp") %>% st_transform(27700)
+
+# Set CRS using epsg code on spdf for symmetry with datasets below
+proj4string(admin_lev1) <- CRS("+init=epsg:27700")
+proj4string(admin_lev2) <- CRS("+init=epsg:27700")
+
+# Generate new sf shape using bounding box for central belt for map insets below
+# Note: coordinates use BNG as CRS (EPSG: 27700)
+
+scotland <- st_bbox(c(xmin = 5513.0000, xmax = 470332.0000,
+                      ymin = 530249.0000, ymax = 1220301.5000),
+                    crs = st_crs("+init=epsg:27700")) %>% 
+  st_as_sfc()
+  
+centralbelt_region <- st_bbox(c(xmin = 224479.2, xmax = 642963.5,
+                      ymin = 347475.0, ymax = 711014.5),
+                    crs = st_crs("+init=epsg:27700")) %>% 
+  st_as_sfc()
+st_crs(centralbelt_region) <- st_transform(centralbelt_region, 27700)
+
 ```
 
 ```{r import_groups_data, message=FALSE, warning=FALSE, include=FALSE}
 # read in Transition Towns data and turn it into a SpatialPointsDataFrame
 transition_wgs <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
 coordinates(transition_wgs) <- c("X", "Y")
-proj4string(transition_wgs) <- CRS(wgs84)
+proj4string(transition_wgs) <- CRS("+init=epsg:4326")
 transition <- spTransform(transition_wgs, bng)
 transition_sf <- st_as_sf(transition, coords = c("X", "Y"), crs=27700)
 
@@ -215,20 +228,28 @@ transition_sf <- st_as_sf(transition, coords = c("X", "Y"), crs=27700)
 pow_pointX <- read.csv("./data/poi_2015_12_scot06340459.csv", sep="|")
 coordinates(pow_pointX) <- c("feature_easting", "feature_northing")
 # TODO: need to alter to draw from wgs84 or bng defined in preamble above
-proj4string(pow_pointX) <- proj4string(admin_lev1)
+proj4string(pow_pointX) <- CRS("+init=epsg:27700")
 pow_pointX_sf <- st_as_sf(pow_pointX, coords = c("X", "Y"), crs=27700)
 
 # read in Scottish Community Dev. trust data and turn it into a SpatialPointsDataFrame
 dtas <- read.csv("data/community-dev-trusts-2.6.csv")
 coordinates(dtas) <- c("X", "Y")
-proj4string(dtas) <- proj4string(admin_lev1)
+proj4string(dtas) <- CRS("+init=epsg:27700")
 dtas_sf <- st_as_sf(dtas, coords = c("X", "Y"), crs=27700)
 
 # read in permaculture data and turn it into a SpatialPointsDataFrame
 permaculture <- read.csv("data/permaculture_scot-0.8.csv")
 coordinates(permaculture) <- c("X", "Y")
-proj4string(permaculture) <- proj4string(admin_lev1)
+proj4string(permaculture) <- CRS("+init=epsg:27700")
 permaculture_sf <- st_as_sf(permaculture, coords = c("X", "Y"), crs=27700)
+
+# subset point datasets for inset maps below
+ecs_sf_centralbelt <- st_intersection(ecs_sf, centralbelt_region)
+dtas_sf_centralbelt <- st_intersection(dtas_sf, centralbelt_region)
+transition_sf_centralbelt <- st_intersection(transition_sf, centralbelt_region)
+pow_sf_centralbelt <- st_intersection(pow_pointX_sf, centralbelt_region)
+permaculture_sf_centralbelt <- st_intersection(permaculture_sf, centralbelt_region)
+
 ```
 
 ```{r process_admin_data}
@@ -240,8 +261,9 @@ permaculture_sf <- st_as_sf(permaculture, coords = c("X", "Y"), crs=27700)
 # calculate count of ECS for fields in admin and provide percentages
 # JK Note: need to convert from poly.counts, which uses sp() to st_covers() which uses sf() - cf. https://stackoverflow.com/questions/45314094/equivalent-of-poly-counts-to-count-lat-long-pairs-falling-inside-of-polygons-w#45337050
 
-ecs <- spTransform(ecs, proj4string(admin_lev1))
-transition <- spTransform(transition, proj4string(admin_lev1))
+# Commenting out 27 Feb 2019 in light of revisions to CRS handling above
+# ecs <- spTransform(ecs, proj4string(admin_lev1))
+# transition <- spTransform(transition, proj4string(admin_lev1))
 
 admin_lev1$ecs_count <- poly.counts(ecs,admin_lev1)
 admin_lev1$ecs_percent<- prop.table(admin_lev1$ecs_count)
@@ -331,7 +353,7 @@ Though there are too few eco-congregations and transition groups for a numerical
 # TODO: clip choropleth polygons to buildings shapefile (possble superceded by pverlay on lev2)
 
 # Draw initial choropleth map of ECS concentration (using tmap and sf below by default)
-
+# Revising re: CRS inset maps complete to here
 tm_shape(admin_lev2) + 
   tm_fill(col = "ecs_count", palette = "Oranges", title = "Concentration of ECS groups") +
   tm_borders(alpha=.5, lwd=0.1) +
@@ -461,7 +483,7 @@ tm_shape(admin_lev2) +
   tm_borders(alpha=.5, lwd=0.1) +
   tm_shape(admin_lev1) +
   tm_borders(lwd=0.6) +
-  tm_shape(ecs_sf) +
+  tm_shape(ecs_sf_centralbelt) +
   tm_dots("red", size = .02, alpha = .2) +
   tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
@@ -595,8 +617,9 @@ unzip("data/SG_UrbanRural_2016.zip", exdir = "data")
 }
 # Todo: remove sp datasets when sf revisions are complete. Currently running in parallel
 urbanrural <- readOGR("./data", "SG_UrbanRural_2016") 
-urbanrural_sf <- st_read("data/SG_UrbanRural_2016.shp")
-urbanrural_sf_simplified <- st_simplify(urbanrural_sf)
+proj4string(urbanrural) <- CRS("+init=epsg:27700")
+urbanrural_sf <- st_read("data/SG_UrbanRural_2016.shp") %>% st_transform(27700)
+urbanrural_sf_simplified <- st_simplify(urbanrural_sf) %>% st_transform(27700)
 # TODO: worth considering uploading data to zenodo for long-term reproducibility as ScotGov shuffles this stuff around periodically breaking URLs
 
 # This code will generate a table of frequencies for each spatialpointsdataframe in urbanrural
@@ -661,7 +684,10 @@ ggplot(urbanrural_gathered,
 
 # Generate static plot for printing
 
-tm_shape(urbanrural_sf_simplified) + 
+# Generate code for inset map of central belt
+# First build large plot using National level view
+
+urbanrural_uk_ecs_choropleth_plot <- tm_shape(urbanrural_sf_simplified) + 
   tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001, n=9, 
               title = "UrbanRural 8 Fold Scale") +
   tm_shape(ecs_sf) +
@@ -678,29 +704,39 @@ tm_shape(urbanrural_sf_simplified) +
             frame = FALSE, 
             title.size = .7, 
             legend.title.size = .7,
-            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            # values are bottom, left, top, right, modified here to make space for inset
+            inner.margins = c(0.5, 0.1, 0.05, 0.05)
             )
 
-# Generate new sf shape using bounding box and subset of urbanrural for central belt inset below
-# Note: coordinates use BNG as CRS (EPSG: 27700)
+# Next build smaller central belt plot for inset:
 
-centralbelt_region = st_bbox(c(xmin = 224479.2, xmax = 642963.5,
-                      ymin = 347475.0, ymax = 711014.5),
-                    crs = st_crs(urbanrural_sf)) %>% 
-  st_as_sfc()
+urbanrural_sf_simplified_centralbelt <- st_crop(urbanrural_sf_simplified, centralbelt_region)
 
-# Generate code for inset map of central belt
+st_crs(urbanrural_sf_simplified)
+st_crs(urbanrural_sf)
+proj4string(urbanrural)
+st_crs(centralbelt_region)
 
-# centralbelt_map = tm_shape(centralbelt_region) + tm_polygons() +
-#   tm_shape(st_within(ecs_sf, centralbelt_region)) +
-#   tm_dots("red", size = .05, alpha = .4) +
-#   tm_shape(nz_region) + tm_borders(lwd = 3) 
-# Still need to mod above line
+urbanrural_centralbelt_ecs_choropleth_plot <- 
+  tm_shape(urbanrural_sf_simplified_centralbelt) +
+  tm_polygons(col = "UR8FOLD", palette = "BrBG") +
+  tm_shape(ecs_sf_centralbelt) + tm_dots("red", size = .05, alpha = .4)
+
 # Stitch together maps using grid()
 
-# library(grid)
-# nz_height_map
-# print(nz_map, vp = viewport(0.8, 0.27, width = 0.5, height = 0.5))
+# Note: viewport values are X, Y, width and height
+print(urbanrural_centralbelt_ecs_choropleth_plot, vp = viewport(0.8, 0.27, width = 0.5, height = 0.5))
+
+# Test by saving to file
+vp_urbanrural_centralbelt_ecs_choropleth_plot <- viewport(x = 1.5, y = 0.15, width = 5.5, height = 1.5)
+
+tmap_mode("plot")
+urbanrural_uk_ecs_choropleth_plot
+print(urbanrural_centralbelt_ecs_choropleth_plot, vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
+
+save_tmap(urbanrural_uk_ecs_choropleth_plot, "urbanrural_test.png", scale = 0.7, width = 6.125, 
+  insets_tm = urbanrural_centralbelt_ecs_choropleth_plot, 
+  insets_vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
 
 # Generate dynamic plot for exploring
 # TODO: change basemap
@@ -727,6 +763,7 @@ unzip("data/simd2016_withgeog.zip", exdir = "data", junkpaths = TRUE)
 simd_shapes <- readOGR("./data", "sc_dz_11") 
 simd_indicators <- read.csv("./data/simd2016_withinds.csv")
 simd_indicators_min <- simd_indicators[c(1,6:17)]
+# Original data is in wgs, so need to convert from wgs to bng to work with analysis across data sets
 simd_wgs <- merge(x=simd_shapes, y=simd_indicators_min, by.x = "DataZone", by.y = "Data_Zone")
 simd <- spTransform(simd_wgs, bng)
 
@@ -901,13 +938,12 @@ forestinv_simplified <- st_simplify(forestinv)
 # scenicareas_sp <- readOGR("./data", "ScenicAreas") 
 
 # Set symmetrical CRS for analysis below (inserted here in order to correct errors, may be deprecated later)
-st_crs(sssi) <- 27700
-st_crs(ecs_sf) <- 27700
-st_crs(pow_pointX_sf) <- 27700
-st_crs(dtas_sf) <- 27700
-st_crs(transition_sf) <- 27700
-st_crs(permaculture_sf) <- 27700
-
+# st_crs(sssi) <- 27700
+# st_crs(ecs_sf) <- 27700
+# st_crs(pow_pointX_sf) <- 27700
+# st_crs(dtas_sf) <- 27700
+# st_crs(transition_sf) <- 27700
+# st_crs(permaculture_sf) <- 27700
 
 # Define buffer and measure number of ECS groups within 0.5 miles of all SSSI
 # CRS uses meters for units, so a buffer for 0.5 miles would use 805 meters)
@@ -1125,18 +1161,19 @@ write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", ro
 ```{r sssi_ecs_buffer_plot, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 11"}
 
 # Plot SSSI polygons (showing buffers) with ECS points (coloured by location)
+# TODO set bounding box to clip all polygons (or identify offending layer)
 
-tm_shape(sssi_simplified) + 
+tm_shape(sssi_simplified, bbox = scotland) + 
   tm_fill(col = "green", alpha = 0.3, lwd=0.001, 
           title = "Sites of Special Scientific Interest and ECS Groups") + 
 #  tm_shape(sssi_buf50) + tm_borders(lwd=0.001) +
 #  tm_shape(sssi_buf500) + tm_borders(lwd=0.001)
-  tm_shape(admin_lev1_sf) + tm_borders(lwd=0.1) +
-  tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4) +
+  tm_shape(admin_lev1_sf) + tm_borders(lwd=0.01) +
+  tm_shape(ecs_sf) + tm_dots("red", size = .02, alpha = .4) +
 #  tm_shape(ecs_sf_sssi50m) + tm_dots("yellow", size = .5, alpha = .4) + 
 #  tm_shape(ecs_sf_sssi500m) + tm_dots("orange", size = .5, alpha = .4) +
 #  tm_shape(ecs_sf_sssibeyond500m) + tm_dots("red", size = .5, alpha = .4)
-  tm_scale_bar(position = c("right", "bottom")) +
+#  tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
   tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
               size = 0.4, 
@@ -1155,13 +1192,14 @@ tm_shape(sssi_simplified) +
 ```{r all_wilderness_ecs_plot, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 12"}
 
 # Plot map with all wilderness shapes on it
-
-tm_shape(sssi_simplified) + tm_fill(col = "blue", alpha = 0.3, lwd=0.001, title = "Wilderness Areas") + 
-  tm_shape(wildland_simplified) + tm_fill(col = "green", alpha = 0.3, lwd=0.001) + 
-  tm_shape(forestinv_simplified) + tm_fill(col = "orange", alpha = 0.3, lwd=0.001) + 
-  tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
-  tm_shape(ecs_sf) + tm_dots("red", size = .05, alpha = .4) +
-  tm_scale_bar(position = c("right", "bottom")) +
+# TODO set bounding box to clip all polygons (or identify offending layer)
+tm_shape(sssi_simplified, bbox = scotland) + tm_fill(col = "blue", alpha = 0.4, lwd=0.01, title = "Wilderness Areas") + 
+  tm_shape(wildland_simplified, bbox = scotland) + tm_fill(col = "green", alpha = 0.4, lwd=0.01) + 
+  tm_shape(forestinv_simplified, bbox = scotland) + tm_fill(col = "orange", alpha = 0.4, lwd=0.01) + 
+  tm_shape(admin_lev1) + tm_borders(lwd=0.01) +
+# tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
+  tm_shape(ecs_sf) + tm_dots("red", size = .02, alpha = .4) +
+# tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
   tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
               size = 0.4, 
