@@ -300,6 +300,14 @@ admin_lev2$dtas_percent<- prop.table(admin_lev2$dtas_count)
 admin_lev2$permaculture_count <- poly.counts(permaculture,admin_lev2)
 admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
 
+# calculate count of ECS for fields in admin_lev2_sf
+# TODO: for future migration to sf throughout, remove above content and swap out references.
+admin_lev2_sf$ecs_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(ecs_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+admin_lev2_sf$pow_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(pow_pointX_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+admin_lev2_sf$transition_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(transition_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+admin_lev2_sf$dtas_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(dtas_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+admin_lev2_sf$permaculture_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(permaculture_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+
 # Import csv with population data for each level of administrative subdivision and join to spatialdataframe
 
 # Placeholder for England parish data for later implementation
@@ -350,7 +358,7 @@ Though there are too few eco-congregations and transition groups for a numerical
 
 ## Eco-Congregation Scotland groups shown by concentration in administrative regions (NUTS3)
 
-```{r plot_admin_ecs_choropleth, fig.width=4, fig.cap="Figure 1"}
+```{r 01_admin_ecs_choropleth, fig.width=4, fig.cap="Figure 1"}
 # Note: for more information on EU administrative levels, see here: https://ec.europa.eu/eurostat/web/nuts/national-structures-eu
 # TODO: clip choropleth polygons to buildings shapefile (possble superceded by pverlay on lev2)
 
@@ -386,7 +394,7 @@ tm_shape(admin_lev2) +
 
 
 
-```{r plot_admin_ecs_normed_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 3"}
+```{r 02_admin_ecs_normed_choropleth, fig.width=4, fig.show="hold", fig.cap="Figure 3"}
 
 # Plot out first figure with normalised data: 
 
@@ -450,7 +458,7 @@ Turning to the total of `r length(pow_pointX)` "places of worship" in Scotland, 
 
 Whereas our initial measurements indicated a prominent lead for Edinburgh, by normalising our data in this way we can highlight the stronger-than-expected presence of several others that might otherwise escape notice because they lie in a region with significantly lower population or numerically less places of worship. Taking the PointX data on "places of worship" in Scotland, we find a less dramatic picture, but also a slightly different one. The positive outliers include East Renfrewshire (3.4x) Edinburgh (2.9x), Stirling (2.2), West Lothian (1.9x) and Aberdeen (1.5x). Again, negative outliers are far less dramatic, with only Midlothian possessing a ratio of more than 100% negative difference from the number of "places of worship" at 1.5x *fewer*.
 
-```{r create_admin_barplot, fig.width=4, fig.cap="Figure 4"}
+```{r 03_admin_barplot, fig.width=4, fig.cap="Figure 4"}
 # comvert admin back to dataframe for analysis
 admin.df <- data.frame(admin_lev1)
 
@@ -476,11 +484,12 @@ ggplot(admin_gathered,
 
 ## Other environmental groups shown by concentration in administrative regions (NUTS)
 
-```{r create_choropleth_others, fig.width=4, fig.show="hold", fig.cap="Figure 5"}
+```{r 04_choropleth_others, fig.width=4, fig.show="hold", fig.cap="Figure 5"}
 
 # TODO: consider switching to two-dimensional kernel densities instead of dots as shown here: https://github.com/mtennekes/tmap/tree/master/demo/LondonCrimes
 
-tm_shape(admin_lev2) + 
+admin_lev2_scotland_ecs_plot <- 
+  tm_shape(admin_lev2) + 
   tm_fill(col = "ecs_count", palette = "Oranges", n = 5, title = "Concentration of ECS groups") +
   tm_borders(alpha=.5, lwd=0.1) +
   tm_shape(admin_lev1) +
@@ -499,8 +508,35 @@ tm_shape(admin_lev2) +
             title = "Figure 5a", 
             title.size = .7,
             legend.title.size = .7,
-            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            inner.margins = c(0.1, 0.1, 0.05, 0.05),
+            outer.margins = c(0.2, 0.01, 0.01, 0.01)
             )
+
+# Build smaller central belt plot for inset:
+
+admin_lev2_centralbelt <- st_crop(admin_lev2_sf, centralbelt_region)
+
+admin_lev2_centralbelt_ecs_plot <- 
+  tm_shape(admin_lev2_centralbelt) +
+  tm_fill(col = "ecs_count", palette = "Oranges", n = 5) +
+  tm_shape(ecs_sf_centralbelt) + tm_dots("red", size = .05, alpha = .4) + 
+  tm_legend(show=FALSE)
+
+# Stitch together maps using grid()
+vp_admin_lev2_centralbelt_ecs_plot <- viewport(x = 0.5, y = 0.1, height = 6.0/centralbelt_ratio)
+
+# Save to file
+tmap_save(admin_lev2_scotland_ecs_plot, filename = "adminlev2_test.png", scale = 0.7, width = 6.125, 
+  insets_tm = admin_lev2_centralbelt_ecs_plot, 
+  insets_vp = vp_admin_lev2_centralbelt_ecs_plot)
+
+# plot full map with inset
+tmap_mode("plot")
+admin_lev2_scotland_ecs_plot
+print(admin_lev2_centralbelt_ecs_plot, 
+      vp = vp_admin_lev2_centralbelt_ecs_plot)
+
+# Second plot, revealing transition towns
 
 tm_shape(admin_lev2) + 
   tm_fill(col = "transition_count", palette = "Oranges", n = 5, title = "Concentration of Transition groups") +
@@ -521,7 +557,8 @@ tm_shape(admin_lev2) +
             title = "Figure 5b", 
             title.size = .7,
             legend.title.size = .7,
-            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            inner.margins = c(0.1, 0.1, 0.05, 0.05),
+            outer.margins = c(0.2, 0.01, 0.01, 0.01)
             )
 
 tm_shape(admin_lev2) + 
@@ -543,7 +580,8 @@ tm_shape(admin_lev2) +
             title = "Figure 5c", 
             title.size = .7,
             legend.title.size = .7,
-            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            inner.margins = c(0.1, 0.1, 0.05, 0.05),
+            outer.margins = c(0.2, 0.01, 0.01, 0.01)
             )
 
 tm_shape(admin_lev2) + 
@@ -566,13 +604,14 @@ tm_shape(admin_lev2) +
             title = "Figure 5d", 
             title.size = .7,
             legend.title.size = .7,
-            inner.margins = c(0.1, 0.1, 0.05, 0.05)
+            inner.margins = c(0.1, 0.1, 0.05, 0.05),
+            outer.margins = c(0.2, 0.01, 0.01, 0.01)
             )
 ```
 
 ## Cartogram Comparisons
 
-```{r create_cartograms, fig.width=4, fig.show="hold", fig.cap="Figure 6"}
+```{r 05_cartograms, fig.width=4, fig.show="hold", fig.cap="Figure 6"}
 
 # # TODO: plot as animated chorogram: 
 # # https://www.r-graph-gallery.com/331-basic-cartogram/
@@ -598,7 +637,7 @@ A wide variety of historians and sociologists of religion have noted the regiona
 
 So why provide this kind of data (i.e. at the level of individual churches) when more granular data (i.e. at the level of individuals persons) is available in the form of the census and related parallel publications such as the 2008 Scottish Environmental Attitudes survey? We believe that mapping places of worship provides a useful intermediate level of analysis and may complement our more atomised understanding of EA which has been assessed at the level of individual persons to date. Because representation within some administrative areas of Scotland, can lead to a small number of data points, we have kept analysis to a National level and have not provided more specific administrative-area level calculations.
 
-```{r create_ecs_denomination_table}
+```{r 06_ecs_denomination_table}
 knitr::kable(summary(ecs@data[["denomination"]]), caption = 'ECS by denomination')
 # TODO: Add dataframe with overall church numbers for the UK from "ScottishChurches" dataset by JK
 ```
@@ -610,7 +649,7 @@ While Roman Catholic churches make up just over 10% of the church buildings in S
 
 # Eco-Congregations, Urban, Rural and Remote
 
-```{r ur8fold, message=FALSE, warning=FALSE}
+```{r import_ur8fold_data, message=FALSE, warning=FALSE}
 # read in relevant polygons for UR8fold scale
 if (file.exists("data/SG_UrbanRural_2016.shp") == FALSE) {
 download.file("http://sedsh127.sedsh.gov.uk/Atom_data/ScotGov/ZippedShapefiles/SG_UrbanRural_2016.zip", 
@@ -658,7 +697,7 @@ The key question which this analysis seeks to answer is whether ECS, or the othe
 
 Of all the groups surveyed in this study, Eco-Congregation Scotland is the most heavily concentrated in large urban areas (33.53%), exceeding by almost 50% the rate for all places of worship (22.96% in large urban areas). Transition is a much more modest 20% and development trusts a bit lower at 15%. It is interesting to note that the rate of ECS concentration in these large urban areas matches the level of overall population distribution (34.5%). On the other end of the scale, Eco-Congregation Scotland is the least concentrated in remote rural areas (with 3.93% on level 7 and 5.44% on level 8 on the urban-rural scale), though again, they correlate roughly to the general population distribution (3.2% and 2.9% respectively). Places of worship outpace both the population of Scotland and the footprint of Eco-Congregation Scotland, with 14.98% in very remote rural areas, but this is exceeded by transition at 16.47% and both by Scottish community development trusts at 32.14%. So while Eco-Congregation Scotland correlates roughly with Scottish population distribution across the urban-rural scale, it has a considerably more urban profile than either of the other two groups surveyed.
 
-```{r create_ur_barplot, fig.width=4, fig.cap="Figure 7"}
+```{r 07_ur_barplot, fig.width=4, fig.cap="Figure 7"}
 # Need to flatten urbanrural based on all the count columns and generate using ggplot
 
 urbanrural_gathered <- gather(data.frame(urbanrural), key="group_type", value="number", ecs_count, transition_count, dtas_count, permaculture_count)
@@ -676,7 +715,7 @@ ggplot(urbanrural_gathered,
 ```
 ## Eco-Congregation Scotland\nconcentrations in Urban Rural 8-fold classifications
 
-```{r create_urbanrural_ecs_chart_choropleth, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 8"}
+```{r 08_urbanrural_ecs_chart_choropleth, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 8"}
 
 # TODO: Clip shapes to buildings shapefile (use OSM or OS?), using st_difference
 # TODO: Double check data licenses for tm_credits
@@ -727,13 +766,15 @@ vp_urbanrural_centralbelt_ecs_choropleth_plot <- viewport(x = 0.5, y = 0.1, heig
 
 # Save to file
 
-save_tmap(urbanrural_uk_ecs_choropleth_plot, "urbanrural_test.png", scale = 0.7, width = 6.125, 
+tmap_save(urbanrural_uk_ecs_choropleth_plot, filename = "urbanrural_test.png", scale = 0.7, width = 6.125, 
   insets_tm = urbanrural_centralbelt_ecs_choropleth_plot, 
   insets_vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
 
 # plot full map with inset
 tmap_mode("plot")
+
 urbanrural_uk_ecs_choropleth_plot
+
 print(urbanrural_centralbelt_ecs_choropleth_plot, vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
 
 
@@ -753,7 +794,7 @@ print(urbanrural_centralbelt_ecs_choropleth_plot, vp = vp_urbanrural_centralbelt
 
 # Wealth, Employment, and Literacy
 
-```{r simd data, message=FALSE, warning=FALSE}
+```{r 09_simd_data, message=FALSE, warning=FALSE}
 # read in relevant polygons, Scottish Index of Multiple deprivation
 if (file.exists("data/sc_dz_11.shp") == FALSE) {
 download.file("http://simd.scot/2016/data/simd2016_withgeog.zip", 
@@ -813,7 +854,7 @@ allgroups_gathered <- gather(allgroups_simd, key = "simd_category", value = "ran
 
 ### Jitterplot
 
-```{r create_simd_jitterplot}
+```{r 10_simd_jitterplot}
 # simd jitterplot
 # jitterplot option, from Teutonico 2015, p. 63
 # https://ggplot2.tidyverse.org/reference/geom_jitter.html
@@ -821,7 +862,7 @@ allgroups_gathered <- gather(allgroups_simd, key = "simd_category", value = "ran
 
 ### Barplot
 
-```{r create_simd_barplot, fig.width=4, fig.cap="Figure 9"}
+```{r 11_simd_barplot, fig.width=4, fig.cap="Figure 9"}
 # Run plots
 
 # Faceted stacked bar plot
@@ -859,7 +900,7 @@ ggplot(data=allgroups_gathered,
 ### Boxplot
 
 
-```{r create_simd_boxplot, fig.width=4, fig.cap="Figure 10"}
+```{r 12_simd_boxplot, fig.width=4, fig.cap="Figure 10"}
 
 # simd boxplot
 
@@ -1134,7 +1175,7 @@ Proximity to these areas was the next concern, because many of these designation
 
 So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, sssi_buf50)` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, sssi_buf50)` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs_sf, forestinv)` Eco-Congregation lies within either native or generally forested land.
 
-```{r wilderness_tables} 
+```{r 13_wilderness_tables} 
 
 # Output mmd tables using kable
 
@@ -1158,7 +1199,7 @@ write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", ro
 ```
 
 
-```{r sssi_ecs_buffer_plot, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 11"}
+```{r 14_sssi_ecs_buffer_plot, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 11"}
 
 # Plot SSSI polygons (showing buffers) with ECS points (coloured by location)
 # TODO set bounding box to clip all polygons (or identify offending layer)
@@ -1189,7 +1230,7 @@ tm_shape(sssi_simplified, bbox = scotland) +
 
 ```
 
-```{r all_wilderness_ecs_plot, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 12"}
+```{r 15_all_wilderness_ecs_plot, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 12"}
 
 # Plot map with all wilderness shapes on it
 # TODO set bounding box to clip all polygons (or identify offending layer)
