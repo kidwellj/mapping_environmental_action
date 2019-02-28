@@ -64,6 +64,7 @@ require(rgeos) # deprecated by sf()
 require(maptools)
 require(ggplot2)
 require(tmap) # using as an alternative to base r graphics and ggplot for geospatial plots
+require(tmaptools) # for get_asp_ratio below
 require(grid) # using for inset maps on tmap
 require(broom) # required for tidying SPDF to data.frame for ggplot2
 require(tidyr)  # using for grouped bar plot
@@ -119,8 +120,8 @@ ecs <- read.csv("data/ECS-GIS-Locations_3.0.csv", comment.char="#")
 # unnecessary with advent of sf (above)
 coordinates(ecs) <- c("X", "Y")
 # Modified to use EPSG code directly 27 Feb 2019
-proj4string(ecs) = CRS("+init=epsg:27700")
-ecs_sf <- st_as_sf(ecs, coords = c("X", "Y"), crs=27700)
+proj4string(ecs) <- bng
+ecs_sf <- st_as_sf(ecs, coords = c("X", "Y"), crs=paste0("+init=epsg:",27700))
 ```
 
 There are `r length(ecs)` eco-congregations in Scotland. By some measurements, particularly in terms of individual sites and possibly also with regards to volunteers, this makes Eco-Congregation Scotland one of the largest environmental third-sector groups in Scotland.[^159141043] 
@@ -174,7 +175,7 @@ download.file("https://borders.ukdataservice.ac.uk/ukborders/easy_download/prebu
 unzip("data/Scotland_ca_2010.zip", exdir = "data")
 }
 admin_lev1 <- readOGR("./data", "scotland_ca_2010")
-admin_lev1_sf <- st_read("data/scotland_ca_2010.shp") %>% st_transform(27700)
+admin_lev1_sf <- st_read("data/scotland_ca_2010.shp") %>% st_transform(paste0("+init=epsg:",27700))
 
 # read in polygon for intermediate admin boundary layers
 if (file.exists("data/scotland_parlcon_2011.shp") == FALSE) {
@@ -183,11 +184,11 @@ download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/
 unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
 }
 admin_lev2 <- readOGR("./data", "scotland_parlcon_2011")
-admin_lev2_sf <- st_read("data/scotland_parlcon_2011.shp") %>% st_transform(27700)
+admin_lev2_sf <- st_read("data/scotland_parlcon_2011.shp") %>% st_transform(paste0("+init=epsg:",27700))
 
 # Set CRS using epsg code on spdf for symmetry with datasets below
-proj4string(admin_lev1) <- CRS("+init=epsg:27700")
-proj4string(admin_lev2) <- CRS("+init=epsg:27700")
+proj4string(admin_lev1) <- bng
+proj4string(admin_lev2) <- bng
 
 # Generate new sf shape using bounding box for central belt for map insets below
 # Note: coordinates use BNG as CRS (EPSG: 27700)
@@ -197,14 +198,13 @@ scotland <- st_bbox(c(xmin = 5513.0000, xmax = 470332.0000,
                     crs = st_crs("+init=epsg:27700")) %>% 
   st_as_sfc()
   
-centralbelt_region <- st_bbox(c(xmin = 224479.2, xmax = 642963.5,
-                      ymin = 347475.0, ymax = 711014.5),
+centralbelt_region <- st_bbox(c(xmin = 234841, xmax = 346309,
+                      ymin = 653542, ymax = 686722),
                     crs = st_crs("+init=epsg:27700")) %>% 
   st_as_sfc()
-st_crs(centralbelt_region) <- st_transform(centralbelt_region, 27700)
 
 centralbelt_ratio <- get_asp_ratio(centralbelt_region)
-
+scotland_ratio<- get_asp_ratio(scotland)
 ```
 
 ```{r import_groups_data, message=FALSE, warning=FALSE, include=FALSE}
@@ -485,7 +485,7 @@ tm_shape(admin_lev2) +
   tm_borders(alpha=.5, lwd=0.1) +
   tm_shape(admin_lev1) +
   tm_borders(lwd=0.6) +
-  tm_shape(ecs_sf_centralbelt) +
+  tm_shape(ecs_sf) +
   tm_dots("red", size = .02, alpha = .2) +
   tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
@@ -619,9 +619,9 @@ unzip("data/SG_UrbanRural_2016.zip", exdir = "data")
 }
 # Todo: remove sp datasets when sf revisions are complete. Currently running in parallel
 urbanrural <- readOGR("./data", "SG_UrbanRural_2016") 
-proj4string(urbanrural) <- CRS("+init=epsg:27700")
-urbanrural_sf <- st_read("data/SG_UrbanRural_2016.shp") %>% st_transform(27700)
-urbanrural_sf_simplified <- st_simplify(urbanrural_sf) %>% st_transform(27700)
+proj4string(urbanrural) <- bng
+urbanrural_sf <- st_read("data/SG_UrbanRural_2016.shp") %>% st_transform(paste0("+init=epsg:",27700))
+urbanrural_sf_simplified <- st_simplify(urbanrural_sf)
 # TODO: worth considering uploading data to zenodo for long-term reproducibility as ScotGov shuffles this stuff around periodically breaking URLs
 
 # This code will generate a table of frequencies for each spatialpointsdataframe in urbanrural
@@ -678,13 +678,8 @@ ggplot(urbanrural_gathered,
 
 ```{r create_urbanrural_ecs_chart_choropleth, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 8"}
 
-# Using tmap as an alternative to ggplot and base R graphics
-
 # TODO: Clip shapes to buildings shapefile (use OSM or OS?), using st_difference
 # TODO: Double check data licenses for tm_credits
-# TODO: Add inset with zoom-in for central belt to bottom of map; cf. https://github.com/mtennekes/tmap/tree/master/demo/USChoropleth and https://geocompr.robinlovelace.net/adv-map.html section 8.2.7
-
-# Generate static plot for printing
 
 # Generate code for inset map of central belt
 # First build large plot using National level view
@@ -708,47 +703,40 @@ urbanrural_uk_ecs_choropleth_plot <- tm_shape(urbanrural_sf_simplified) +
             title.size = .7, 
             legend.title.size = .7,
             # values are bottom, left, top, right, modified here to make space for inset
-            inner.margins = c(0.5, 0.1, 0.05, 0.05)
+            inner.margins = c(0.1, 0.1, 0.05, 0.05),
+            outer.margins = c(0.2, 0.01, 0.01, 0.01)
             )
 
 # Next build smaller central belt plot for inset:
 
-# TODO: fix issue here with mismatching CRS cf stackexchange
-
 urbanrural_sf_simplified_centralbelt <- st_crop(urbanrural_sf_simplified, centralbelt_region)
-
-st_crs(urbanrural_sf_simplified)
-st_crs(urbanrural_sf)
-proj4string(urbanrural)
-st_crs(centralbelt_region)
 
 urbanrural_centralbelt_ecs_choropleth_plot <- 
   tm_shape(urbanrural_sf_simplified_centralbelt) +
   tm_polygons(col = "UR8FOLD", palette = "BrBG") +
-  tm_shape(ecs_sf_centralbelt) + tm_dots("red", size = .05, alpha = .4)
+  tm_shape(ecs_sf_centralbelt) + tm_dots("red", size = .05, alpha = .4) + 
+  tm_legend(show=FALSE)
 
 # Stitch together maps using grid()
 
 # Note: viewport values are X, Y, width and height
-print(urbanrural_centralbelt_ecs_choropleth_plot, vp = viewport(0.8, 0.27, width = 0.5, height = 0.5))
 
-# Test by saving to file
-vp_urbanrural_centralbelt_ecs_choropleth_plot <- viewport(x = 1.5, y = 0.15, width = 5.5, height = 1.5)
+# todo: extrploate and use scale of inset bbox (centralbelt_ratio) to configure dimensions above for inset plots
 
-tmap_mode("plot")
-urbanrural_uk_ecs_choropleth_plot
-print(urbanrural_centralbelt_ecs_choropleth_plot, vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
+vp_urbanrural_centralbelt_ecs_choropleth_plot <- viewport(x = 0.5, y = 0.1, height = 6.0/centralbelt_ratio)
 
-# output inset map separately first for testing
-save_tmap(urbanrural_centralbelt_ecs_choropleth_plot, "urbanrural_test.png", scale = 1, width = 6.125)
-
-# todo: refine bounding box, implement clipping on inset map for polygon layers, calc scale of inset map, extrploate and use to configure dimensions above for inset plots
-
-# centralbelt_ratio
+# Save to file
 
 save_tmap(urbanrural_uk_ecs_choropleth_plot, "urbanrural_test.png", scale = 0.7, width = 6.125, 
   insets_tm = urbanrural_centralbelt_ecs_choropleth_plot, 
   insets_vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
+
+# plot full map with inset
+tmap_mode("plot")
+urbanrural_uk_ecs_choropleth_plot
+print(urbanrural_centralbelt_ecs_choropleth_plot, vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
+
+
 
 # Generate dynamic plot for exploring
 # TODO: change basemap
@@ -902,7 +890,7 @@ if (file.exists("data/SSSI_SCOTLAND.shp") == FALSE) {
 unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
-sssi <- st_read("data/SSSI_SCOTLAND.shp") %>% st_transform(27700)
+sssi <- st_read("data/SSSI_SCOTLAND.shp") %>% st_transform(paste0("+init=epsg:",27700))
 sssi_sp <- readOGR("./data", "SSSI_SCOTLAND") 
 # Generate simplified polygon for plots below
 sssi_simplified <- st_simplify(sssi)
@@ -918,7 +906,7 @@ if (file.exists("data/WILDLAND_SCOTLAND.shp") == FALSE) {
 unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
-wildland <- st_read("data/WILDLAND_SCOTLAND.shp") %>% st_transform(27700)
+wildland <- st_read("data/WILDLAND_SCOTLAND.shp") %>% st_transform(paste0("+init=epsg:",27700))
 wildland_sp <- readOGR("./data", "WILDLAND_SCOTLAND") 
 # Generate simplified polygon for plots below
 wildland_simplified <- st_simplify(wildland)
@@ -934,7 +922,7 @@ download.file("https://opendata.arcgis.com/datasets/3cb1abc185a247a48b9d53e4c4a8
 unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data")
 }
 
-forestinv <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") %>% st_transform(27700)
+forestinv <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") %>% st_transform(paste0("+init=epsg:",27700))
 forestinv_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
 # Generate simplified polygon for plots below
 forestinv_simplified <- st_simplify(forestinv)
