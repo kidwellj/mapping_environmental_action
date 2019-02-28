@@ -203,6 +203,8 @@ centralbelt_region <- st_bbox(c(xmin = 224479.2, xmax = 642963.5,
   st_as_sfc()
 st_crs(centralbelt_region) <- st_transform(centralbelt_region, 27700)
 
+centralbelt_ratio <- get_asp_ratio(centralbelt_region)
+
 ```
 
 ```{r import_groups_data, message=FALSE, warning=FALSE, include=FALSE}
@@ -686,6 +688,7 @@ ggplot(urbanrural_gathered,
 
 # Generate code for inset map of central belt
 # First build large plot using National level view
+# TODO: add inner margin to layout to provide adequate spce for inset map at bottom
 
 urbanrural_uk_ecs_choropleth_plot <- tm_shape(urbanrural_sf_simplified) + 
   tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001, n=9, 
@@ -710,6 +713,8 @@ urbanrural_uk_ecs_choropleth_plot <- tm_shape(urbanrural_sf_simplified) +
 
 # Next build smaller central belt plot for inset:
 
+# TODO: fix issue here with mismatching CRS cf stackexchange
+
 urbanrural_sf_simplified_centralbelt <- st_crop(urbanrural_sf_simplified, centralbelt_region)
 
 st_crs(urbanrural_sf_simplified)
@@ -733,6 +738,13 @@ vp_urbanrural_centralbelt_ecs_choropleth_plot <- viewport(x = 1.5, y = 0.15, wid
 tmap_mode("plot")
 urbanrural_uk_ecs_choropleth_plot
 print(urbanrural_centralbelt_ecs_choropleth_plot, vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
+
+# output inset map separately first for testing
+save_tmap(urbanrural_centralbelt_ecs_choropleth_plot, "urbanrural_test.png", scale = 1, width = 6.125)
+
+# todo: refine bounding box, implement clipping on inset map for polygon layers, calc scale of inset map, extrploate and use to configure dimensions above for inset plots
+
+# centralbelt_ratio
 
 save_tmap(urbanrural_uk_ecs_choropleth_plot, "urbanrural_test.png", scale = 0.7, width = 6.125, 
   insets_tm = urbanrural_centralbelt_ecs_choropleth_plot, 
