@@ -930,13 +930,11 @@ if (file.exists("data/SSSI_SCOTLAND.shp") == FALSE) {
 # download.file("", destfile = "data/SSSI_SCOTLAND_ESRI.zip")
 unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
 }
-
 sssi <- st_read("data/SSSI_SCOTLAND.shp") %>% st_transform(paste0("+init=epsg:",27700))
 sssi_sp <- readOGR("./data", "SSSI_SCOTLAND") 
 # Generate simplified polygon for plots below
 sssi_simplified <- st_simplify(sssi)
 # sssi_simplified_sp <- rgeos::gSimplify(sssi_sp, tol=3)
-
 
 # 2. Download wild land areas:
 
@@ -948,10 +946,8 @@ unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
 }
 
 wildland <- st_read("data/WILDLAND_SCOTLAND.shp") %>% st_transform(paste0("+init=epsg:",27700))
-wildland_sp <- readOGR("./data", "WILDLAND_SCOTLAND") 
 # Generate simplified polygon for plots below
 wildland_simplified <- st_simplify(wildland)
-
 
 # 3. Download data for National Forest Inventory:
 
@@ -964,7 +960,6 @@ unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data
 }
 
 forestinv <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp") %>% st_transform(paste0("+init=epsg:",27700))
-forestinv_sp <- readOGR("./data", "National_Forest_Inventory_Woodland_Scotland_2017") 
 # Generate simplified polygon for plots below
 forestinv_simplified <- st_simplify(forestinv)
 
@@ -1024,16 +1019,7 @@ forestinv_buf500 <- st_buffer(forestinv_simplified, dist = 500)
 # Calculate number of groups within polygons
 
 # calculate coincidence of ecs points within each polygons and buffers for each
-# todo, possibly use st_difference(sssi_buf50, sssi)
-
-# TODO: sort out why these layers aren't inheriting crs
-st_crs(wildland) <- 27700
-st_crs(wildland_buf50) <- 27700
-st_crs(wildland_buf500) <- 27700
-st_crs(forestinv) <- 27700
-st_crs(forestinv_buf50) <- 27700
-st_crs(forestinv_buf500) <- 27700
-
+# TODO: possibly use st_difference(sssi_buf50, sssi)
 # TODO: consider subsetting instead here, e.g.:
 
 # plot(lnd, col = "lightgrey") # plot the london_sport object
@@ -1080,6 +1066,7 @@ sssi_counts <- as.data.frame(sssi_counts)
 colnames(sssi_counts) <- c("Within SSSIs", "...50m", "...500m")
 
 # Generate dataframe from rows based on percentages of totals
+# TODO: Work with ecs_sf etc., but first sort out why length is different between shapefiles
 ecs_sssi_row_pct <- ecs_sssi_row/length(ecs)
 pow_sssi_row_pct <- pow_sssi_row/length(pow_pointX)
 dtas_sssi_row_pct <- dtas_sssi_row/length(dtas)
@@ -1094,7 +1081,6 @@ colnames(sssi_counts_pct) <- c("% Within SSSIs", "% within 50m", "% within 500m"
 
 # Merge into larger dataframe
 sssi_counts_merged <- cbind(sssi_counts, sssi_counts_pct)
-
 
 # Generate dataframe based on wildland buffers
 

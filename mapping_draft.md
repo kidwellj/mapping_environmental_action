@@ -1,13 +1,13 @@
 ---
 title:  "Mapping Environmental Action in Scotland"
 abstract:    
-# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: February 26, 2019
+# thanks: "Replication files are available on the author's Github account (https://github.com/kidwellj/mapping_environmental_action). **Current version**: March 01, 2019
 style:  jeremy1
 author: "[Jeremy H. Kidwell](http://jeremykidwell.info)"
 affiliation: University of Birmingham
 institute: University of Birmingham
 e-mail: "[j.kidwell@bham.ac.uk](mailto:j.kidwell@bham.ac.uk)"
-date: "2019-02-26"
+date: "2019-03-01"
 bibliography: biblio.bib
 linkcolor: black
 geometry: margin=1in
@@ -89,11 +89,11 @@ Though there are too few eco-congregations and transition groups for a numerical
 
 ## Eco-Congregation Scotland groups shown by concentration in administrative regions (NUTS3)
 
-![Figure 1](figures/plot_admin_ecs_choropleth-1.png)
+![Figure 1](figures/01_admin_ecs_choropleth-1.png)
 
 
 
-![Figure 3](figures/plot_admin_ecs_normed_choropleth-1.png)![Figure 3](figures/plot_admin_ecs_normed_choropleth-2.png)
+![Figure 3](figures/02_admin_ecs_normed_choropleth-1.png)![Figure 3](figures/02_admin_ecs_normed_choropleth-2.png)
 
 Given the way population and places of worship are unevenly distributed across Scotland it is important to represent data in terms of relative distribution. For this study, we attempted to "normalise" our data in two different ways, (1) as shown by Figure 2 above, by taking population figures from the 2011 census (see data sheet in Appendix A) and (2) by adjusting relative to the number of places of worship in each council region.[^15914204] The latter of these two can yield particularly unexpected results. Thus, of the 4048 "places of worship" in Scotland, the highest concentration is actually the  region, with 435, second is 329 (). Rank of Council Areas by population and number of places of worship is also included in Appendix A.
 
@@ -105,11 +105,11 @@ Turning to the total of 4048 "places of worship" in Scotland, we find a slightly
 
 Whereas our initial measurements indicated a prominent lead for Edinburgh, by normalising our data in this way we can highlight the stronger-than-expected presence of several others that might otherwise escape notice because they lie in a region with significantly lower population or numerically less places of worship. Taking the PointX data on "places of worship" in Scotland, we find a less dramatic picture, but also a slightly different one. The positive outliers include East Renfrewshire (3.4x) Edinburgh (2.9x), Stirling (2.2), West Lothian (1.9x) and Aberdeen (1.5x). Again, negative outliers are far less dramatic, with only Midlothian possessing a ratio of more than 100% negative difference from the number of "places of worship" at 1.5x *fewer*.
 
-![Figure 4](figures/create_admin_barplot-1.png)
+![Figure 4](figures/03_admin_barplot-1.png)
 
 ## Other environmental groups shown by concentration in administrative regions (NUTS)
 
-![Figure 5](figures/create_choropleth_others-1.png)![Figure 5](figures/create_choropleth_others-2.png)![Figure 5](figures/create_choropleth_others-3.png)![Figure 5](figures/create_choropleth_others-4.png)
+![Figure 5](figures/04_choropleth_others-1.png)![Figure 5](figures/04_choropleth_others-2.png)![Figure 5](figures/04_choropleth_others-3.png)![Figure 5](figures/04_choropleth_others-4.png)
 
 ## Cartogram Comparisons
 
@@ -235,10 +235,10 @@ The key question which this analysis seeks to answer is whether ECS, or the othe
 
 Of all the groups surveyed in this study, Eco-Congregation Scotland is the most heavily concentrated in large urban areas (33.53%), exceeding by almost 50% the rate for all places of worship (22.96% in large urban areas). Transition is a much more modest 20% and development trusts a bit lower at 15%. It is interesting to note that the rate of ECS concentration in these large urban areas matches the level of overall population distribution (34.5%). On the other end of the scale, Eco-Congregation Scotland is the least concentrated in remote rural areas (with 3.93% on level 7 and 5.44% on level 8 on the urban-rural scale), though again, they correlate roughly to the general population distribution (3.2% and 2.9% respectively). Places of worship outpace both the population of Scotland and the footprint of Eco-Congregation Scotland, with 14.98% in very remote rural areas, but this is exceeded by transition at 16.47% and both by Scottish community development trusts at 32.14%. So while Eco-Congregation Scotland correlates roughly with Scottish population distribution across the urban-rural scale, it has a considerably more urban profile than either of the other two groups surveyed.
 
-![Figure 7](figures/create_ur_barplot-1.png)
+![Figure 7](figures/07_ur_barplot-1.png)
 ## Eco-Congregation Scotland\nconcentrations in Urban Rural 8-fold classifications
 
-![Figure 8](figures/create_urbanrural_ecs_chart_choropleth-1.png)
+![Figure 8](figures/08_urbanrural_ecs_chart_choropleth-1.png)
 
 
 # Wealth, Employment, and Literacy
@@ -259,7 +259,7 @@ Of all the groups surveyed in this study, Eco-Congregation Scotland is the most 
 
 ### Barplot
 
-![Figure 9](figures/create_simd_barplot-1.png)
+![Figure 9](figures/11_simd_barplot-1.png)
 
 ### Boxplot
 
@@ -304,13 +304,6 @@ We can find divergence between transition communities and eco-congregation when 
 ```
 
 ```
-## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "WILDLAND_SCOTLAND"
-## with 42 features
-## It has 3 fields
-```
-
-```
 ## Reading layer `National_Forest_Inventory_Woodland_Scotland_2017' from data source `/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data/National_Forest_Inventory_Woodland_Scotland_2017.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 199698 features and 7 fields
 ## geometry type:  POLYGON
@@ -318,14 +311,6 @@ We can find divergence between transition communities and eco-congregation when 
 ## bbox:           xmin: 65210.1 ymin: 532547.9 xmax: 461253.7 ymax: 1209179
 ## epsg (SRID):    NA
 ## proj4string:    +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +datum=OSGB36 +units=m +no_defs
-```
-
-```
-## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/kidwellj/OneDrive - bham.ac.uk/writing/201708_mapping_environmental_action/data", layer: "National_Forest_Inventory_Woodland_Scotland_2017"
-## with 199698 features
-## It has 7 fields
-## Integer64 fields read as strings:  OBJECTID
 ```
 
 # Proximity to "Wilderness"
@@ -523,9 +508,9 @@ So what did I discover? The results were inconclusive. First, it is important to
 </table>
 
 
-![Figure 11](figures/sssi_ecs_buffer_plot-1.png)
+![Figure 11](figures/14_sssi_ecs_buffer_plot-1.png)
 
-![Figure 12](figures/all_wilderness_ecs_plot-1.png)
+![Figure 12](figures/15_all_wilderness_ecs_plot-1.png)
 
 
 # Appendix A
