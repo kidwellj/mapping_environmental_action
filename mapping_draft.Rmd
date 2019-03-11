@@ -335,6 +335,7 @@ admin_lev1$ecs_count_popnorm_scaled <- admin_lev1$ecs_count_popnorm*(sum(admin_l
 admin_lev1$ecs_count_pownorm_scaled <- admin_lev1$ecs_count_pownorm*(sum(admin_lev1$ecs_count)/sum(admin_lev1$ecs_count_pownorm))
 
 # Load population statistics for normalising data by population on admin_lev2
+# TODO: source this data file in a replicable way (e.g. zenodo)
 admin_lev2_pop <- read.csv("./data/scotland_and_wales_const_scotland_2011pop.csv")
 admin_lev2 <- merge(x=admin_lev2, y=admin_lev2_pop, by.x = "code", by.y = "CODE")
 # Convert number stored as string with a comma to an integer (using data.zone data)
