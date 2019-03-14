@@ -338,6 +338,7 @@ admin_lev1$ecs_count_popnorm_scaled <- admin_lev1$ecs_count_popnorm*(sum(admin_l
 admin_lev1$ecs_count_pownorm_scaled <- admin_lev1$ecs_count_pownorm*(sum(admin_lev1$ecs_count)/sum(admin_lev1$ecs_count_pownorm))
 
 # Load population statistics for normalising data by population on admin_lev2
+# TODO: source this data file in a replicable way (e.g. zenodo)
 admin_lev2_pop <- read.csv("./data/scotland_and_wales_const_scotland_2011pop.csv")
 admin_lev2 <- merge(x=admin_lev2, y=admin_lev2_pop, by.x = "code", by.y = "CODE")
 # Convert number stored as string with a comma to an integer (using data.zone data)
@@ -928,7 +929,7 @@ We can find divergence between transition communities and eco-congregation when 
 # 1. Download data for SSSI:
 
 if (file.exists("data/SSSI_SCOTLAND.shp") == FALSE) {
-# TODO: get reliable URL for data download
+# TODO: upload data to zenodo, uncomment below
 # http://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=SSSI
 # download.file("", destfile = "data/SSSI_SCOTLAND_ESRI.zip")
 unzip("data/SSSI_SCOTLAND_ESRI.zip", exdir = "data")
@@ -942,7 +943,7 @@ sssi_simplified <- st_simplify(sssi)
 # 2. Download wild land areas:
 
 if (file.exists("data/WILDLAND_SCOTLAND.shp") == FALSE) {
-# TODO: get reliable URL for data download
+# TODO: upload data to zenodo, uncomment below
 # https://gateway.snh.gov.uk/natural-spaces/dataset.jsp?dsid=WILDLAND
 # download.file("", destfile = "data/WILDLAND_SCOTLAND_ESRI.zip")
 unzip("data/WILDLAND_SCOTLAND_ESRI.zip", exdir = "data")
