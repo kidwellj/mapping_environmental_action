@@ -766,10 +766,6 @@ vp_urbanrural_centralbelt_ecs_choropleth_plot <- viewport(x = 0.5, y = 0.1, heig
 
 # Save to file
 
-tmap_save(urbanrural_uk_ecs_choropleth_plot, filename = "urbanrural_test.png", scale = 0.7, width = 6.125, 
-  insets_tm = urbanrural_centralbelt_ecs_choropleth_plot, 
-  insets_vp = vp_urbanrural_centralbelt_ecs_choropleth_plot)
-
 # plot full map with inset
 tmap_mode("plot")
 
