@@ -479,9 +479,10 @@ admin_barplot <-
      axis.text.x = element_blank()) +
     scale_color_manual(labels = c("DTAS", "ECS", "Permaculture", "Transition"))
 
-pdf("03_admin_barplot.pdf")
+pdf("figures/03_admin_barplot.pdf")
 print(admin_barplot)
 dev.off() 
+
 ```
 
 ## Other environmental groups shown by concentration in administrative regions (NUTS)
