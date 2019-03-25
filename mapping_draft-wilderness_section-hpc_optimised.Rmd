@@ -764,8 +764,6 @@ urbanrural_centralbelt_ecs_choropleth_plot <-
 
 vp_urbanrural_centralbelt_ecs_choropleth_plot <- viewport(x = 0.5, y = 0.1, height = 6.0/centralbelt_ratio)
 
-# Save to file
-
 # plot full map with inset
 tmap_mode("plot")
 
@@ -966,8 +964,10 @@ forestinv_simplified <- st_simplify(forestinv)
 
 # download.file("https://opendata.arcgis.com/datasets/d7f6b987c7224a72a185ce012258d500_23.zip", destfile = "data/ScenicAreas.zip")
 # unzip("data/ScenicAreas.zip", exdir = "data")
-# scenicareas <- st_read("data/ScenicAreas.shp")
-# scenicareas_sp <- readOGR("./data", "ScenicAreas") 
+
+scenicareas <- st_read("data/SG_NationalScenicAreas_1998.shp") %>% st_transform(paste0("+init=epsg:",27700))
+# Generate simplified polygon for plots below
+scenicareas_simplified <- st_simplify(scenicareas)
 
 # Set symmetrical CRS for analysis below (inserted here in order to correct errors, may be deprecated later)
 # st_crs(sssi) <- 27700
@@ -1012,6 +1012,9 @@ forestinv_buf500 <- st_buffer(forestinv_simplified, dist = 500)
 # forestinv_buf500_lines = st_union(forestinv_simplified) %>% st_buffer(500) %>% 
 #   st_cast(to = "LINESTRING")
 
+scenicareas_buf50 <- st_buffer(scenicareas_simplified, dist = 50)
+scenicareas_buf500 <- st_buffer(scenicareas_simplified, dist = 500)
+
 # Calculate number of groups within polygons
 
 # calculate coincidence of ecs points within each polygons and buffers for each
@@ -1023,20 +1026,25 @@ forestinv_buf500 <- st_buffer(forestinv_simplified, dist = 500)
 # plot(lnd[ sel, ], col = "turquoise", add = TRUE) # add selected zones to map
 # from https://gotellilab.github.io/Bio381/StudentPresentations/SpatialDataTutorial.html
 
-ecs_sf_sssi <- st_within(ecs_sf, sssi)
+ecs_sf_sssi <- st_within(ecs_sf, sssi_simplified)
 ecs_sf_sssi50m <- st_within(ecs_sf, sssi_buf50)
 ecs_sf_sssi500m <- st_within(ecs_sf, sssi_buf500)
 ecs_sf_sssibeyond500m <- !(st_within(ecs_sf, sssi_buf500))
 
-ecs_sf_wildland <- st_within(ecs_sf, wildland)
+ecs_sf_wildland <- st_within(ecs_sf, wildland_simplified)
 ecs_sf_wildland50m <- st_within(ecs_sf, wildland_buf50)
 ecs_sf_wildland500m <- st_within(ecs_sf, wildland_buf500)
 ecs_sf_wildlandbeyond500m <- !(st_within(ecs_sf, wildland_buf500))
 
-ecs_sf_forestinv <- st_within(ecs_sf, forestinv)
+ecs_sf_forestinv <- st_within(ecs_sf, forestinv_simplified)
 ecs_sf_forestinv50m <- st_within(ecs_sf, forestinv_buf50)
 ecs_sf_forestinv500m <- st_within(ecs_sf, forestinv_buf500)
 ecs_sf_forestinvbeyond500m <- !(st_within(ecs_sf, forestinv_buf500))
+
+ecs_sf_scenicareas <- st_within(ecs_sf, scenicareas_simplified)
+ecs_sf_scenicareas50m <- st_within(ecs_sf, scenicareas_buf50)
+ecs_sf_scenicareas500m <- st_within(ecs_sf, scenicareas_buf500)
+ecs_sf_scenicareasbeyond500m <- !(st_within(ecs_sf, scenicareas_buf500))
 
 # TODO: implement more efficient code using do.call() function or sapply() as here https://stackoverflow.com/questions/3642535/creating-an-r-dataframe-row-by-row
 
@@ -1045,13 +1053,13 @@ ecs_sf_forestinvbeyond500m <- !(st_within(ecs_sf, forestinv_buf500))
 # Calculate incidence of ecs within SSSI and within buffers at 50/500m
 ecs_sssi_row <- c(sum(apply(st_within(ecs_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
-pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, sssi_buf500, sparse=FALSE), 1, any)))
+pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
-dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, sssi_buf500, sparse=FALSE), 1, any)))
+dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
-transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, sssi_buf500, sparse=FALSE), 1, any)))
+transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
-permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, sssi_buf500, sparse=FALSE), 1, any)))
+permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, sssi_buf500, sparse=FALSE), 1, any)))
 
 # Generate dataframe from rows based on counts
 sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
@@ -1080,18 +1088,18 @@ sssi_counts_merged <- cbind(sssi_counts, sssi_counts_pct)
 
 # Generate dataframe based on wildland buffers
 
-ecs_wildland_row <- c(sum(apply(st_within(ecs_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, wildland_buf500, sparse=FALSE), 1, any)))
+ecs_wildland_row <- c(sum(apply(st_within(ecs_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, wildland_buf500, sparse=FALSE), 1, any)))
 
-pow_wildland_row <- c(sum(apply(st_within(pow_pointX_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, wildland_buf500, sparse=FALSE), 1, any)))
+pow_wildland_row <- c(sum(apply(st_within(pow_pointX_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(ecs_wildland_row, pow_wildland_row)
 
-dtas_wildland_row <- c(sum(apply(st_within(dtas_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, wildland_buf500, sparse=FALSE), 1, any)))
+dtas_wildland_row <- c(sum(apply(st_within(dtas_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, dtas_wildland_row)
 
-transition_wildland_row <- c(sum(apply(st_within(transition_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, wildland_buf500, sparse=FALSE), 1, any)))
+transition_wildland_row <- c(sum(apply(st_within(transition_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, transition_wildland_row)
 
-permaculture_wildland_row <- c(sum(apply(st_within(permaculture_sf, wildland, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, wildland_buf500, sparse=FALSE), 1, any)))
+permaculture_wildland_row <- c(sum(apply(st_within(permaculture_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, permaculture_wildland_row)
 
 colnames(wildland_counts) <- c("Within Wildland Areas", "...50m", "...500m")
@@ -1115,18 +1123,18 @@ wildland_counts_merged <- cbind(wildland_counts, wildland_counts_pct)
 
 # Generate dataframe based on forestinv buffers
 
-ecs_forestinv_row <- c(sum(apply(st_within(ecs_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+ecs_forestinv_row <- c(sum(apply(st_within(ecs_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, forestinv_buf500, sparse=FALSE), 1, any)))
 
-pow_forestinv_row <- c(sum(apply(st_within(pow_pointX_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+pow_forestinv_row <- c(sum(apply(st_within(pow_pointX_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, forestinv_buf500, sparse=FALSE), 1, any)))
 forestinv_counts <- rbind(ecs_forestinv_row, pow_forestinv_row)
 
-dtas_forestinv_row <- c(sum(apply(st_within(dtas_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+dtas_forestinv_row <- c(sum(apply(st_within(dtas_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, forestinv_buf500, sparse=FALSE), 1, any)))
 forestinv_counts <- rbind(forestinv_counts, dtas_forestinv_row)
 
-transition_forestinv_row <- c(sum(apply(st_within(transition_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+transition_forestinv_row <- c(sum(apply(st_within(transition_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, forestinv_buf500, sparse=FALSE), 1, any)))
 forestinv_counts <- rbind(forestinv_counts, transition_forestinv_row)
 
-permaculture_forestinv_row <- c(sum(apply(st_within(permaculture_sf, forestinv, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+permaculture_forestinv_row <- c(sum(apply(st_within(permaculture_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, forestinv_buf500, sparse=FALSE), 1, any)))
 forestinv_counts <- rbind(forestinv_counts, permaculture_forestinv_row)
 
 colnames(forestinv_counts) <- c("Within Woodlands", "...50m", "...500m")
@@ -1146,6 +1154,42 @@ colnames(forestinv_counts_pct) <- c("% Within Woodlands", "% within 50m", "% wit
 
 # Merge into larger dataframe
 forestinv_counts_merged <- cbind(forestinv_counts, forestinv_counts_pct)
+
+# Generate dataframe based on scenicareas buffers
+
+ecs_scenicareas_row <- c(sum(apply(st_within(ecs_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+
+pow_scenicareas_row <- c(sum(apply(st_within(pow_pointX_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+scenicareas_counts <- rbind(ecs_scenicareas_row, pow_scenicareas_row)
+
+dtas_scenicareas_row <- c(sum(apply(st_within(dtas_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+scenicareas_counts <- rbind(scenicareas_counts, dtas_scenicareas_row)
+
+transition_scenicareas_row <- c(sum(apply(st_within(transition_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+scenicareas_counts <- rbind(scenicareas_counts, transition_scenicareas_row)
+
+permaculture_scenicareas_row <- c(sum(apply(st_within(permaculture_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+scenicareas_counts <- rbind(scenicareas_counts, permaculture_scenicareas_row)
+
+colnames(scenicareas_counts) <- c("Within Scenic Areas", "...50m", "...500m")
+
+# Generate dataframe from rows based on percentages of totals
+
+ecs_scenicareas_row_pct <- ecs_scenicareas_row/length(ecs_sf)
+pow_scenicareas_row_pct <- pow_scenicareas_row/length(pow_pointX)
+dtas_scenicareas_row_pct <- dtas_scenicareas_row/length(dtas)
+transition_scenicareas_row_pct <- transition_scenicareas_row/length(transition)
+permaculture_scenicareas_row_pct <- permaculture_scenicareas_row/length(permaculture)
+
+scenicareas_counts_pct <- rbind(ecs_scenicareas_row_pct, pow_scenicareas_row_pct)
+scenicareas_counts_pct <- rbind(scenicareas_counts_pct, dtas_scenicareas_row_pct)
+scenicareas_counts_pct <- rbind(scenicareas_counts_pct, transition_scenicareas_row_pct)
+scenicareas_counts_pct <- rbind(scenicareas_counts_pct, permaculture_scenicareas_row_pct)
+colnames(scenicareas_counts_pct) <- c("% Within scenicareass", "% within 50m", "% within 500m")
+
+# Merge into larger dataframe
+scenicareas_counts_merged <- cbind(scenicareas_counts, scenicareas_counts_pct)
+
 
 ```
 
@@ -1173,10 +1217,16 @@ forestinv_counts_merged %>%
   kable(format = "html", col.names = colnames(forestinv_counts_merged), caption = "Group counts within woodlands") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
+scenicareas_counts_merged %>%
+  kable(format = "html", col.names = colnames(scenicareas_counts_merged), caption = "Group counts within woodlands") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
+
+
 # Output CSV files for tables above
 write.csv(sssi_counts_merged, "derivedData/sssi_counts_merged.csv", row.names=TRUE)
 write.csv(wildland_counts_merged, "derivedData/wildland_counts_merged.csv", row.names=TRUE)
 write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", row.names=TRUE)
+write.csv(scenicareas_counts_merged, "derivedData/scenicareas_counts_merged.csv", row.names=TRUE)
 
 ```
 
@@ -1219,6 +1269,7 @@ tm_shape(sssi_simplified, bbox = scotland) +
 tm_shape(sssi_simplified, bbox = scotland) + tm_fill(col = "blue", alpha = 0.4, lwd=0.01, title = "Wilderness Areas") + 
   tm_shape(wildland_simplified, bbox = scotland) + tm_fill(col = "green", alpha = 0.4, lwd=0.01) + 
   tm_shape(forestinv_simplified, bbox = scotland) + tm_fill(col = "orange", alpha = 0.4, lwd=0.01) + 
+  tm_shape(scenicareas_simplified, bbox = scotland) + tm_fill(col = "orange", alpha = 0.4, lwd=0.01) + 
   tm_shape(admin_lev1) + tm_borders(lwd=0.01) +
 # tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
   tm_shape(ecs_sf) + tm_dots("red", size = .02, alpha = .4) +
