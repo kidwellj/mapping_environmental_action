@@ -55,6 +55,7 @@ local({r <- getOption("repos")
        options(repos=r)
 })
 # TODO: remove sp etc. once sf is fully implemented
+# TODO: automatically test for packages below on given execution environment and run install.packages() as needed.
 require(RCurl) # used for fetching reproducible datasets
 require(sf) # new simplefeature data class, supercedes sp in many ways
 require(sp) # needed for proj4string, deprecated by sf()
@@ -255,17 +256,12 @@ permaculture_sf_centralbelt <- st_intersection(permaculture_sf, centralbelt_regi
 ```
 
 ```{r process_admin_data}
-# TODO: Code below augments existing dataframes to run calculations and add columns with point counts per polygon, 
-# percentages, and normalising data. I'm pretty sure this can all be done inline under create_admin_ecs_choropleth 
-# code chunk without adding new columns to dataframes here, but how?!
+# Augment existing dataframes to run calculations and add columns with point counts per polygon, 
+# percentages, and normalising data.
 
 # This code will generate a table of frequencies for each spatialpointsdataframe in admin
 # calculate count of ECS for fields in admin and provide percentages
 # JK Note: need to convert from poly.counts, which uses sp() to st_covers() which uses sf() - cf. https://stackoverflow.com/questions/45314094/equivalent-of-poly-counts-to-count-lat-long-pairs-falling-inside-of-polygons-w#45337050
-
-# Commenting out 27 Feb 2019 in light of revisions to CRS handling above
-# ecs <- spTransform(ecs, proj4string(admin_lev1))
-# transition <- spTransform(transition, proj4string(admin_lev1))
 
 admin_lev1$ecs_count <- poly.counts(ecs,admin_lev1)
 admin_lev1$ecs_percent<- prop.table(admin_lev1$ecs_count)
