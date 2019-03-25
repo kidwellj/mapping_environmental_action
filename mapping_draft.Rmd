@@ -78,6 +78,9 @@ require(plotly) # allows for export of plots to dynamic web pages
 require(gtable) # more powerful package for multi-plot layouts, not necessary for knitr
 require(showtext) # for loading in fonts
 require(extrafont) # font support
+# consider implementing parallel core execution here:
+# require(parallel)
+# as per https://blog.dominodatalab.com/multicore-data-science-r-python/
 
 # Set up local workspace:
 if (dir.exists("data") == FALSE) {
