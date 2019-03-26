@@ -1214,11 +1214,11 @@ wildland_counts_merged %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
 forestinv_counts_merged %>%
-  kable(format = "html", col.names = colnames(forestinv_counts_merged), caption = "Group counts within woodlands") %>%
+  kable(format = "html", col.names = colnames(forestinv_counts_merged), caption = "Group counts within Woodlands") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
 scenicareas_counts_merged %>%
-  kable(format = "html", col.names = colnames(scenicareas_counts_merged), caption = "Group counts within woodlands") %>%
+  kable(format = "html", col.names = colnames(scenicareas_counts_merged), caption = "Group counts within Scenic Areas") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
 
@@ -1273,6 +1273,10 @@ tm_shape(sssi_simplified, bbox = scotland) + tm_fill(col = "blue", alpha = 0.4, 
   tm_shape(admin_lev1) + tm_borders(lwd=0.01) +
 # tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
   tm_shape(ecs_sf) + tm_dots("red", size = .02, alpha = .4) +
+  tm_shape(pow_pointX_sf) + tm_dots("orange", size = .01, alpha = .2) +
+  tm_shape(dtas_sf) + tm_dots("blue", size = .02, alpha = .4) +
+  tm_shape(transition_sf) + tm_dots("green", size = .02, alpha = .4) +
+  tm_shape(permaculture_sf) + tm_dots("pink", size = .025, alpha = .4) +
 # tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
   tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 

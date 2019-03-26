@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --mail-type ALL
 #SBATCH --cpus-per-task 1
-#SBATCH --time 60:0
+#SBATCH --time 120:0
 #SBATCH --ntasks 20
 #SBATCH --qos bbdefault
 
