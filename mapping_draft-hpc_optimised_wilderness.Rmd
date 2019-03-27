@@ -550,8 +550,8 @@ pow_sssi_row_pct <- pow_sssi_row/length(pow_pointX)
 dtas_sssi_row_pct <- dtas_sssi_row/length(dtas)
 transition_sssi_row_pct <- transition_sssi_row/length(transition)
 permaculture_sssi_row_pct <- permaculture_sssi_row/length(permaculture)
-grocery_sssi_row_pct <- grocery_sssi_row/length(poi_grocery_sf)
-pubs_sssi_row_pct <- pubs_sssi_row/length(poi_pubs_sf)
+grocery_sssi_row_pct <- grocery_sssi_row/length(poi_grocery)
+pubs_sssi_row_pct <- pubs_sssi_row/length(poi_pubs)
 
 sssi_counts_pct <- rbind(ecs_sssi_row_pct, pow_sssi_row_pct)
 sssi_counts_pct <- rbind(sssi_counts_pct, dtas_sssi_row_pct)
@@ -583,7 +583,6 @@ wildland_counts <- rbind(wildland_counts, permaculture_wildland_row)
 grocery_wildland_row <- c(sum(apply(st_within(poi_grocery_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery_sf, wildland_buf500, sparse=FALSE), 1, any)))
 
 pubs_wildland_row <- c(sum(apply(st_within(poi_pubs_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs_sf, wildland_buf500, sparse=FALSE), 1, any)))
-
 
 colnames(wildland_counts) <- c("Within Wildland Areas", "...50m", "...500m")
 
@@ -719,56 +718,6 @@ write.csv(sssi_counts_merged, "derivedData/sssi_counts_merged.csv", row.names=TR
 write.csv(wildland_counts_merged, "derivedData/wildland_counts_merged.csv", row.names=TRUE)
 write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", row.names=TRUE)
 write.csv(scenicareas_counts_merged, "derivedData/scenicareas_counts_merged.csv", row.names=TRUE)
-
-```
-
-# Appendix A
-
-```{r admin_table}
-# Output CSV files for various levels of admin
-write.csv(admin_lev1, "derivedData/admin_lev1.csv", row.names=FALSE)
-write.csv(admin_lev2, "derivedData/admin_lev2.csv", row.names=FALSE)
-write.csv(ecs, "derivedData/ecs.csv", row.names=FALSE)
-write.csv(transition, "derivedData/transition.csv", row.names=FALSE)
-write.csv(permaculture, "derivedData/permaculture.csv", row.names=FALSE)
-write.csv(dtas, "derivedData/dtas.csv", row.names=FALSE)
-write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
-
-# Output mmd tables using kable
-admin_lev1_df <- as_data_frame(admin_lev1[,c(3,5,7,11,13)])
-
-admin_lev1_df %>%
-  kable(format = "html", col.names = colnames(admin_lev1_df)) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
-    kableExtra::scroll_box(width = "100%", height = "800px")
-```
-
-# Appendix B
-
-```{r admin_table_withproportions}
-
-admin_lev1_prop_df <- as_data_frame(admin_lev1[,c(3,5:14,22:25)])
-
-admin_lev1_prop_df %>%
-  kable(format = "html", col.names = colnames(admin_lev1_prop_df)) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
-    kableExtra::scroll_box(width = "100%", height = "800px")
-```
-
-# Appendix C - Data by Urban / Rural Classification
-
-```{r urbanrural_table}
-# Output CSV files for urbanrural tables
-write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
-
-# Output mmd tables using kable
-
-urbanrural_table <- as_data_frame(urbanrural[,c(1,7:16)])
-
-urbanrural_table %>%
-  kable(format = "html", col.names = colnames(urbanrural_table)) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
-    kableExtra::scroll_box(width = "100%")
 
 ```
 
