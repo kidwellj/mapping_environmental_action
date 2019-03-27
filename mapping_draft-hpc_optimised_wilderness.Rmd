@@ -370,7 +370,7 @@ poi_grocery_sf <- st_as_sf(poi_grocery, coords = c("long_wgs", "lat_wgs"), crs=p
 
 # Load in British pubs from Ordnance survey dataset
 poi_pubs <- read.csv("data/poi_pubs.csv", header = FALSE, sep = "|")
-# select useful columns
+# select useful columns 
 poi_pubs <- subset(poi_pubs, select = c("V1", "V2", "V3", "V4", "V5"))
 # rename columns to tidier names
 colnames(poi_pubs) <- c("refnum", "name", "code", "x", "y")
