@@ -378,7 +378,7 @@ coordinates(poi_pubs) <- c("x", "y")
 proj4string(poi_pubs) <- proj4string(admin_lev1)
 # filter out non-Scottish pubs
 poi_pubs <- poi_pubs[!is.na(over(poi_pubs, geometry(admin_lev1))),]
-poi_pubs_sf <- st_as_sf(poi_pubs_wgs, coords = c("x", "y"), crs=paste0("+init=epsg:",27700))
+poi_pubs_sf <- st_as_sf(poi_pubs, coords = c("x", "y"), crs=paste0("+init=epsg:",27700))
 ```
 
 ```{r wilderness_data_prep} 
