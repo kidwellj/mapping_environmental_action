@@ -36,48 +36,67 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-require(knitr)
-require(kableExtra)
+# Note, this script has been written largely with RStudio on MacOS, but is compiled on 
+# an hpc cluster which runs Linux, so some tweaks below ensure smooth execution 
+# in both environments. Also, as above, the script is meant to output to both PDF and
+# html_document knitr formats.
+require(knitr) # used to knit RMarkdown format script into working documents in various formats 
+require(kableExtra) # used for markdown table formatting compatible with knitr
+# note: some features of the below line are specific to html/pdf format and will need to be adapted pre-compile until dual outputs are working (see https://github.com/kidwellj/mapping_environmental_action/issues/2)
 knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE, dpi=300, fig.width=7)
-# TODO: consider implementing knitcitations - https://github.com/cboettig/knitcitations
-# TODO: fix simultaneous output towards PDF, see here: https://stackoverflow.com/questions/23621012/display-and-save-the-plot-simultaneously-in-r-rstudio
 ```
 
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
-## Default repo
-# setwd("/Users/jeremy/gits/mapping_environmental_action")
-# setwd("/Users/kidwellj/OneDrive\ -\ bham.ac.uk/writing/201708_mapping_environmental_action")
+# Set up working machine independent working directory and environment
+require(here) # used to keep working directory organised and portable
+require(renv) # used to set up environment
+require(usethis) # integrates git support for rStudio
 
 # Set repository to be new standard, e.g. cloud server. 
-# This will avoid a dialogue box if packages are to be installed for below on first run.
+# For smooth execution on command-line knitr - this will avoid a dialogue box 
+# if packages are to be installed for below on first run
 local({r <- getOption("repos")
        r["CRAN"] <- "https://cloud.r-project.org" 
        options(repos=r)
 })
-# TODO: remove sp etc. once sf is fully implemented
-# TODO: automatically test for packages below on given execution environment and run install.packages() as needed.
+
 require(RCurl) # used for fetching reproducible datasets
 require(sf) # new simplefeature data class, supercedes sp in many ways
-require(sp) # needed for proj4string, deprecated by sf()
-require(rgdal) # deprecated by sf()
-require(GISTools) # deprecated by sf()
-require(rgeos) # deprecated by sf()
-require(maptools)
+# See issue https://github.com/kidwellj/mapping_environmental_action/issues/3 for progress re: migration from sp()
+# require(sp) # needed for proj4string, deprecated by sf()
+# require(rgdal) # deprecated by sf()
+# require(GISTools) # deprecated by sf()
+# require(rgeos) # deprecated by sf()
+# require(maptools)
 require(ggplot2)
 require(tmap) # using as an alternative to base r graphics and ggplot for geospatial plots
 require(tmaptools) # for get_asp_ratio below
 require(grid) # using for inset maps on tmap
 require(broom) # required for tidying SPDF to data.frame for ggplot2
 require(tidyr)  # using for grouped bar plot
-require(plyr)
-require(dplyr)
+# require(plyr) # already a dependency of knitr, remove?
+# require(dplyr) # already a dependency of knitr, remove?
 require(reshape2)  # using for grouped bar plot
 require(scales)
 # require(sqldf) # using sqldf to filter before loading very large data sets
+
+## Packages required for PostGIS database access
+# Many thanks to Sébastien Rochette for documentation here: https://www.r-bloggers.com/interact-with-postgis-from-r/
+library(DBI)
+library(RPostgres)
+library(sqlpetr) # useful for visual DB panels in RStudio, see https://smithjd.github.io/sqlpetr/
+# library(rpostgis)
+library(dbplyr)
+
+## Packages required for knitr output
+## Packages used for features or issues relating to html_document knitr output
 require(plotly) # allows for export of plots to dynamic web pages
 require(gtable) # more powerful package for multi-plot layouts, not necessary for knitr
-require(showtext) # for loading in fonts
-require(extrafont) # font support
+
+## Packages used for features or issues relating to pdf_document knitr format
+# Note: implementation of fonts (currently commented out) is specific to pdf_document output
+# require(showtext) # for loading in fonts
+# require(extrafont) # font support
 
 # Set up local workspace:
 if (dir.exists("data") == FALSE) {
@@ -96,12 +115,15 @@ if (dir.exists("derivedData") == FALSE) {
 # data-sets and papers.
 
 # Working with EPSG codes for spatialfeature CRS given the usage of this approach with sf()
+# for discussion related to this fix, see https://gis.stackexchange.com/q/313761/41474
+# TODO: remove below as part of overall migration to sf()
+# See issue https://github.com/kidwellj/mapping_environmental_action/issues/3 for progress re: migration from sp()
 bng <- CRS("+init=epsg:27700")
 wgs84 <- CRS("+init=epsg:4326")
 
-# Configure fonts for plots below
-
+## Configure fonts for plots below, commented out currently because of incompatibilities
 ## Loading Google fonts (http://www.google.com/fonts)
+# Note: implementation of fonts (currently commented out) is specific to pdf_document output
 # font_add_google("Merriweather", "merriweather")
 # The following will load in system fonts (uncomment and run as needed on first execution)
 # font_import(pattern="[A/a]rial", prompt=FALSE)
@@ -116,12 +138,25 @@ Until recently, environmentalism has been treated by governments and environment
 ```{r load_ecs_data, message=FALSE, warning=FALSE}
 # read in Eco-Congregation Scotland data and-------------------
 # ...turn it into a SpatialPointsDataFrame---------------------
-# TODO: upload ECS-GIS-Locations_3.0.csv to zenodo repository, i.e.
+# TODO: update below to match new dataset once it has been uploaded to zenodo
+# if (file.exists("data/ECS-GIS-Locations_3.0.csv") == FALSE) {
+# download.file("https://____.zip", 
+#               destfile = "data/____.zip")
+# unzip("data/____.zip", exdir = "data")
+# }
+
+# TODO: remove below as part of overall migration to sf()
+# See issue https://github.com/kidwellj/mapping_environmental_action/issues/3 for progress re: migration from sp()
 ecs <- read.csv("data/ECS-GIS-Locations_3.0.csv", comment.char="#")
 # unnecessary with advent of sf (above)
 coordinates(ecs) <- c("X", "Y")
 # Modified to use EPSG code directly 27 Feb 2019
 proj4string(ecs) <- bng
+# Note, use of paste0 here relates to fix noted above.
+# for discussion related to this approach, see https://gis.stackexchange.com/q/313761/41474
+# read in Eco-Congregation Scotland data and-------------------
+# ...turn it into a SpatialPointsDataFrame---------------------
+
 ecs_sf <- st_as_sf(ecs, coords = c("X", "Y"), crs=paste0("+init=epsg:",27700))
 ```
 
@@ -357,7 +392,7 @@ Though there are too few eco-congregations and transition groups for a numerical
 
 ```{r 01_admin_ecs_choropleth, fig.width=4, fig.cap="Figure 1"}
 # Note: for more information on EU administrative levels, see here: https://ec.europa.eu/eurostat/web/nuts/national-structures-eu
-# TODO: clip choropleth polygons to buildings shapefile (possble superceded by pverlay on lev2)
+# TODO: clip choropleth polygons to buildings shapefile (possibly superceded by pverlay on lev2)
 
 # Draw initial choropleth map of ECS concentration (using tmap and sf below by default)
 # Revising re: CRS inset maps complete to here

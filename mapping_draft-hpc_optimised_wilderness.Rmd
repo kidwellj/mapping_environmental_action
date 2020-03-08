@@ -35,7 +35,7 @@ output:
   
 ---
 
-```{r setup, include=FALSE}
+```{R setup, include=FALSE}
 require(knitr)
 require(kableExtra)
 knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE, dpi=300, fig.width=7)
@@ -43,7 +43,7 @@ knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FA
 # TODO: fix simultaneous output towards PDF, see here: https://stackoverflow.com/questions/23621012/display-and-save-the-plot-simultaneously-in-r-rstudio
 ```
 
-```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+```{R load_packages, message=FALSE, warning=FALSE, include=FALSE}
 ## Default repo
 # setwd("/Users/jeremy/gits/mapping_environmental_action")
 # setwd("/Users/kidwellj/OneDrive\ -\ bham.ac.uk/writing/201708_mapping_environmental_action")
