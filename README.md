@@ -18,7 +18,7 @@ To skip ahead and start reading the actual paper in raw format, click on [`mappi
 
 Now for...
 
-## The quick technical version ##
+## The technical version ##
 
 This repository contains the code and writing towards a (working draft of a) scholarly paper that presents my analysis of the geospatial footprint of eco-groups in the UK. This is based on research I have been conducting since 2013 and that is ongoing. The paper is written in R Markdown and for the most part, I'm using the conventions outlined by Kieran Healy [here](https://kieranhealy.org/blog/archives/2014/01/23/plain-text/) and is best viewed (I think) in [R Studio](https://www.rstudio.com) though it will be reasonably comprehensible to anyone using a Markdown editor. If I'm not working in RStudio, I'm probably in Sublime text, FYI. Co-authors and collaborators take note, generally, I use [Hadley Wickham's venerable R Style Guide](http://adv-r.had.co.nz/Style.html). 
 
@@ -49,14 +49,29 @@ There are a few aspects of this code which are novel or were difficult that I'm 
 - The level of reproducibility
 - Optimisation of intensive geospatial operations for htpc and parallel computing
 
-# Prerequisites 
+# Prerequisites for reproducing this codebase
 
 I've tried to follow best practices in setting up this script for reproducibility, but given some of the choices I've had to make computationally (e.g. running some operations in PostGIS) some setup is required before execution will be successful.
 
 These steps are:
 
-1. Acquire a working installation of R. I have produced a Docker container which replicates the environment I have used to execute this script which is probably the easiest way to complete this task.
+1. Acquire a working installation of R (and RStudio). I have produced a Docker container that replicates the environment I have used to execute this script that is probably the easiest way to complete this task.
 2. Set up a working Postgres database with PostGIS extensions installed. The script will download necessary data and load it into your database if it is not already in place.
+3. Install platform appropriate prerequisites for the R odbc() package, see here: [https://github.com/r-dbi/odbc#installation]
+4. Configure a local `config.yml` file with the following information (used to connect to your PostGIS database):
+```
+default:
+  datawarehouse:
+    driver: 'Postgres' 
+    server: 'change.to.yourserver.com'
+    uid: 'change-to-your-username'
+    pwd: 'change-to-your-password'  
+    port: 5432
+    database: 'database-name'
+```
+5. Clone or download the code from this repository
+6. Set up a proper R/RStudio working environment. I use the `renv` package to manage working environment, which takes snapshots and stores them to `renv.lock`. If you run `renv::restore()` in R after loading this code, it will install necessary libraries at proper versions.
+7. Nearly all of the data used in this study is open, with one exception, that of the Ordnance Survey PointX data product. This is available to most UK academics via the EDINA service, so the user will need to manually download this data and place it in the `/data/` directory.
 
 # Contributing
 
