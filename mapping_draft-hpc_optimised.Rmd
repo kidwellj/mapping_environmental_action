@@ -36,48 +36,65 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-require(knitr)
-require(kableExtra)
+# Note, this script has been written largely with RStudio on MacOS, but is compiled on 
+# an hpc cluster which runs Linux, so some tweaks below ensure smooth execution 
+# in both environments. Also, as above, the script is meant to output to both PDF and
+# html_document knitr formats.
+require(knitr) # used to knit RMarkdown format script into working documents in various formats 
+require(kableExtra) # used for markdown table formatting compatible with knitr
+# note: some features of the below line are specific to html/pdf format and will need to be adapted pre-compile until dual outputs are working (see https://github.com/kidwellj/mapping_environmental_action/issues/2)
 knitr::opts_chunk$set(fig.path='figures/', warning=FALSE, echo=FALSE, message=FALSE, dpi=300, fig.width=7)
-# TODO: consider implementing knitcitations - https://github.com/cboettig/knitcitations
-# TODO: fix simultaneous output towards PDF, see here: https://stackoverflow.com/questions/23621012/display-and-save-the-plot-simultaneously-in-r-rstudio
 ```
 
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
-## Default repo
-# setwd("/Users/jeremy/gits/mapping_environmental_action")
-# setwd("/Users/kidwellj/OneDrive\ -\ bham.ac.uk/writing/201708_mapping_environmental_action")
+# Set up working machine independent working directory and environment
+require(here) # used to keep working directory organised and portable
+require(renv) # used to set up environment
+require(usethis) # integrates git support for rStudio
 
 # Set repository to be new standard, e.g. cloud server. 
-# This will avoid a dialogue box if packages are to be installed for below on first run.
+# For smooth execution on command-line knitr - this will avoid a dialogue box 
+# if packages are to be installed for below on first run
 local({r <- getOption("repos")
        r["CRAN"] <- "https://cloud.r-project.org" 
        options(repos=r)
 })
-# TODO: remove sp etc. once sf is fully implemented
-# TODO: automatically test for packages below on given execution environment and run install.packages() as needed.
+
 require(RCurl) # used for fetching reproducible datasets
 require(sf) # new simplefeature data class, supercedes sp in many ways
-require(sp) # needed for proj4string, deprecated by sf()
-require(rgdal) # deprecated by sf()
-require(GISTools) # deprecated by sf()
-require(rgeos) # deprecated by sf()
-require(maptools)
+# See issue https://github.com/kidwellj/mapping_environmental_action/issues/3 for progress re: migration from sp()
+# require(sp) # needed for proj4string, deprecated by sf()
+# require(maptools)
 require(ggplot2)
 require(tmap) # using as an alternative to base r graphics and ggplot for geospatial plots
 require(tmaptools) # for get_asp_ratio below
 require(grid) # using for inset maps on tmap
 require(broom) # required for tidying SPDF to data.frame for ggplot2
 require(tidyr)  # using for grouped bar plot
-require(plyr)
-require(dplyr)
+# require(plyr) # already a dependency of knitr, remove?
+# require(dplyr) # already a dependency of knitr, remove?
 require(reshape2)  # using for grouped bar plot
 require(scales)
 # require(sqldf) # using sqldf to filter before loading very large data sets
+
+## Packages required for PostGIS database access
+# Many thanks to Sébastien Rochette for documentation here: https://www.r-bloggers.com/interact-with-postgis-from-r/
+# require(config) # used to access database connection credentials in config.yml file below
+# library(DBI)
+# library(odbc)
+# library(RPostgres)
+# library(rpostgis)
+# library(dbplyr)
+
+## Packages required for knitr output
+## Packages used for features or issues relating to html_document knitr output
 require(plotly) # allows for export of plots to dynamic web pages
 require(gtable) # more powerful package for multi-plot layouts, not necessary for knitr
-require(showtext) # for loading in fonts
-require(extrafont) # font support
+
+## Packages used for features or issues relating to pdf_document knitr format
+# Note: implementation of fonts (currently commented out) is specific to pdf_document output
+# require(showtext) # for loading in fonts
+# require(extrafont) # font support
 
 # Set up local workspace:
 if (dir.exists("data") == FALSE) {
@@ -90,18 +107,33 @@ if (dir.exists("derivedData") == FALSE) {
   dir.create("derivedData")
 }
 
+# # Setup PostGIS database connection
+# dw <- config::get("datawarehouse")
+# 
+# con <- dbConnect(odbc::odbc(),
+#   driver = dw$driver,
+#   database = dw$database,
+#   uid = dw$uid,
+#   pwd = dw$pwd,
+#   host = dw$server,
+#   port = 5432
+#   )
+
 # Define Coordinate Reference Systems (CRS) for later use
 # Note: I've used British National Grid (27000) in this paper, but have found that 
 # it is falling out of use in many cases, so will be defaulting to WGS84 in future 
 # data-sets and papers.
 
 # Working with EPSG codes for spatialfeature CRS given the usage of this approach with sf()
+# for discussion related to this fix, see https://gis.stackexchange.com/q/313761/41474
+# TODO: remove below as part of overall migration to sf()
+# See issue https://github.com/kidwellj/mapping_environmental_action/issues/3 for progress re: migration from sp()
 bng <- CRS("+init=epsg:27700")
 wgs84 <- CRS("+init=epsg:4326")
 
-# Configure fonts for plots below
-
+## Configure fonts for plots below, commented out currently because of incompatibilities
 ## Loading Google fonts (http://www.google.com/fonts)
+# Note: implementation of fonts (currently commented out) is specific to pdf_document output
 # font_add_google("Merriweather", "merriweather")
 # The following will load in system fonts (uncomment and run as needed on first execution)
 # font_import(pattern="[A/a]rial", prompt=FALSE)
@@ -116,16 +148,24 @@ Until recently, environmentalism has been treated by governments and environment
 ```{r load_ecs_data, message=FALSE, warning=FALSE}
 # read in Eco-Congregation Scotland data and-------------------
 # ...turn it into a SpatialPointsDataFrame---------------------
-# TODO: upload ECS-GIS-Locations_3.0.csv to zenodo repository, i.e.
-ecs <- read.csv("data/ECS-GIS-Locations_3.0.csv", comment.char="#")
-# unnecessary with advent of sf (above)
-coordinates(ecs) <- c("X", "Y")
-# Modified to use EPSG code directly 27 Feb 2019
-proj4string(ecs) <- bng
-ecs_sf <- st_as_sf(ecs, coords = c("X", "Y"), crs=paste0("+init=epsg:",27700))
+# TODO: update below to match new dataset once it has been uploaded to zenodo
+# if (file.exists("data/ECS-GIS-Locations_3.0.geojson") == FALSE) {
+# download.file("https://____.zip", 
+#               destfile = "data/____.zip")
+# unzip("data/____.zip", exdir = "data")
+# }
+
+# Note, use of paste0 here relates to fix noted above.
+# for discussion related to this approach, see https://gis.stackexchange.com/q/313761/41474
+# read in Eco-Congregation Scotland data and-------------------
+# ...turn it into a SimpleFeature---------------------
+ecs <- st_read("data/ECS-GIS-Locations_3.0.geojson") %>% st_transform(paste0("+init=epsg:",27700))
+# Write data to PostGIS database for later analysis, currently commented out for later integration
+# st_write(ecs, dsn = con, layer = "ecs",
+#          overwrite = FALSE, append = FALSE)
 ```
 
-There are `r length(ecs)` eco-congregations in Scotland. By some measurements, particularly in terms of individual sites and possibly also with regards to volunteers, this makes Eco-Congregation Scotland one of the largest environmental third-sector groups in Scotland.[^159141043] 
+There are `r length(ecs$name)` eco-congregations in Scotland. By some measurements, particularly in terms of individual sites and possibly also with regards to volunteers, this makes Eco-Congregation Scotland one of the largest environmental third-sector groups in Scotland.[^159141043] 
 
 In seeking to conduct GIS and statistical analysis of ECS, it is important to note that there some ways in which these sites are statistically opaque. Our research conducted through interviews at a sampling of sites and analysis of a variety of documents suggests that there is a high level of diversity both in terms of the number of those participating in environmental action and the types of action underway at specific sites. Work at a particular site can also ebb and flow over the course of time. Of course, as research into other forms of activism and secular environmental NGOs has shown, this is no different from any other third sector volunteer group. Variability is a regular feature of groups involved in activism and/or environmental concern. 
 
@@ -141,7 +181,7 @@ For the sake of comparison, we also measured the geographical footprint of two o
 
 # Technical Background
 
-Analysis was conducted using QGIS 2.8 and R `r getRversion()`, and data-sets were generated in CSV format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
+Analysis was conducted using QGIS 3.12 and R `r getRversion()`, and data-sets were generated in CSV, geopackage, and geojson format.[^15541313] To begin with, I assembled a data set consisting of x and y coordinates for each congregation in Scotland and collated this against a variety of other specific data. Coordinates were checked by matching UK postcodes of individual congregations against geo-referencing data in the Office for National Statistics postcode database. In certain instances a single "congregation" is actually a series of sites which have joined together under one administrative unit. In these cases, each site was treated as a separate data point if worship was held at that site at least once a month, but all joined sites shared a single unique identifier. As noted above, two other datasets were generated for the sake of comparative analysis.[^177171536] These included one similar Environmental Non-Governmental Organisation (ENGO) in Scotland (1) Transition Scotland (which includes Scotland Communities Climate Action Network);[^15541342] and another community-based NGO, Scottish Community Development Trusts.[^158261232] As this report will detail, these three overlap in certain instances both literally and in terms of their aims, but each also has a separate identity and footprint in Scotland. Finally, in order to normalise data, we utilised the PointX POI dataset which maintains a complete database of Places of Worship in Scotland.[^15541614]
 
 # Background and History of Eco-Congregation Scotland
 
@@ -149,17 +189,16 @@ Eco-Congregation Scotland began a year before the official launch of Eco-Congreg
 
 ```{r calculate_ecs_by_year, message=FALSE, warning=FALSE}
 # Tidy up date fields and convert to date data type
-ecs$registration <- as.Date(ecs$registration, "%Y-%m-%d")
-# TODO: Fix issues here with R complaining that "character string is not in a std...
-# ecs$award1 <- as.Date(ecs$award1)
-# ecs$award2 <- as.Date(ecs$award2)
-# ecs$award3 <- as.Date(ecs$award3)
-# ecs$award4 <- as.Date(ecs$award4)
+ecs$registration <- as.Date(ecs$registration, "%d/%m/%Y")
+ecs$award1 <- as.Date(ecs$award1, "%d/%m/%Y")
+ecs$award2 <- as.Date(ecs$award2, "%d/%m/%Y")
+ecs$award3 <- as.Date(ecs$award3, "%d/%m/%Y")
+ecs$award4 <- as.Date(ecs$award4, "%d/%m/%Y")
 # TODO: add "R" to command in paragraph below once this is resolved, do search for all non 'r instances
 ecs_complete_cases <- ecs[complete.cases(ecs$year_begun),]
 ```
 
-The programme launched officially in 2001 at Dunblane Cathedral in Stirling and by 2005 the project had `r length(ecs_complete_cases[ecs_complete_cases$year_begun < 2006, ])` congregations registered to be a part of the programme and 25 which had completed the curriculum successfully and received an Eco-Congregation award. By 2011, the number of registrations had tripled to `r length(ecs_complete_cases[ecs_complete_cases$year_begun < 2012, ])` and the number of awarded congregations had quadrupled to `sum(ecs$award1 < "01/01/2012", na.rm=TRUE)`. This process of taking registrations and using a tiered award or recognition scheme is common to many voluntary organisations. The ECS curriculum was developed in part by consulting the Eco-Congregation England and Wales materials which had been released just a year earlier in 1999, though it has been subsequently revised, particularly with a major redesign in 2010. In the USA, a number of similar groups take a similar approach including Earth Ministry (earthministry.org) and Green Faith (greenfaith.org). 
+The programme launched officially in 2001 at Dunblane Cathedral in Stirling and by 2005 the project had `r length(which(as.numeric(as.character(ecs$year_begun)) < 2006))` congregations registered to be a part of the programme and 25 which had completed the curriculum successfully and received an Eco-Congregation award. By 2011, the number of registrations had tripled to `r length(which(as.numeric(as.character(ecs$year_begun)) < 2012))` and the number of awarded congregations had quadrupled to `r length(which((ecs$award1 < "2012/01/01")))`. This process of taking registrations and using a tiered award or recognition scheme is common to many voluntary organisations. The ECS curriculum was developed in part by consulting the Eco-Congregation England and Wales materials which had been released just a year earlier in 1999, though it has been subsequently revised, particularly with a major redesign in 2010. In the USA, a number of similar groups take a similar approach including Earth Ministry (earthministry.org) and Green Faith (greenfaith.org).[^footnote1]
 
 In the case of Eco-Congregation Scotland, congregations are invited to begin by "registering" their interest in the programme by completing a basic one-sided form. The next step requires the completion of an award application, which includes a facilitated curriculum called a "church check-up" and after an application is submitted, the site is visited and assessed by third-party volunteer assessors. Sites are invited to complete additional applications for further awards which are incremental (as is the application process). Transition communities, at least in the period reflected on their map, go through a similar process (though this does not involve the use of a supplied curriculum) by which they are marked first as "interested," become "active" and then gain "official" status.[^1554162]
 
@@ -167,16 +206,15 @@ In the case of Eco-Congregation Scotland, congregations are invited to begin by 
 
 ```{r import_admin_data, message=FALSE, warning=FALSE, include=FALSE}
 # read in polygon for Scottish admin boundaries
-# TODO: upload bundle of admin data to new zenodo repository and alter below to use new URLs
-# TODO: need to remove readOGR below once st_read is confirmed to be working as sf
-
 if (file.exists("data/scotland_ca_2010.shp") == FALSE) {
 download.file("https://borders.ukdataservice.ac.uk/ukborders/easy_download/prebuilt/shape/Scotland_ca_2010.zip", 
               destfile = "data/Scotland_ca_2010.zip")
 unzip("data/Scotland_ca_2010.zip", exdir = "data")
 }
-admin_lev1 <- readOGR("./data", "scotland_ca_2010")
-admin_lev1_sf <- st_read("data/scotland_ca_2010.shp") %>% st_transform(paste0("+init=epsg:",27700))
+admin_lev1 <- st_read("data/scotland_ca_2010.shp") %>% st_transform(paste0("+init=epsg:",27700))
+# Write to SQL database
+# st_write(admin_lev1, dsn = con, layer = "admin_lev1",
+#          overwrite = FALSE, append = FALSE)
 
 # read in polygon for intermediate admin boundary layers
 if (file.exists("data/scotland_parlcon_2011.shp") == FALSE) {
@@ -184,12 +222,9 @@ download.file("http://census.edina.ac.uk/ukborders/easy_download/prebuilt/shape/
               destfile = "data/Scotland_parlcon_2011.zip")
 unzip("data/Scotland_parlcon_2011.zip", exdir = "data")
 }
-admin_lev2 <- readOGR("./data", "scotland_parlcon_2011")
-admin_lev2_sf <- st_read("data/scotland_parlcon_2011.shp") %>% st_transform(paste0("+init=epsg:",27700))
-
-# Set CRS using epsg code on spdf for symmetry with datasets below
-proj4string(admin_lev1) <- bng
-proj4string(admin_lev2) <- bng
+admin_lev2 <- st_read("data/scotland_parlcon_2011.shp") %>% st_transform(paste0("+init=epsg:",27700))
+st_write(admin_lev2, dsn = con, layer = "admin_lev2",
+         overwrite = FALSE, append = FALSE)
 
 # Generate new sf shape using bounding box for central belt for map insets below
 # Note: coordinates use BNG as CRS (EPSG: 27700)
@@ -210,99 +245,117 @@ scotland_ratio<- get_asp_ratio(scotland)
 
 ```{r import_groups_data, message=FALSE, warning=FALSE, include=FALSE}
 # read in Transition Towns data and turn it into a SpatialPointsDataFrame
-transition_wgs <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
-coordinates(transition_wgs) <- c("X", "Y")
-proj4string(transition_wgs) <- CRS("+init=epsg:4326")
-transition <- spTransform(transition_wgs, bng)
-transition_sf <- st_as_sf(transition, coords = c("X", "Y"), crs=27700)
 
-# read in all_churches data (data set generated by Jeremy Kidwell to replace PointX data used from Ordnance Survey)
-# TODO: need to remove all data points which are outside BNG area to resolve error
-# also need to make symmetrical with ECS denominations, add Methodist 
-# churches, remove nazarene and salvation army
- 
-# churches_all <- read.csv("data/all_churches_0.9.csv")
-# churches_all_clean<-churches_all[complete.cases(churches_all),]
-# churches_all_null<-churches_all[!complete.cases(churches_all),]
-# coordinates(churches_all) <- c("X", "Y")
-# proj4string(churches_all) <- proj4string(admin_lev1)
+# Original approach using sp()
+# transition_wgs <- read.csv(text=getURL("https://zenodo.org/record/165519/files/SCCAN_1.4.csv"))
+# coordinates(transition_wgs) <- c("X", "Y")
+# proj4string(transition_wgs) <- CRS("+init=epsg:4326")
+# transition <- spTransform(transition_wgs, bng)
+# transition_sf <- st_as_sf(transition, coords = c("X", "Y"), crs=27700)
+
+transition <- st_read("data/transition-scotland_2.3.geojson") %>% st_transform(paste0("+init=epsg:",27700))
 
 # read in pointX data and turn it into a SpatialPointsDataFrame
-pow_pointX <- read.csv("./data/poi_2015_12_scot06340459.csv", sep="|")
-coordinates(pow_pointX) <- c("feature_easting", "feature_northing")
-# TODO: need to alter to draw from wgs84 or bng defined in preamble above
-proj4string(pow_pointX) <- CRS("+init=epsg:27700")
-pow_pointX_sf <- st_as_sf(pow_pointX, coords = c("X", "Y"), crs=27700)
+# TODO to add code here to parse out raw pointx file (or OS local?)
 
-# read in Scottish Community Dev. trust data and turn it into a SpatialPointsDataFrame
-dtas <- read.csv("data/community-dev-trusts-2.6.csv")
-coordinates(dtas) <- c("X", "Y")
-proj4string(dtas) <- CRS("+init=epsg:27700")
-dtas_sf <- st_as_sf(dtas, coords = c("X", "Y"), crs=27700)
+# Original approach using sp()
+# pow_pointX <- read.csv("./data/poi_2015_12_scot06340459.csv", sep="|")
+# coordinates(pow_pointX) <- c("feature_easting", "feature_northing")
+# # TODO: need to alter to draw from wgs84 or bng defined in preamble above
+# proj4string(pow_pointX) <- CRS("+init=epsg:27700")
+# pow_pointX_sf <- st_as_sf(pow_pointX, coords = c("X", "Y"), crs=27700)
 
-# read in permaculture data and turn it into a SpatialPointsDataFrame
-permaculture <- read.csv("data/permaculture_scot-0.8.csv")
-coordinates(permaculture) <- c("X", "Y")
-proj4string(permaculture) <- CRS("+init=epsg:27700")
-permaculture_sf <- st_as_sf(permaculture, coords = c("X", "Y"), crs=27700)
+pow_pointX <- st_read("data/pointx_201512_scotland_pow.geojson") %>% st_transform(paste0("+init=epsg:",27700))
+
+## read in Scottish Community Dev. trust data and turn it into a SpatialPointsDataFrame
+# removing deprecated use of sp() and csv
+# dtas <- read.csv("data/community-dev-trusts-2.6.csv")
+# coordinates(dtas) <- c("X", "Y")
+# proj4string(dtas) <- CRS("+init=epsg:27700")
+# dtas_sf <- st_as_sf(dtas, coords = c("X", "Y"), crs=27700)
+
+dtas <- st_read("data/community-dev-trusts-2.6.geojson") %>% st_transform(paste0("+init=epsg:",27700))
+
+## read in permaculture data and turn it into a SpatialPointsDataFrame
+# removing deprecated use of sp() and csv
+# permaculture <- read.csv("data/permaculture_scot-0.8.csv")
+# coordinates(permaculture) <- c("X", "Y")
+# proj4string(permaculture) <- CRS("+init=epsg:27700")
+# permaculture_sf <- st_as_sf(permaculture, coords = c("X", "Y"), crs=27700)
+
+permaculture <- st_read("data/permaculture_scot-0.8.geojson") %>% st_transform(paste0("+init=epsg:",27700))
 
 # subset point datasets for inset maps below
-ecs_sf_centralbelt <- st_intersection(ecs_sf, centralbelt_region)
-dtas_sf_centralbelt <- st_intersection(dtas_sf, centralbelt_region)
-transition_sf_centralbelt <- st_intersection(transition_sf, centralbelt_region)
-pow_sf_centralbelt <- st_intersection(pow_pointX_sf, centralbelt_region)
-permaculture_sf_centralbelt <- st_intersection(permaculture_sf, centralbelt_region)
+# commenting out deprecated naming convention
+# ecs_sf_centralbelt <- st_intersection(ecs_sf, centralbelt_region)
+# dtas_sf_centralbelt <- st_intersection(dtas_sf, centralbelt_region)
+# transition_sf_centralbelt <- st_intersection(transition_sf, centralbelt_region)
+# pow_sf_centralbelt <- st_intersection(pow_pointX_sf, centralbelt_region)
+# permaculture_sf_centralbelt <- st_intersection(permaculture_sf, centralbelt_region)
 
+ecs_centralbelt <- st_intersection(ecs, centralbelt_region)
+dtas_centralbelt <- st_intersection(dtas, centralbelt_region)
+transition_centralbelt <- st_intersection(transition, centralbelt_region)
+pow_centralbelt <- st_intersection(pow_pointX, centralbelt_region)
+permaculture_centralbelt <- st_intersection(permaculture, centralbelt_region)
 ```
 
 ```{r process_admin_data}
 # Augment existing dataframes to run calculations and add columns with point counts per polygon, 
 # percentages, and normalising data.
 
-# This code will generate a table of frequencies for each spatialpointsdataframe in admin
+# Generate a table of frequencies for each set of points in admin_lev1
 # calculate count of ECS for fields in admin and provide percentages
-# JK Note: need to convert from poly.counts, which uses sp() to st_covers() which uses sf() - cf. https://stackoverflow.com/questions/45314094/equivalent-of-poly-counts-to-count-lat-long-pairs-falling-inside-of-polygons-w#45337050
-
-admin_lev1$ecs_count <- poly.counts(ecs,admin_lev1)
+# Thanks to commenter for tip on sf() approach here at https://stackoverflow.com/questions/45314094/equivalent-of-poly-counts-to-count-lat-long-pairs-falling-inside-of-polygons-w#45337050
+admin_lev1$ecs_count <- lengths(st_covers(admin_lev1, ecs))
 admin_lev1$ecs_percent<- prop.table(admin_lev1$ecs_count)
+
+# # Test new approach
+# library(sp)
+# library(GISTools)
+# admin_lev1$ecs_count_sp <- poly.counts(ecs,admin_lev1)
+# admin_lev1$ecs_count_sp - admin_lev1$ecs_count
+# admin_lev1$ecs_percent <- prop.table(admin_lev1$ecs_count)
+
 # calculate count of places of worship in PointX db for fields in admin and provide percentages
-admin_lev1$pow_count <- poly.counts(pow_pointX,admin_lev1)
+# TODO ingest data here from OS Open Map Local dataset (rather than non-open PointX dataset; need to filter and upload to zenodo)
+admin_lev1$pow_count <- lengths(st_covers(admin_lev1, pow_pointX))
 admin_lev1$pow_percent<- prop.table(admin_lev1$pow_count)
 # calculate count of Transition for fields in admin and provide percentages
-admin_lev1$transition_count <- poly.counts(transition,admin_lev1)
+admin_lev1$transition_count <- lengths(st_covers(admin_lev1, transition))
 admin_lev1$transition_percent<- prop.table(admin_lev1$transition_count)
 # calculate count of dtas for fields in admin and provide percentages
-admin_lev1$dtas_count <- poly.counts(dtas,admin_lev1)
+admin_lev1$dtas_count <- lengths(st_covers(admin_lev1, dtas))
 admin_lev1$dtas_percent<- prop.table(admin_lev1$dtas_count)
 # calculate count of permaculture for fields in admin and provide percentages
-admin_lev1$permaculture_count <- poly.counts(permaculture,admin_lev1)
+admin_lev1$permaculture_count <- lengths(st_covers(admin_lev1, permaculture))
 admin_lev1$permaculture_percent<- prop.table(admin_lev1$permaculture_count)
 
 # run totals for intermediate boundaries level 2
 # This code will generate a table of frequencies for each spatialpointsdataframe in admin_lev2
 # calculate count of ECS for fields in admin_lev2 and provide percentages
-admin_lev2$ecs_count <- poly.counts(ecs,admin_lev2)
+admin_lev2$ecs_count <- lengths(st_covers(admin_lev2, ecs))
 admin_lev2$ecs_percent<- prop.table(admin_lev2$ecs_count)
 # calculate count of places of worship in PointX db for fields in admin_lev2 and provide percentages
-admin_lev2$pow_count <- poly.counts(pow_pointX,admin_lev2)
+admin_lev2$pow_count <- lengths(st_covers(admin_lev2, pow_pointX))
 admin_lev2$pow_percent<- prop.table(admin_lev2$pow_count)
 # calculate count of Transition for fields in admin_lev2 and provide percentages
-admin_lev2$transition_count <- poly.counts(transition,admin_lev2)
+admin_lev2$transition_count <- lengths(st_covers(admin_lev2, transition))
 admin_lev2$transition_percent<- prop.table(admin_lev2$transition_count)
 # calculate count of dtas for fields in admin_lev2 and provide percentages
-admin_lev2$dtas_count <- poly.counts(dtas,admin_lev2)
+admin_lev2$dtas_count <- lengths(st_covers(admin_lev2, dtas))
 admin_lev2$dtas_percent<- prop.table(admin_lev2$dtas_count)
 # calculate count of permaculture for fields in admin_lev2 and provide percentages
-admin_lev2$permaculture_count <- poly.counts(permaculture,admin_lev2)
+admin_lev2$permaculture_count <- lengths(st_covers(admin_lev2, permaculture))
 admin_lev2$permaculture_percent<- prop.table(admin_lev2$permaculture_count)
 
-# calculate count of ECS for fields in admin_lev2_sf
+# original approach - calculate count of ECS for fields in admin_lev2_sf
 # TODO: for future migration to sf throughout, remove above content and swap out references.
-admin_lev2_sf$ecs_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(ecs_sf, coords = c("long", "lat"), crs = st_crs(27700))))
-admin_lev2_sf$pow_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(pow_pointX_sf, coords = c("long", "lat"), crs = st_crs(27700))))
-admin_lev2_sf$transition_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(transition_sf, coords = c("long", "lat"), crs = st_crs(27700))))
-admin_lev2_sf$dtas_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(dtas_sf, coords = c("long", "lat"), crs = st_crs(27700))))
-admin_lev2_sf$permaculture_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(permaculture_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+# admin_lev2_sf$ecs_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(ecs_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+# admin_lev2_sf$pow_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(pow_pointX_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+# admin_lev2_sf$transition_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(transition_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+# admin_lev2_sf$dtas_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(dtas_sf, coords = c("long", "lat"), crs = st_crs(27700))))
+# admin_lev2_sf$permaculture_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(permaculture_sf, coords = c("long", "lat"), crs = st_crs(27700))))
 
 # Import csv with population data for each level of administrative subdivision and join to spatialdataframe
 
@@ -313,14 +366,18 @@ admin_lev2_sf$permaculture_count <- lengths(st_covers(admin_lev2_sf, st_as_sf(pe
 
 # TODO - consider adapting to use ONS mid-year statistics: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland
 
+JK revising done to here 2020-Mar-11
+
 # Load population statistics for normalising data by population and merge with admin_lev1
 admin_lev1_pop <- read.csv("./data/scotland_admin_2011pop.csv")
+# TODO: sf() merge doesn't support by.x etc. operations, need to adapt
 admin_lev1 <- merge(x=admin_lev1, y=admin_lev1_pop, by.x = "code", by.y = "CODE")
+admin_lev1_merged <- merge(admin_lev1, admin_lev1_pop)
 # Convert number stored as string with a comma to an integer
 admin_lev1$X2011_pop <- as.numeric(gsub(",", "", admin_lev1@data$X2011_pop))
 # Calculate counts as percentages of total for normalising below
-admin_lev1$pop_percent<- prop.table(admin_lev1$X2011_pop)
-admin_lev1$pow_percent<- prop.table(admin_lev1$pow_count)
+admin_lev1$pop_percent <- prop.table(admin_lev1$X2011_pop)
+admin_lev1$pow_percent <- prop.table(admin_lev1$pow_count)
 # Normalise ecs_count using population figures (using ArcGIS method)
 admin_lev1$ecs_count_popnorm <- admin_lev1$ecs_count * admin_lev1$pop_percent
 # Normalise ecs_count using places of worship counts (using ArcGIS method)
@@ -351,13 +408,12 @@ admin_lev2$ecs_count_pownorm_scaled <- admin_lev2$ecs_count_pownorm*(sum(admin_l
 
 Perhaps the first important question to ask of these groups is, where are they? I calculated the spread of eco-congregations and transition groups across each of the 32 council areas in Scotland. Every council area in Scotland has at least one eco-congregation or transition group). The most are located in `r as.character(admin_lev1$NAME_2[which.max(admin_lev1$ecs_count)])`, with `r max(admin_lev1$ecs_count)`, whereas the mean among all the 32 council areas is `r mean(admin_lev1$ecs_count)`, with a median of `r median(admin_lev1$ecs_count)`, standard deviation of `r sd(admin_lev1$ecs_count)`, and interquartile range of `r IQR(admin_lev1$ecs_count)`. The following choropleth maps show the relative concentration of eco-congregations (indicated by yellow to red). 
 
-Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake. Note, for the sake of a more accurate visual communication, we have also marked out areas of Scotland that are uninhabited with hash marks on the map of agricultural parishes. (*TODO: this will be done in the final draft, once I get my image masking fixed!*).[^15571030]
+Though there are too few eco-congregations and transition groups for a numerically significant representation in any of the intermediate geographies, mapping the concentration of sites by agricultural parishes allows for a more granular visual and I include this for comparison sake.[^15571030]
 
 ## Eco-Congregation Scotland groups shown by concentration in administrative regions (NUTS3)
 
 ```{r 01_admin_ecs_choropleth, fig.width=4, fig.cap="Figure 1"}
 # Note: for more information on EU administrative levels, see here: https://ec.europa.eu/eurostat/web/nuts/national-structures-eu
-# TODO: clip choropleth polygons to buildings shapefile (possble superceded by pverlay on lev2)
 
 # Draw initial choropleth map of ECS concentration (using tmap and sf below by default)
 # Revising re: CRS inset maps complete to here
@@ -370,7 +426,7 @@ tm_shape(admin_lev2) +
   # also consider scaling text size using area #  quick plot example: 
 # qtm(World, fill = "income_grp", text = "iso_a3", text.size = "AREA") # use "World$" to see the two attributes: income_grp and iso_a3, text.size= area: text is sized increasingly with coutry area size.
   # tm_text("name", size=.2, shadow=TRUE, bg.color="white", bg.alpha=.25) +
-#  tm_shape(ecs_sf) +
+#  tm_shape(ecs) +
 #  tm_dots("red", size = .05, alpha = .4) +
 #  tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
@@ -451,7 +507,7 @@ admin_lev1$ecs_dtas_factor <- ((admin_lev1$ecs_percent - admin_lev1$dtas_percent
 
 We can use this data to normalise our figures regarding Eco-Congregation Scotland communities and this draws the presence in Edinburgh of ECS communities into even sharper relief, as Edinburgh, though ranked second in terms of population and fifth in terms of places of worship, ranks first for the presence of all ECS congregations and awarded ECS congregations. However, taking population as the basis for normalisation first, we find that Edinburgh is far from the most prominent outlier. In trying to communicate this difference for a lay-audience, we have chosen to list this difference as a multiplier (i.e. there are 2.x times as many congregations as their share of population and an average figure of congregations might allow for) as this conveys the difference in a straight-forward way. Outliers where the disparity between their relative share of the total ECS footprint and their relative share of population is different by a positive ratio of more than double include the Orkney Islands (3.7 times more eco-congregations than their expected average share based on population), Argyll and Bute (`admin_lev1[CODE=S12000023]$ecs_pop_factor` 4.2x), Stirling (2.76x), and Perthshire and Kinross (2.18x). Interestingly, there are no outliers whose relative share of the total footprint of ECS is double or more in the negative direction (see Appendix A chart for full numbers). 
 
-Turning to the total of `r length(pow_pointX)` "places of worship" in Scotland, we find a slightly different picture of the relative concentration of Eco-Congregations in Scotland. In this case, the outliers are 
+Turning to the total of `r length(pow_pointX)` "places of worship" in Scotland, we find a slightly different picture of the relative concentration of Eco-Congregations in Scotland. In this case, the outliers are *TODO: add code here!*
 
 Whereas our initial measurements indicated a prominent lead for Edinburgh, by normalising our data in this way we can highlight the stronger-than-expected presence of several others that might otherwise escape notice because they lie in a region with significantly lower population or numerically less places of worship. Taking the PointX data on "places of worship" in Scotland, we find a less dramatic picture, but also a slightly different one. The positive outliers include East Renfrewshire (3.4x) Edinburgh (2.9x), Stirling (2.2), West Lothian (1.9x) and Aberdeen (1.5x). Again, negative outliers are far less dramatic, with only Midlothian possessing a ratio of more than 100% negative difference from the number of "places of worship" at 1.5x *fewer*.
 
@@ -497,7 +553,7 @@ admin_lev2_scotland_ecs_plot <-
   tm_borders(alpha=.5, lwd=0.1) +
   tm_shape(admin_lev1) +
   tm_borders(lwd=0.6) +
-  tm_shape(ecs_sf) +
+  tm_shape(ecs) +
   tm_dots("red", size = .02, alpha = .2) +
   tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
@@ -517,12 +573,12 @@ admin_lev2_scotland_ecs_plot <-
 
 # Build smaller central belt plot for inset:
 
-admin_lev2_centralbelt <- st_crop(admin_lev2_sf, centralbelt_region)
+admin_lev2_centralbelt <- st_crop(admin_lev2, centralbelt_region)
 
 admin_lev2_centralbelt_ecs_plot <- 
   tm_shape(admin_lev2_centralbelt) +
   tm_fill(col = "ecs_count", palette = "Oranges", n = 5) +
-  tm_shape(ecs_sf_centralbelt) + tm_dots("red", size = .05, alpha = .4) + 
+  tm_shape(ecs_centralbelt) + tm_dots("red", size = .05, alpha = .4) + 
   tm_legend(show=FALSE)
 
 # Stitch together maps using grid()
@@ -543,7 +599,7 @@ tm_shape(admin_lev2) +
   tm_borders(alpha=.5, lwd=0.1) +
   tm_shape(admin_lev1) +
   tm_borders(lwd=0.6) +
-  tm_shape(transition_sf) +
+  tm_shape(transition) +
   tm_dots("red", size = .02, alpha = .2) +
   tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
@@ -566,7 +622,7 @@ tm_shape(admin_lev2) +
   tm_borders(alpha=.5, lwd=0.1) +
   tm_shape(admin_lev1) +
   tm_borders(lwd=0.6) +
-  tm_shape(dtas_sf) +
+  tm_shape(dtas) +
   tm_dots("red", size = .02, alpha = .2) +
   tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
@@ -590,7 +646,7 @@ tm_shape(admin_lev2) +
   tm_borders(alpha=.5, lwd=0.1) +
   tm_shape(admin_lev1) +
   tm_borders(lwd=0.6) +
-  tm_shape(permaculture_sf) +
+  tm_shape(permaculture) +
   tm_dots("red", size = .02, alpha = .2) +
   tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
@@ -656,28 +712,25 @@ download.file("http://sedsh127.sedsh.gov.uk/Atom_data/ScotGov/ZippedShapefiles/S
               destfile = "data/SG_UrbanRural_2016.zip")
 unzip("data/SG_UrbanRural_2016.zip", exdir = "data")
 }
-# Todo: remove sp datasets when sf revisions are complete. Currently running in parallel
-urbanrural <- readOGR("./data", "SG_UrbanRural_2016") 
-proj4string(urbanrural) <- bng
-urbanrural_sf <- st_read("data/SG_UrbanRural_2016.shp") %>% st_transform(paste0("+init=epsg:",27700))
-urbanrural_sf_simplified <- st_simplify(urbanrural_sf)
+urbanrural <- st_read("data/SG_UrbanRural_2016.shp") %>% st_transform(paste0("+init=epsg:",27700))
+urbanrural_simplified <- st_simplify(urbanrural)
 # TODO: worth considering uploading data to zenodo for long-term reproducibility as ScotGov shuffles this stuff around periodically breaking URLs
 
 # This code will generate a table of frequencies for each spatialpointsdataframe in urbanrural
 # calculate count of ECS for fields in urbanrural
-urbanrural$ecs_count <- poly.counts(ecs,urbanrural)
+urbanrural$ecs_count <- lengths(st_covers(urbanrural, ecs))
 urbanrural$ecs_percent<- prop.table(urbanrural$ecs_count)
 # calculate count of places of worship in PointX db for fields in urbanrural and provide percentages
-urbanrural$pow_count <- poly.counts(pow_pointX,urbanrural)
+urbanrural$pow_count <- lengths(st_covers(urbanrural, pow_pointX))
 urbanrural$pow_percent<- prop.table(urbanrural$pow_count)
 # calculate count of Transition for fields in urbanrural
-urbanrural$transition_count <- poly.counts(transition,urbanrural)
+urbanrural$transition_count <- lengths(st_covers(urbanrural, transition))
 urbanrural$transition_percent<- prop.table(urbanrural$transition_count)
 # calculate count of dtas for fields in urbanrural
-urbanrural$dtas_count <- poly.counts(dtas,urbanrural)
+urbanrural$dtas_count <- lengths(st_covers(urbanrural, dtas))
 urbanrural$dtas_percent<- prop.table(urbanrural$dtas_count)
 # calculate count of permaculture for fields in urbanrural
-urbanrural$permaculture_count <- poly.counts(permaculture,urbanrural)
+urbanrural$permaculture_count <- lengths(st_covers(urbanrural, permaculture))
 urbanrural$permaculture_percent<- prop.table(urbanrural$permaculture_count)
 
 ```
@@ -717,17 +770,15 @@ ggplot(urbanrural_gathered,
 
 ```{r 08_urbanrural_ecs_chart_choropleth, message=FALSE, warning=FALSE, fig.width=4, fig.cap="Figure 8"}
 
-# TODO: Clip shapes to buildings shapefile (use OSM or OS?), using st_difference
 # TODO: Double check data licenses for tm_credits
-
 # Generate code for inset map of central belt
 # First build large plot using National level view
 # TODO: add inner margin to layout to provide adequate spce for inset map at bottom
 
-urbanrural_uk_ecs_choropleth_plot <- tm_shape(urbanrural_sf_simplified) + 
+urbanrural_uk_ecs_choropleth_plot <- tm_shape(urbanrural_simplified) + 
   tm_polygons(col = "UR8FOLD", palette = "BrBG", lwd=0.001, n=9, 
               title = "UrbanRural 8 Fold Scale") +
-  tm_shape(ecs_sf) +
+  tm_shape(ecs) +
   tm_dots("red", size = .05, alpha = .2) +
   tm_scale_bar(position = c("left", "bottom")) +
   tm_style("gray") +
@@ -748,12 +799,12 @@ urbanrural_uk_ecs_choropleth_plot <- tm_shape(urbanrural_sf_simplified) +
 
 # Next build smaller central belt plot for inset:
 
-urbanrural_sf_simplified_centralbelt <- st_crop(urbanrural_sf_simplified, centralbelt_region)
+urbanrural_simplified_centralbelt <- st_crop(urbanrural_simplified, centralbelt_region)
 
 urbanrural_centralbelt_ecs_choropleth_plot <- 
-  tm_shape(urbanrural_sf_simplified_centralbelt) +
+  tm_shape(urbanrural_simplified_centralbelt) +
   tm_polygons(col = "UR8FOLD", palette = "BrBG") +
-  tm_shape(ecs_sf_centralbelt) + tm_dots("red", size = .05, alpha = .4) + 
+  tm_shape(ecs_centralbelt) + tm_dots("red", size = .05, alpha = .4) + 
   tm_legend(show=FALSE)
 
 # Stitch together maps using grid()
@@ -777,8 +828,8 @@ print(urbanrural_centralbelt_ecs_choropleth_plot, vp = vp_urbanrural_centralbelt
 # TODO: change basemap
 
 # tmap_mode("view")
-# tm_shape(urbanrural_sf_simplified) + tm_polygons(col = "UR8FOLD", palette = "BrBG") +
-#   tm_shape(ecs_sf) +
+# tm_shape(urbanrural_simplified) + tm_polygons(col = "UR8FOLD", palette = "BrBG") +
+#   tm_shape(ecs) +
 #   tm_dots("red", size = .05, alpha = .4, popup.vars = TRUE) +
 #   tm_view(alpha = 1, basemaps = "Esri.WorldTopoMap")
   
@@ -971,11 +1022,11 @@ scenicareas_simplified <- st_simplify(scenicareas)
 
 # Set symmetrical CRS for analysis below (inserted here in order to correct errors, may be deprecated later)
 # st_crs(sssi) <- 27700
-# st_crs(ecs_sf) <- 27700
-# st_crs(pow_pointX_sf) <- 27700
-# st_crs(dtas_sf) <- 27700
-# st_crs(transition_sf) <- 27700
-# st_crs(permaculture_sf) <- 27700
+# st_crs(ecs) <- 27700
+# st_crs(pow_pointX) <- 27700
+# st_crs(dtas) <- 27700
+# st_crs(transition) <- 27700
+# st_crs(permaculture) <- 27700
 
 # Define buffer and measure number of ECS groups within 0.5 miles of all SSSI
 # CRS uses meters for units, so a buffer for 0.5 miles would use 805 meters)
@@ -1026,46 +1077,55 @@ scenicareas_buf500 <- st_buffer(scenicareas_simplified, dist = 500)
 # plot(lnd[ sel, ], col = "turquoise", add = TRUE) # add selected zones to map
 # from https://gotellilab.github.io/Bio381/StudentPresentations/SpatialDataTutorial.html
 
-ecs_sf_sssi <- st_within(ecs_sf, sssi_simplified)
-ecs_sf_sssi50m <- st_within(ecs_sf, sssi_buf50)
-ecs_sf_sssi500m <- st_within(ecs_sf, sssi_buf500)
-ecs_sf_sssibeyond500m <- !(st_within(ecs_sf, sssi_buf500))
+# TODO: integrate pre-calc here into calculations further down which are still recalculating these figures
+ecs_sssi <- st_within(ecs, sssi_simplified)
+ecs_sssi50m <- st_within(ecs, sssi_buf50)
+ecs_sssi500m <- st_within(ecs, sssi_buf500)
+ecs_sssibeyond500m <- !(st_within(ecs, sssi_buf500))
 
-ecs_sf_wildland <- st_within(ecs_sf, wildland_simplified)
-ecs_sf_wildland50m <- st_within(ecs_sf, wildland_buf50)
-ecs_sf_wildland500m <- st_within(ecs_sf, wildland_buf500)
-ecs_sf_wildlandbeyond500m <- !(st_within(ecs_sf, wildland_buf500))
+ecs_wildland <- st_within(ecs, wildland_simplified)
+ecs_wildland50m <- st_within(ecs, wildland_buf50)
+ecs_wildland500m <- st_within(ecs, wildland_buf500)
+ecs_wildlandbeyond500m <- !(st_within(ecs, wildland_buf500))
 
-ecs_sf_forestinv <- st_within(ecs_sf, forestinv_simplified)
-ecs_sf_forestinv50m <- st_within(ecs_sf, forestinv_buf50)
-ecs_sf_forestinv500m <- st_within(ecs_sf, forestinv_buf500)
-ecs_sf_forestinvbeyond500m <- !(st_within(ecs_sf, forestinv_buf500))
+ecs_forestinv <- st_within(ecs, forestinv_simplified)
+ecs_forestinv50m <- st_within(ecs, forestinv_buf50)
+ecs_forestinv500m <- st_within(ecs, forestinv_buf500)
+ecs_forestinvbeyond500m <- !(st_within(ecs, forestinv_buf500))
 
-ecs_sf_scenicareas <- st_within(ecs_sf, scenicareas_simplified)
-ecs_sf_scenicareas50m <- st_within(ecs_sf, scenicareas_buf50)
-ecs_sf_scenicareas500m <- st_within(ecs_sf, scenicareas_buf500)
-ecs_sf_scenicareasbeyond500m <- !(st_within(ecs_sf, scenicareas_buf500))
+ecs_scenicareas <- st_within(ecs, scenicareas_simplified)
+ecs_scenicareas50m <- st_within(ecs, scenicareas_buf50)
+ecs_scenicareas500m <- st_within(ecs, scenicareas_buf500)
+ecs_scenicareasbeyond500m <- !(st_within(ecs, scenicareas_buf500))
 
 # TODO: implement more efficient code using do.call() function or sapply() as here https://stackoverflow.com/questions/3642535/creating-an-r-dataframe-row-by-row
+# TODO: implement parallel computing to distribute execution of loopable calculations below
+# See: https://nceas.github.io/oss-lessons/parallel-computing-in-r/parallel-computing-in-r.html
 
 # Generate dataframe based on SSSI buffers
 
 # Calculate incidence of ecs within SSSI and within buffers at 50/500m
-ecs_sssi_row <- c(sum(apply(st_within(ecs_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, sssi_buf500, sparse=FALSE), 1, any)))
+ecs_sssi_row <- c(sum(apply(st_within(ecs, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, sssi_buf500, sparse=FALSE), 1, any)))
 
-pow_sssi_row <- c(sum(apply(st_within(pow_pointX_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, sssi_buf500, sparse=FALSE), 1, any)))
+pow_sssi_row <- c(sum(apply(st_within(pow_pointX, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, sssi_buf500, sparse=FALSE), 1, any)))
 
-dtas_sssi_row <- c(sum(apply(st_within(dtas_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, sssi_buf500, sparse=FALSE), 1, any)))
+dtas_sssi_row <- c(sum(apply(st_within(dtas, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, sssi_buf500, sparse=FALSE), 1, any)))
 
-transition_sssi_row <- c(sum(apply(st_within(transition_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, sssi_buf500, sparse=FALSE), 1, any)))
+transition_sssi_row <- c(sum(apply(st_within(transition, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition, sssi_buf500, sparse=FALSE), 1, any)))
 
-permaculture_sssi_row <- c(sum(apply(st_within(permaculture_sf, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, sssi_buf500, sparse=FALSE), 1, any)))
+permaculture_sssi_row <- c(sum(apply(st_within(permaculture, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, sssi_buf500, sparse=FALSE), 1, any)))
+
+grocery_sssi_row <- c(sum(apply(st_within(poi_grocery, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, sssi_buf500, sparse=FALSE), 1, any)))
+
+pubs_sssi_row <- c(sum(apply(st_within(poi_pubs, sssi_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, sssi_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, sssi_buf500, sparse=FALSE), 1, any)))
 
 # Generate dataframe from rows based on counts
 sssi_counts <- rbind(ecs_sssi_row, pow_sssi_row)
 sssi_counts <- rbind(sssi_counts, dtas_sssi_row)
 sssi_counts <- rbind(sssi_counts, transition_sssi_row)
 sssi_counts <- rbind(sssi_counts, permaculture_sssi_row)
+sssi_counts <- rbind(sssi_counts, grocery_sssi_row)
+sssi_counts <- rbind(sssi_counts, pubs_sssi_row)
 sssi_counts <- as.data.frame(sssi_counts)
 colnames(sssi_counts) <- c("Within SSSIs", "...50m", "...500m")
 
@@ -1076,11 +1136,15 @@ pow_sssi_row_pct <- pow_sssi_row/length(pow_pointX)
 dtas_sssi_row_pct <- dtas_sssi_row/length(dtas)
 transition_sssi_row_pct <- transition_sssi_row/length(transition)
 permaculture_sssi_row_pct <- permaculture_sssi_row/length(permaculture)
+grocery_sssi_row_pct <- grocery_sssi_row/length(poi_grocery)
+pubs_sssi_row_pct <- pubs_sssi_row/length(poi_pubs)
 
 sssi_counts_pct <- rbind(ecs_sssi_row_pct, pow_sssi_row_pct)
 sssi_counts_pct <- rbind(sssi_counts_pct, dtas_sssi_row_pct)
 sssi_counts_pct <- rbind(sssi_counts_pct, transition_sssi_row_pct)
 sssi_counts_pct <- rbind(sssi_counts_pct, permaculture_sssi_row_pct)
+sssi_counts_pct <- rbind(sssi_counts_pct, grocery_sssi_row_pct)
+sssi_counts_pct <- rbind(sssi_counts_pct, pubs_sssi_row_pct)
 colnames(sssi_counts_pct) <- c("% Within SSSIs", "% within 50m", "% within 500m")
 
 # Merge into larger dataframe
@@ -1088,34 +1152,44 @@ sssi_counts_merged <- cbind(sssi_counts, sssi_counts_pct)
 
 # Generate dataframe based on wildland buffers
 
-ecs_wildland_row <- c(sum(apply(st_within(ecs_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, wildland_buf500, sparse=FALSE), 1, any)))
+ecs_wildland_row <- c(sum(apply(st_within(ecs, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, wildland_buf500, sparse=FALSE), 1, any)))
 
-pow_wildland_row <- c(sum(apply(st_within(pow_pointX_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, wildland_buf500, sparse=FALSE), 1, any)))
+pow_wildland_row <- c(sum(apply(st_within(pow_pointX, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(ecs_wildland_row, pow_wildland_row)
 
-dtas_wildland_row <- c(sum(apply(st_within(dtas_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, wildland_buf500, sparse=FALSE), 1, any)))
+dtas_wildland_row <- c(sum(apply(st_within(dtas, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, dtas_wildland_row)
 
-transition_wildland_row <- c(sum(apply(st_within(transition_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, wildland_buf500, sparse=FALSE), 1, any)))
+transition_wildland_row <- c(sum(apply(st_within(transition, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, transition_wildland_row)
 
-permaculture_wildland_row <- c(sum(apply(st_within(permaculture_sf, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, wildland_buf500, sparse=FALSE), 1, any)))
+permaculture_wildland_row <- c(sum(apply(st_within(permaculture, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, wildland_buf500, sparse=FALSE), 1, any)))
 wildland_counts <- rbind(wildland_counts, permaculture_wildland_row)
+
+grocery_wildland_row <- c(sum(apply(st_within(poi_grocery, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, wildland_buf500, sparse=FALSE), 1, any)))
+wildland_counts <- rbind(wildland_counts, grocery_wildland_row)
+
+pubs_wildland_row <- c(sum(apply(st_within(poi_pubs, wildland_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, wildland_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, wildland_buf500, sparse=FALSE), 1, any)))
+wildland_counts <- rbind(wildland_counts, pubs_wildland_row)
 
 colnames(wildland_counts) <- c("Within Wildland Areas", "...50m", "...500m")
 
 # Generate dataframe from rows based on percentages of totals
 
-ecs_wildland_row_pct <- ecs_wildland_row/length(ecs_sf)
+ecs_wildland_row_pct <- ecs_wildland_row/length(ecs)
 pow_wildland_row_pct <- pow_wildland_row/length(pow_pointX)
 dtas_wildland_row_pct <- dtas_wildland_row/length(dtas)
 transition_wildland_row_pct <- transition_wildland_row/length(transition)
 permaculture_wildland_row_pct <- permaculture_wildland_row/length(permaculture)
+grocery_wildland_row_pct <- grocery_wildland_row/length(poi_grocery)
+pubs_wildland_row_pct <- pubs_wildland_row/length(poi_pubs)
 
 wildland_counts_pct <- rbind(ecs_wildland_row_pct, pow_wildland_row_pct)
 wildland_counts_pct <- rbind(wildland_counts_pct, dtas_wildland_row_pct)
 wildland_counts_pct <- rbind(wildland_counts_pct, transition_wildland_row_pct)
 wildland_counts_pct <- rbind(wildland_counts_pct, permaculture_wildland_row_pct)
+wildland_counts_pct <- rbind(wildland_counts_pct, grocery_wildland_row_pct)
+wildland_counts_pct <- rbind(wildland_counts_pct, pubs_wildland_row_pct)
 colnames(wildland_counts_pct) <- c("% Within wildlands", "% within 50m", "% within 500m")
 
 # Merge into larger dataframe
@@ -1123,33 +1197,44 @@ wildland_counts_merged <- cbind(wildland_counts, wildland_counts_pct)
 
 # Generate dataframe based on forestinv buffers
 
-ecs_forestinv_row <- c(sum(apply(st_within(ecs_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+ecs_forestinv_row <- c(sum(apply(st_within(ecs, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, forestinv_buf500, sparse=FALSE), 1, any)))
 
-pow_forestinv_row <- c(sum(apply(st_within(pow_pointX_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+pow_forestinv_row <- c(sum(apply(st_within(pow_pointX, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, forestinv_buf500, sparse=FALSE), 1, any)))
 forestinv_counts <- rbind(ecs_forestinv_row, pow_forestinv_row)
 
-dtas_forestinv_row <- c(sum(apply(st_within(dtas_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+dtas_forestinv_row <- c(sum(apply(st_within(dtas, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, forestinv_buf500, sparse=FALSE), 1, any)))
 forestinv_counts <- rbind(forestinv_counts, dtas_forestinv_row)
 
-transition_forestinv_row <- c(sum(apply(st_within(transition_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+transition_forestinv_row <- c(sum(apply(st_within(transition, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition, forestinv_buf500, sparse=FALSE), 1, any)))
 forestinv_counts <- rbind(forestinv_counts, transition_forestinv_row)
 
-permaculture_forestinv_row <- c(sum(apply(st_within(permaculture_sf, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, forestinv_buf500, sparse=FALSE), 1, any)))
+permaculture_forestinv_row <- c(sum(apply(st_within(permaculture, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, forestinv_buf500, sparse=FALSE), 1, any)))
 forestinv_counts <- rbind(forestinv_counts, permaculture_forestinv_row)
+
+grocery_forestinv_row <- c(sum(apply(st_within(poi_grocery, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, forestinv_buf500, sparse=FALSE), 1, any)))
+forestinv_counts <- rbind(forestinv_counts, grocery_forestinv_row)
+
+pubs_forestinv_row <- c(sum(apply(st_within(poi_pubs, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, forestinv_buf500, sparse=FALSE), 1, any)))
+forestinv_counts <- rbind(forestinv_counts, pubs_forestinv_row)
 
 colnames(forestinv_counts) <- c("Within Woodlands", "...50m", "...500m")
 
 # Generate dataframe from rows based on percentages of totals
-ecs_forestinv_row_pct <- ecs_forestinv_row/length(ecs_sf)
+# TODO: fix error generated by ecs_forestinv_row_pct using ecs as sf().
+ecs_forestinv_row_pct <- ecs_forestinv_row/length(ecs)
 pow_forestinv_row_pct <- pow_forestinv_row/length(pow_pointX)
 dtas_forestinv_row_pct <- dtas_forestinv_row/length(dtas)
 transition_forestinv_row_pct <- transition_forestinv_row/length(transition)
 permaculture_forestinv_row_pct <- permaculture_forestinv_row/length(permaculture)
+grocery_forestinv_row_pct <- grocery_forestinv_row/length(poi_grocery)
+pubs_forestinv_row_pct <- pubs_forestinv_row/length(poi_pubs)
 
 forestinv_counts_pct <- rbind(ecs_forestinv_row_pct, pow_forestinv_row_pct)
 forestinv_counts_pct <- rbind(forestinv_counts_pct, dtas_forestinv_row_pct)
 forestinv_counts_pct <- rbind(forestinv_counts_pct, transition_forestinv_row_pct)
 forestinv_counts_pct <- rbind(forestinv_counts_pct, permaculture_forestinv_row_pct)
+forestinv_counts_pct <- rbind(forestinv_counts_pct, grocery_forestinv_row_pct)
+forestinv_counts_pct <- rbind(forestinv_counts_pct, pubs_forestinv_row_pct)
 colnames(forestinv_counts_pct) <- c("% Within Woodlands", "% within 50m", "% within 500m")
 
 # Merge into larger dataframe
@@ -1157,34 +1242,44 @@ forestinv_counts_merged <- cbind(forestinv_counts, forestinv_counts_pct)
 
 # Generate dataframe based on scenicareas buffers
 
-ecs_scenicareas_row <- c(sum(apply(st_within(ecs_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+ecs_scenicareas_row <- c(sum(apply(st_within(ecs, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, scenicareas_buf500, sparse=FALSE), 1, any)))
 
-pow_scenicareas_row <- c(sum(apply(st_within(pow_pointX_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+pow_scenicareas_row <- c(sum(apply(st_within(pow_pointX, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, scenicareas_buf500, sparse=FALSE), 1, any)))
 scenicareas_counts <- rbind(ecs_scenicareas_row, pow_scenicareas_row)
 
-dtas_scenicareas_row <- c(sum(apply(st_within(dtas_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+dtas_scenicareas_row <- c(sum(apply(st_within(dtas, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, scenicareas_buf500, sparse=FALSE), 1, any)))
 scenicareas_counts <- rbind(scenicareas_counts, dtas_scenicareas_row)
 
-transition_scenicareas_row <- c(sum(apply(st_within(transition_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+transition_scenicareas_row <- c(sum(apply(st_within(transition, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition, scenicareas_buf500, sparse=FALSE), 1, any)))
 scenicareas_counts <- rbind(scenicareas_counts, transition_scenicareas_row)
 
-permaculture_scenicareas_row <- c(sum(apply(st_within(permaculture_sf, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture_sf, scenicareas_buf500, sparse=FALSE), 1, any)))
+permaculture_scenicareas_row <- c(sum(apply(st_within(permaculture, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, scenicareas_buf500, sparse=FALSE), 1, any)))
 scenicareas_counts <- rbind(scenicareas_counts, permaculture_scenicareas_row)
+
+grocery_scenicareas_row <- c(sum(apply(st_within(poi_grocery, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, scenicareas_buf500, sparse=FALSE), 1, any)))
+scenicareas_counts <- rbind(scenicareas_counts, grocery_scenicareas_row)
+
+pubs_scenicareas_row <- c(sum(apply(st_within(poi_pubs, scenicareas_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, scenicareas_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, scenicareas_buf500, sparse=FALSE), 1, any)))
+scenicareas_counts <- rbind(scenicareas_counts, pubs_scenicareas_row)
 
 colnames(scenicareas_counts) <- c("Within Scenic Areas", "...50m", "...500m")
 
 # Generate dataframe from rows based on percentages of totals
 
-ecs_scenicareas_row_pct <- ecs_scenicareas_row/length(ecs_sf)
+ecs_scenicareas_row_pct <- ecs_scenicareas_row/length(ecs)
 pow_scenicareas_row_pct <- pow_scenicareas_row/length(pow_pointX)
 dtas_scenicareas_row_pct <- dtas_scenicareas_row/length(dtas)
 transition_scenicareas_row_pct <- transition_scenicareas_row/length(transition)
 permaculture_scenicareas_row_pct <- permaculture_scenicareas_row/length(permaculture)
+grocery_scenicareas_row_pct <- grocery_scenicareas_row/length(poi_grocery)
+pubs_scenicareas_row_pct <- pubs_scenicareas_row/length(poi_pubs)
 
 scenicareas_counts_pct <- rbind(ecs_scenicareas_row_pct, pow_scenicareas_row_pct)
 scenicareas_counts_pct <- rbind(scenicareas_counts_pct, dtas_scenicareas_row_pct)
 scenicareas_counts_pct <- rbind(scenicareas_counts_pct, transition_scenicareas_row_pct)
 scenicareas_counts_pct <- rbind(scenicareas_counts_pct, permaculture_scenicareas_row_pct)
+scenicareas_counts_pct <- rbind(scenicareas_counts_pct, grocery_scenicareas_row_pct)
+scenicareas_counts_pct <- rbind(scenicareas_counts_pct, pubs_scenicareas_row_pct)
 colnames(scenicareas_counts_pct) <- c("% Within scenicareass", "% within 50m", "% within 500m")
 
 # Merge into larger dataframe
@@ -1199,7 +1294,7 @@ Chasing down a curiosity, I decided to try and calculate whether proximity to "w
 
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs_sf, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX_sf, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition_sf, sssi)` transition towns, (or 2%) and `st_within(dtas_sf, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs_sf, sssi_buf50)` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX_sf, sssi_buf50)` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs_sf, forestinv)` Eco-Congregation lies within either native or generally forested land.
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition, sssi)` transition towns, (or 2%) and `st_within(dtas, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs, sssi_buf50)` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX, sssi_buf50)` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs, forestinv)` Eco-Congregation lies within either native or generally forested land.
 
 ```{r 13_wilderness_tables} 
 
@@ -1241,11 +1336,11 @@ tm_shape(sssi_simplified, bbox = scotland) +
           title = "Sites of Special Scientific Interest and ECS Groups") + 
 #  tm_shape(sssi_buf50) + tm_borders(lwd=0.001) +
 #  tm_shape(sssi_buf500) + tm_borders(lwd=0.001)
-  tm_shape(admin_lev1_sf) + tm_borders(lwd=0.01) +
-  tm_shape(ecs_sf) + tm_dots("red", size = .02, alpha = .4) +
-#  tm_shape(ecs_sf_sssi50m) + tm_dots("yellow", size = .5, alpha = .4) + 
-#  tm_shape(ecs_sf_sssi500m) + tm_dots("orange", size = .5, alpha = .4) +
-#  tm_shape(ecs_sf_sssibeyond500m) + tm_dots("red", size = .5, alpha = .4)
+  tm_shape(admin_lev1) + tm_borders(lwd=0.01) +
+  tm_shape(ecs) + tm_dots("red", size = .02, alpha = .4) +
+#  tm_shape(ecs_sssi50m) + tm_dots("yellow", size = .5, alpha = .4) + 
+#  tm_shape(ecs_sssi500m) + tm_dots("orange", size = .5, alpha = .4) +
+#  tm_shape(ecs_sssibeyond500m) + tm_dots("red", size = .5, alpha = .4)
 #  tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
   tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
@@ -1272,11 +1367,11 @@ tm_shape(sssi_simplified, bbox = scotland) + tm_fill(col = "blue", alpha = 0.4, 
   tm_shape(scenicareas_simplified, bbox = scotland) + tm_fill(col = "orange", alpha = 0.4, lwd=0.01) + 
   tm_shape(admin_lev1) + tm_borders(lwd=0.01) +
 # tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
-  tm_shape(ecs_sf) + tm_dots("red", size = .02, alpha = .4) +
-  tm_shape(pow_pointX_sf) + tm_dots("orange", size = .01, alpha = .2) +
-  tm_shape(dtas_sf) + tm_dots("blue", size = .02, alpha = .4) +
-  tm_shape(transition_sf) + tm_dots("green", size = .02, alpha = .4) +
-  tm_shape(permaculture_sf) + tm_dots("pink", size = .025, alpha = .4) +
+  tm_shape(ecs) + tm_dots("red", size = .02, alpha = .4) +
+  tm_shape(pow_pointX) + tm_dots("orange", size = .01, alpha = .2) +
+  tm_shape(dtas) + tm_dots("blue", size = .02, alpha = .4) +
+  tm_shape(transition) + tm_dots("green", size = .02, alpha = .4) +
+  tm_shape(permaculture) + tm_dots("pink", size = .025, alpha = .4) +
 # tm_scale_bar(position = c("right", "bottom")) +
   tm_style("gray") +
   tm_credits("Data: UK Data Service (OGL)\n& Jeremy H. Kidwell,\nGraphic is CC-by-SA 4.0", 
@@ -1349,7 +1444,7 @@ urbanrural_table %>%
 [^15541312]: This research was jointly funded by the AHRC/ESRC under project numnbers AH/K005456/1 and AH/P005063/1.
 [^158261118]: This is not to say that there have been no collaborations before 2000, noteworthy in this respect is the WWF who helped to found the Alliance of Religion and Conservation (ARC) in 1985.
 [^159141043]: This suggestion should be qualified - RSPB would greatly exceed ECS both in terms of the number of individual subscribers and budget. The RSPB trustee's report for 2013-2014 suggests that their member base was 1,114,938 people across Britain with a net income of £127m - the latter of which exceeds the Church of Scotland. If we adjust this based on the Scottish share of the population of the United Kingdom as of the 2011 census (8.3%) this leaves us with an income of £9.93m. The British charity commission requires charities to self-report the number of volunteers and staff, and from their most recent statistics we learn that RSPB engaged with 17,600 volunteers and employed 2,110 members of staff. Again, adjusted for population, this leaves 1,460 volunteers in Scotland and 176 staff. However, if we measure environmental groups based on the number of sites they maintain, RSPB has only 40 reserves with varying levels of local community engagement. For comparison, as of Sep 14 2015, Friends of the Earth Scotland had only 10 local groups (concentrated mostly in large urban areas). Depending on how one measures "volunteerism," it may be possible that ECS has more engaged volunteers in Scotland as well - if each ECS group had only 4 "volunteers" then this would exceed RSPB.
-[^15541313]: Kidwell, Jeremy. (2016). Eco-Congregation Scotland, 2014-2016. University of Edinburgh. http://dx.doi.org/10.7488/ds/1357.
+[^15541313]: Kidwell, Jeremy. (2016). Eco-Congregation Scotland, 2014-2016. University of Edinburgh. http://dx.doi.org/10.7488/ds/1357. Include citation here to RDJ article
 [^15541342]:My dataset on transition towns will be made available later in 2016. Initial data was aquired from the Transition Scotland website http://www.transitionscotland.org/transition-in-scotland on December 10, 2014. We are currently in the process of collaboratively generating a more up-to-date dataset which will reflect their collaboration with SCCAN.
 [^177171536]: For further detail on Dataset generation, see Kidwell, Forthcoming, 2018.
 [^158261232]:Data was acquired from the Development Trusts Association website, http://www.dtascot.org.uk, accessed on 20 July 2015. As above, we are currently in the process of active collaboration with volunteers from the DTAS to co-generate a new dataset.
@@ -1359,5 +1454,5 @@ urbanrural_table %>%
 [^1554162]:From the Transition map key, "Green pins are 'official' groups
 Blue pins are active communities who are connected to the Scottish Transition network Yellow pins show interest in this area"
 [^15571030]:This was calculated by calculating a 10m wide footprint for every postcode in Scotland, areas which are not within 10m of a postcode (as of May 2014) are counted as uninhabited.
-[^159142242]: Fiona Tweedie, *Ecumenical Audit: Questionnaire Findings* (2014). 
+[^159142242]: Fiona Tweedie, *Ecumenical Audit: Questionnaire Findings* (2014). [^footnote1]: Ref. IA article
 [^15914204]:See note above regarding the data used from the PointX POI database. Note, for our research,we filtered out religious groups not represented within the Eco-Congregation footprint. We discuss representation by tradition and religion further below.adition and religion further below.
