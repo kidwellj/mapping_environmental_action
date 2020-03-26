@@ -107,6 +107,7 @@ if (dir.exists("derivedData") == FALSE) {
   dir.create("derivedData")
 }
 
+<<<<<<< HEAD
 # # Setup PostGIS database connection
 # dw <- config::get("datawarehouse")
 # 
@@ -118,6 +119,19 @@ if (dir.exists("derivedData") == FALSE) {
 #   host = dw$server,
 #   port = 5432
 #   )
+=======
+# Setup PostGIS database connection
+dw <- config::get("datawarehouse")
+
+con <- dbConnect(odbc::odbc(),
+  driver = dw$driver,
+  database = dw$database,
+  uid = dw$uid,
+  pwd = dw$pwd,
+  host = dw$server,
+  port = 5432
+  )
+>>>>>>> 89c9a2a5a4542de5584daa0304a53008a779ded8
 
 # Define Coordinate Reference Systems (CRS) for later use
 # Note: I've used British National Grid (27000) in this paper, but have found that 
@@ -212,9 +226,14 @@ download.file("https://borders.ukdataservice.ac.uk/ukborders/easy_download/prebu
 unzip("data/Scotland_ca_2010.zip", exdir = "data")
 }
 admin_lev1 <- st_read("data/scotland_ca_2010.shp") %>% st_transform(paste0("+init=epsg:",27700))
+<<<<<<< HEAD
 # Write to SQL database
 # st_write(admin_lev1, dsn = con, layer = "admin_lev1",
 #          overwrite = FALSE, append = FALSE)
+=======
+st_write(admin_lev1, dsn = con, layer = "admin_lev1",
+         overwrite = FALSE, append = FALSE)
+>>>>>>> 89c9a2a5a4542de5584daa0304a53008a779ded8
 
 # read in polygon for intermediate admin boundary layers
 if (file.exists("data/scotland_parlcon_2011.shp") == FALSE) {
@@ -282,9 +301,15 @@ dtas <- st_read("data/community-dev-trusts-2.6.geojson") %>% st_transform(paste0
 # coordinates(permaculture) <- c("X", "Y")
 # proj4string(permaculture) <- CRS("+init=epsg:27700")
 # permaculture_sf <- st_as_sf(permaculture, coords = c("X", "Y"), crs=27700)
+<<<<<<< HEAD
 
 permaculture <- st_read("data/permaculture_scot-0.8.geojson") %>% st_transform(paste0("+init=epsg:",27700))
 
+=======
+
+permaculture <- st_read("data/permaculture_scot-0.8.geojson") %>% st_transform(paste0("+init=epsg:",27700))
+
+>>>>>>> 89c9a2a5a4542de5584daa0304a53008a779ded8
 # subset point datasets for inset maps below
 # commenting out deprecated naming convention
 # ecs_sf_centralbelt <- st_intersection(ecs_sf, centralbelt_region)
