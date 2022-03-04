@@ -635,7 +635,8 @@ So why provide this kind of data (i.e. at the level of individual churches) when
 
 ```{r 06_ecs_denomination_table}
 # TODO: fix to work with new sf() object
-knitr::kable(summary(ecs@data[["denomination"]]), caption = 'ECS by denomination')
+ecs_dt <- (st_set_geometry(ecs, NULL))
+knitr::kable(table(ecs_dt$denomination), caption = 'ECS by denomination')
 # TODO: Add dataframe with overall church numbers for the UK from "ScottishChurches" dataset by JK
 ```
 
@@ -828,7 +829,7 @@ simd$permaculture_count <- lengths(st_covers(simd, permaculture))
 simd$pow_count <- lengths(st_covers(simd, pow_pointX))
 
 # Generate simplified dataframes with counts for each group
-ecs_simd <- data.frame(ecs[c(1,16,25,30:36)])
+# ecs_simd <- data.frame(ecs[c(1,16,25,30:36)])
 # TODO: adapt code below to include equivalent rows from above now that we are using tidyverse
 ecs_simd <- data.frame(select(ecs, row.id, col.id))
 
