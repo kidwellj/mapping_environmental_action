@@ -11,7 +11,6 @@ date: "`r Sys.Date()`"
 bibliography: biblio.bib
 linkcolor: black
 geometry: margin=1in
-# fontfamily: mathpazo
 fontsize: 11pt
 output:
   html_document:
@@ -65,14 +64,13 @@ require(sf) # new simplefeature data class, supercedes sp in many ways
 # See issue https://github.com/kidwellj/mapping_environmental_action/issues/3 for progress re: migration from sp()
 # require(sp) # needed for proj4string, deprecated by sf()
 # require(maptools)
-require(ggplot2)
+
+library(ragg) # better video device, more accurate and faster rendering, esp. on macos. Also should enable system fonts for display
+library(tidyverse)
 require(tmap) # using as an alternative to base r graphics and ggplot for geospatial plots
 require(tmaptools) # for get_asp_ratio below
 require(grid) # using for inset maps on tmap
 require(broom) # required for tidying SPDF to data.frame for ggplot2
-require(tidyr)  # using for grouped bar plot
-# require(plyr) # already a dependency of knitr, remove?
-# require(dplyr) # already a dependency of knitr, remove?
 require(reshape2)  # using for grouped bar plot
 require(scales)
 # require(sqldf) # using sqldf to filter before loading very large data sets
@@ -91,11 +89,6 @@ require(scales)
 require(plotly) # allows for export of plots to dynamic web pages
 require(gtable) # more powerful package for multi-plot layouts, not necessary for knitr
 
-## Packages used for features or issues relating to pdf_document knitr format
-# Note: implementation of fonts (currently commented out) is specific to pdf_document output
-# require(showtext) # for loading in fonts
-# require(extrafont) # font support
-
 # Set up local workspace:
 if (dir.exists("data") == FALSE) {
   dir.create("data") 
@@ -107,7 +100,6 @@ if (dir.exists("derivedData") == FALSE) {
   dir.create("derivedData")
 }
 
-<<<<<<< HEAD
 # # Setup PostGIS database connection
 # dw <- config::get("datawarehouse")
 # 
@@ -119,38 +111,20 @@ if (dir.exists("derivedData") == FALSE) {
 #   host = dw$server,
 #   port = 5432
 #   )
-=======
-# Setup PostGIS database connection
-dw <- config::get("datawarehouse")
-
-con <- dbConnect(odbc::odbc(),
-  driver = dw$driver,
-  database = dw$database,
-  uid = dw$uid,
-  pwd = dw$pwd,
-  host = dw$server,
-  port = 5432
-  )
->>>>>>> 89c9a2a5a4542de5584daa0304a53008a779ded8
 
 # Define Coordinate Reference Systems (CRS) for later use
 # Note: I've used British National Grid (27000) in this paper, but have found that 
 # it is falling out of use in many cases, so will be defaulting to WGS84 in future 
 # data-sets and papers.
 
-# Working with EPSG codes for spatialfeature CRS given the usage of this approach with sf()
-# for discussion related to this fix, see https://gis.stackexchange.com/q/313761/41474
-# TODO: remove below as part of overall migration to sf()
-# See issue https://github.com/kidwellj/mapping_environmental_action/issues/3 for progress re: migration from sp()
-bng <- CRS("+init=epsg:27700")
-wgs84 <- CRS("+init=epsg:4326")
+# Proj4 is also now deprecated in favour of WKT2, so I will be adapting code to use this more robust standard in the future. See here for more details: https://inbo.github.io/tutorials/tutorials/spatial_crs_coding/#set-the-crs-of-a-spatial-object-in-sp
 
-## Configure fonts for plots below, commented out currently because of incompatibilities
-## Loading Google fonts (http://www.google.com/fonts)
-# Note: implementation of fonts (currently commented out) is specific to pdf_document output
-# font_add_google("Merriweather", "merriweather")
-# The following will load in system fonts (uncomment and run as needed on first execution)
-# font_import(pattern="[A/a]rial", prompt=FALSE)
+# TODO: remove below as part of overall migration to sf()
+# See issue https://github.com/kidwellj/mapping_environmental_action/issues/3 for progress re: migration from sp() and https://github.com/kidwellj/mapping_environmental_action/issues/4 for progress re: abandoning of Proj4 more broadly
+
+wgs84 <- CRS(SRS_string = "EPSG:4326") # WGS 84 has EPSG code 4326, note: crs() requires sp() to get epsg data
+bng <- CRS(SRS_string = "EPSG:27700") # BNG has EPSG code 4326
+
 ```
 
 # Introduction[^15541312]
