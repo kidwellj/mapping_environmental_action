@@ -965,12 +965,12 @@ download.file("https://opendata.arcgis.com/datasets/3cb1abc185a247a48b9d53e4c4a8
 unzip("data/National_Forest_Inventory_Woodland_Scotland_2017.zip", exdir = "data")
 }
 
-forestinv <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
+# forestinv <- st_read("data/National_Forest_Inventory_Woodland_Scotland_2017.shp")
 # Create simplified version of geometry for visualisations, with a tolerance of 100m
 # Some tweaks required here, useful notes here: https://www.r-bloggers.com/2021/03/simplifying-geospatial-features-in-r-with-sf-and-rmapshaper/
-forestinv_simplified <- st_simplify(forestinv, preserveTopology = TRUE, dTolerance = 1000)
+# forestinv_simplified <- st_simplify(forestinv, preserveTopology = TRUE, dTolerance = 1000)
 # compare memory usage of objects
-round(c(object.size(forestinv), object.size(forestinv_simplified)) / 1024)
+# round(c(object.size(forestinv), object.size(forestinv_simplified)) / 1024)
 
 # Download data for scenic areas
 # https://opendata.arcgis.com/datasets/d7f6b987c7224a72a185ce012258d500_23.zip
@@ -1021,8 +1021,8 @@ wildland_buf500 <- st_buffer(wildland, dist = 500)
 # wildland_buf500_lines = st_union(wildland_simplified) %>% st_buffer(500) %>% 
 #   st_cast(to = "LINESTRING")
 
-forestinv_buf50 <- st_buffer(forestinv_simplified, dist = 50)
-forestinv_buf500 <- st_buffer(forestinv_simplified, dist = 500)
+# forestinv_buf50 <- st_buffer(forestinv_simplified, dist = 50)
+# forestinv_buf500 <- st_buffer(forestinv_simplified, dist = 500)
 # Lines offer even more optimised representation suitable for plotting
 # forestinv_buf50_lines = st_union(forestinv_simplified) %>% st_buffer(50) %>% 
 #   st_cast(to = "LINESTRING")
@@ -1054,10 +1054,10 @@ ecs_wildland50m <- st_within(ecs, wildland_buf50)
 ecs_wildland500m <- st_within(ecs, wildland_buf500)
 ecs_wildlandbeyond500m <- !(st_within(ecs, wildland_buf500))
 
-ecs_forestinv <- st_within(ecs, forestinv_simplified)
-ecs_forestinv50m <- st_within(ecs, forestinv_buf50)
-ecs_forestinv500m <- st_within(ecs, forestinv_buf500)
-ecs_forestinvbeyond500m <- !(st_within(ecs, forestinv_buf500))
+# ecs_forestinv <- st_within(ecs, forestinv_simplified)
+# ecs_forestinv50m <- st_within(ecs, forestinv_buf50)
+# ecs_forestinv500m <- st_within(ecs, forestinv_buf500)
+# ecs_forestinvbeyond500m <- !(st_within(ecs, forestinv_buf500))
 
 ecs_scenicareas <- st_within(ecs, scenicareas)
 ecs_scenicareas50m <- st_within(ecs, scenicareas_buf50)
@@ -1211,49 +1211,49 @@ wildland_counts_merged <- cbind(wildland_counts, wildland_counts_pct)
 
 # Generate dataframe based on forestinv buffers
 
-ecs_forestinv_row <- c(sum(apply(st_within(ecs, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, forestinv_buf500, sparse=FALSE), 1, any)))
+# ecs_forestinv_row <- c(sum(apply(st_within(ecs, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(ecs, forestinv_buf500, sparse=FALSE), 1, any)))
 
-pow_forestinv_row <- c(sum(apply(st_within(pow_pointX, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, forestinv_buf500, sparse=FALSE), 1, any)))
-forestinv_counts <- rbind(ecs_forestinv_row, pow_forestinv_row)
-
-dtas_forestinv_row <- c(sum(apply(st_within(dtas, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, forestinv_buf500, sparse=FALSE), 1, any)))
-forestinv_counts <- rbind(forestinv_counts, dtas_forestinv_row)
-
-transition_forestinv_row <- c(sum(apply(st_within(transition, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition, forestinv_buf500, sparse=FALSE), 1, any)))
-forestinv_counts <- rbind(forestinv_counts, transition_forestinv_row)
-
-permaculture_forestinv_row <- c(sum(apply(st_within(permaculture, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, forestinv_buf500, sparse=FALSE), 1, any)))
-forestinv_counts <- rbind(forestinv_counts, permaculture_forestinv_row)
-
-grocery_forestinv_row <- c(sum(apply(st_within(poi_grocery, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, forestinv_buf500, sparse=FALSE), 1, any)))
-forestinv_counts <- rbind(forestinv_counts, grocery_forestinv_row)
-
-pubs_forestinv_row <- c(sum(apply(st_within(poi_pubs, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, forestinv_buf500, sparse=FALSE), 1, any)))
-forestinv_counts <- rbind(forestinv_counts, pubs_forestinv_row)
-
-colnames(forestinv_counts) <- c("Within Woodlands", "...50m", "...500m")
+# pow_forestinv_row <- c(sum(apply(st_within(pow_pointX, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(pow_pointX, forestinv_buf500, sparse=FALSE), 1, any)))
+# forestinv_counts <- rbind(ecs_forestinv_row, pow_forestinv_row)
+# 
+# dtas_forestinv_row <- c(sum(apply(st_within(dtas, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(dtas, forestinv_buf500, sparse=FALSE), 1, any)))
+# forestinv_counts <- rbind(forestinv_counts, dtas_forestinv_row)
+# 
+# transition_forestinv_row <- c(sum(apply(st_within(transition, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(transition, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(transition, forestinv_buf500, sparse=FALSE), 1, any)))
+# forestinv_counts <- rbind(forestinv_counts, transition_forestinv_row)
+# 
+# permaculture_forestinv_row <- c(sum(apply(st_within(permaculture, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(permaculture, forestinv_buf500, sparse=FALSE), 1, any)))
+# forestinv_counts <- rbind(forestinv_counts, permaculture_forestinv_row)
+# 
+# grocery_forestinv_row <- c(sum(apply(st_within(poi_grocery, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_grocery, forestinv_buf500, sparse=FALSE), 1, any)))
+# forestinv_counts <- rbind(forestinv_counts, grocery_forestinv_row)
+# 
+# pubs_forestinv_row <- c(sum(apply(st_within(poi_pubs, forestinv_simplified, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, forestinv_buf50, sparse=FALSE), 1, any)), sum(apply(st_within(poi_pubs, forestinv_buf500, sparse=FALSE), 1, any)))
+# forestinv_counts <- rbind(forestinv_counts, pubs_forestinv_row)
+# 
+# colnames(forestinv_counts) <- c("Within Woodlands", "...50m", "...500m")
 
 # Generate dataframe from rows based on percentages of totals
 # TODO: fix error generated by ecs_forestinv_row_pct using ecs as sf().
 # Shift to using table summary function
-ecs_forestinv_row_pct <- ecs_forestinv_row/length(ecs)
-pow_forestinv_row_pct <- pow_forestinv_row/length(pow_pointX)
-dtas_forestinv_row_pct <- dtas_forestinv_row/length(dtas)
-transition_forestinv_row_pct <- transition_forestinv_row/length(transition)
-permaculture_forestinv_row_pct <- permaculture_forestinv_row/length(permaculture)
-grocery_forestinv_row_pct <- grocery_forestinv_row/length(poi_grocery)
-pubs_forestinv_row_pct <- pubs_forestinv_row/length(poi_pubs)
-
-forestinv_counts_pct <- rbind(ecs_forestinv_row_pct, pow_forestinv_row_pct)
-forestinv_counts_pct <- rbind(forestinv_counts_pct, dtas_forestinv_row_pct)
-forestinv_counts_pct <- rbind(forestinv_counts_pct, transition_forestinv_row_pct)
-forestinv_counts_pct <- rbind(forestinv_counts_pct, permaculture_forestinv_row_pct)
-forestinv_counts_pct <- rbind(forestinv_counts_pct, grocery_forestinv_row_pct)
-forestinv_counts_pct <- rbind(forestinv_counts_pct, pubs_forestinv_row_pct)
-colnames(forestinv_counts_pct) <- c("% Within Woodlands", "% within 50m", "% within 500m")
-
-# Merge into larger dataframe
-forestinv_counts_merged <- cbind(forestinv_counts, forestinv_counts_pct)
+# ecs_forestinv_row_pct <- ecs_forestinv_row/length(ecs)
+# pow_forestinv_row_pct <- pow_forestinv_row/length(pow_pointX)
+# dtas_forestinv_row_pct <- dtas_forestinv_row/length(dtas)
+# transition_forestinv_row_pct <- transition_forestinv_row/length(transition)
+# permaculture_forestinv_row_pct <- permaculture_forestinv_row/length(permaculture)
+# grocery_forestinv_row_pct <- grocery_forestinv_row/length(poi_grocery)
+# pubs_forestinv_row_pct <- pubs_forestinv_row/length(poi_pubs)
+# 
+# forestinv_counts_pct <- rbind(ecs_forestinv_row_pct, pow_forestinv_row_pct)
+# forestinv_counts_pct <- rbind(forestinv_counts_pct, dtas_forestinv_row_pct)
+# forestinv_counts_pct <- rbind(forestinv_counts_pct, transition_forestinv_row_pct)
+# forestinv_counts_pct <- rbind(forestinv_counts_pct, permaculture_forestinv_row_pct)
+# forestinv_counts_pct <- rbind(forestinv_counts_pct, grocery_forestinv_row_pct)
+# forestinv_counts_pct <- rbind(forestinv_counts_pct, pubs_forestinv_row_pct)
+# colnames(forestinv_counts_pct) <- c("% Within Woodlands", "% within 50m", "% within 500m")
+# 
+# # Merge into larger dataframe
+# forestinv_counts_merged <- cbind(forestinv_counts, forestinv_counts_pct)
 
 # Generate dataframe based on scenicareas buffers
 
@@ -1309,7 +1309,7 @@ Chasing down a curiosity, I decided to try and calculate whether proximity to "w
 
 Proximity to these areas was the next concern, because many of these designations deliberately exclude human habitat, so it was necessary to measure the number of sites within proximity. There is a question which lies here regarding aesthetics, namely, what sort of proximity might generate an affective connection? From my own experience, I decided upon the distance represented by a short walk, i.e. a half-kilometre. However, with the more generic measurements, such as SSSI and forestation, this wouldn't do, as there are so many of these sites that a buffer of 500 meters encapsulates almost all of inhabited Scotland. So for these sites I also calculated a count within 50 metres.
 
-So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition, sssi)` transition towns, (or 2%) and `st_within(dtas, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs, sssi_buf50)` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX, sssi_buf50)` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only `st_within(ecs, forestinv)` Eco-Congregation lies within either native or generally forested land.
+So what did I discover? The results were inconclusive. First, it is important to note that on the whole, Eco-Congregations tend to be more urban than place of worship taken generally at a rate of nearly 3:1 (5.4% of Eco-Congregations lie in areas currently designated as "Very Remote Rural Areas" whereas nearly 15% of places of worship lie in these areas), so what I was testing for was whether this gap was smaller when specifying these various forms of "wild" remoteness. For our narrowest measurements, there were so few sites captured as to render measurement unreliable. There are, for obvious reasons, `st_within(ecs, wildland)` sites located within any of SNG's core wild areas. Similarly, there are very few of our activist communities located within SSSI's (only `st_within(pow_pointX, sssi)` places of worship out of `r length(pow_pointX)`, `st_within(transition, sssi)` transition towns, (or 2%) and `st_within(dtas, sssi)` community development trusts (3%)). However, expanding this out makes things a bit more interesting, within 50 metres of SSSI's in Scotland lie `st_within(ecs, sssi_buf50)` Eco-Congregations (or just under 1%), which compares favourably with the `st_within(pow_pointX, sssi_buf50)` places of worship (or just 1.5%) far exceeding our ratio (1:1.5 vs. 1:3). This is the same with our more anachronistic measure of "scenic areas," there are 7 eco-congregations within these areas, and 175 places of worship, making for a ratio of nearly 1:2 (2.1% vs. 4.3%). Taking our final measure, of forested areas, this is hard to calculate, as only [commented out for now] Eco-Congregation lies within either native or generally forested land.
 
 ```{r 13_wilderness_tables} 
 
@@ -1323,9 +1323,9 @@ wildland_counts_merged %>%
   kable(format = "html", col.names = colnames(wildland_counts_merged), caption = "Group counts within Wildland Areas") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
-forestinv_counts_merged %>%
-  kable(format = "html", col.names = colnames(forestinv_counts_merged), caption = "Group counts within Woodlands") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
+# forestinv_counts_merged %>%
+#   kable(format = "html", col.names = colnames(forestinv_counts_merged), caption = "Group counts within Woodlands") %>%
+#   kable_styling(bootstrap_options = c("striped", "hover", "condensed", full_width = F, "responsive"))
 
 scenicareas_counts_merged %>%
   kable(format = "html", col.names = colnames(scenicareas_counts_merged), caption = "Group counts within Scenic Areas") %>%
@@ -1335,7 +1335,7 @@ scenicareas_counts_merged %>%
 # Output CSV files for tables above
 write.csv(sssi_counts_merged, "derivedData/sssi_counts_merged.csv", row.names=TRUE)
 write.csv(wildland_counts_merged, "derivedData/wildland_counts_merged.csv", row.names=TRUE)
-write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", row.names=TRUE)
+# write.csv(forestinv_counts_merged, "derivedData/forestinv_counts_merged.csv", row.names=TRUE)
 write.csv(scenicareas_counts_merged, "derivedData/scenicareas_counts_merged.csv", row.names=TRUE)
 
 ```
@@ -1378,7 +1378,7 @@ tm_shape(sssi_simplified, bbox = scotland) +
 # TODO set bounding box to clip all polygons (or identify offending layer)
 tm_shape(sssi_simplified, bbox = scotland) + tm_fill(col = "blue", alpha = 0.4, lwd=0.01, title = "Wilderness Areas") + 
   tm_shape(wildland_simplified, bbox = scotland) + tm_fill(col = "green", alpha = 0.4, lwd=0.01) + 
-  tm_shape(forestinv_simplified, bbox = scotland) + tm_fill(col = "orange", alpha = 0.4, lwd=0.01) + 
+  # tm_shape(forestinv_simplified, bbox = scotland) + tm_fill(col = "orange", alpha = 0.4, lwd=0.01) + 
   tm_shape(scenicareas_simplified, bbox = scotland) + tm_fill(col = "orange", alpha = 0.4, lwd=0.01) + 
   tm_shape(admin_lev1) + tm_borders(lwd=0.01) +
 # tm_scale_bar(breaks = c(0, 100, 200), size = 1) +
@@ -1417,41 +1417,28 @@ write.csv(dtas, "derivedData/dtas.csv", row.names=FALSE)
 write.csv(simd, "derivedData/simd.csv", row.names=FALSE)
 
 # Output mmd tables using kable
-admin_lev1_df <- st_set_geometry(admin_lev1)
-admin_lev1_df <- admin_lev1_df[,c(3,5,7,11,13)]
-
+admin_lev1_df <- st_set_geometry(admin_lev1, NULL)
+admin_lev1_prop_df <- select(admin_lev1_df, name, ecs_count, ecs_percent, pow_count, pow_percent, transition_count, transition_percent, dtas_count, dtas_percent, permaculture_count, permaculture_percent)
 admin_lev1_df %>%
   kable(format = "html", col.names = colnames(admin_lev1_df)) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
     kableExtra::scroll_box(width = "100%", height = "800px")
 ```
 
-# Appendix B
-
-```{r admin_table_withproportions}
-
-admin_lev1_prop_df <- admin_lev1_df[,c(3,5:14,22:25)]
-admin_lev1_prop_df %>%
-  kable(format = "html", col.names = colnames(admin_lev1_prop_df)) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
-    kableExtra::scroll_box(width = "100%", height = "800px")
-```
-
-# Appendix C - Data by Urban / Rural Classification
+# Appendix B - Data by Urban / Rural Classification
 
 ```{r urbanrural_table}
 # Output CSV files for urbanrural tables
 write.csv(urbanrural, "derivedData/urbanrural.csv", row.names=FALSE)
 
 # Output mmd tables using kable
-urbanrural_table <- st_set_geometry(urbanrural)
-urbanrural_table <- urbanrural_table[,c(1,7:16)]
+urbanrural_table <- st_set_geometry(urbanrural, NULL)
+urbanrural_table <- select(urbanrural_table, UR8FOLD, ecs_count:permaculture_percent)
 
 urbanrural_table %>%
   kable(format = "html", col.names = colnames(urbanrural_table)) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
     kableExtra::scroll_box(width = "100%")
-
 ```
 
 # Citations
